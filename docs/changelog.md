@@ -1,0 +1,7 @@
+# Change log
+
+Each completed change records the behavior and invariant it establishes. Review existing entries before changing behavior. Earlier source history remains in perpetual-hub; extraction provenance is in `vendor/README.md`.
+
+| Date | Change | Invariant and coverage |
+|---|---|---|
+| 2026-11-23 | Extract Partner Portal into its own project | Move Spot/Perps source, local environment, deployment target and deployment tests out of perpetual-hub. Include the required partner-config/analytics source snapshots and a standalone lockfile. Build/deploy inputs resolve entirely inside this checkout; keep the same production project, server-only Telegram settings, wallet proof formats, browser-storage keys and UI behavior. Publishing clears the former monorepo root setting, verifies settings and output, and logs out. The move does not publish. Clean npm ci, lint/typecheck/build, all 20 deployment-runner tests, independent-cwd CLI dry-run, five local API startup/validation checks and Spot/Perps browser smoke checks pass. Existing deployment tests cover root/settings/staging; independent installation was not exercised before extraction because sibling source was intentional. No permanent application tests by user choice; verify actual Vercel compiled-function startup, wallet signing and live Telegram delivery at the next authorized deployment. The extraction is published to the configured Git repository; no deployment is performed. |

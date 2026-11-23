@@ -1,0 +1,26 @@
+import type { AnalyticsTotals } from "./types";
+
+export const METRIC_HELP = {
+  volume: "TEE-confirmed executed notional during the trailing 24 hours. This does not depend on the selected time range.",
+  executedNotional: "Total notional value of TEE-confirmed trades completed during the selected time range.",
+  averageTradeSize: "Executed notional divided by the number of completed trades in the selected time range.",
+  users: "Unique wallet addresses with at least one completed trade in the selected time range.",
+  feeRevenue: "Lifetime trading commissions reported by accounts in each selected chain's latest account-summary batch.",
+  upnl: "Unrealized profit and loss across all open positions in the latest platform snapshot.",
+  pnl: "Realized plus unrealized profit and loss reported by accounts in each selected chain's latest account-summary batch.",
+  balance: "Total collateral balance before unrealized PNL, derived from the latest platform snapshot.",
+  trades: "TEE-confirmed market opens, closes, and limit-order fills completed during the selected time range.",
+  deposits: "TEE-confirmed user collateral deposits completed during the selected time range. Hedger treasury deposits are excluded.",
+  withdrawals: "TEE-confirmed user collateral withdrawals completed during the selected time range. Hedger treasury withdrawals are excluded.",
+  netDeposits: "User deposits minus user withdrawals completed during the selected time range.",
+  liquidations: "Individual positions liquidated with TEE confirmation during the selected time range.",
+  netFunding: "Sum of TEE-signed user funding charges during the selected time range. Positive means users paid; negative means users received.",
+  currentEquity: "Total account collateral plus unrealized PNL in the latest platform snapshot.",
+  grossOpenInterest: "Total absolute notional of all open user positions in the latest platform snapshot.",
+  accounts: "Partner-chain accounts with non-zero collateral or at least one open position in the latest platform snapshot. A wallet on two chains counts twice.",
+  activeAccounts: "Partner-chain accounts with at least one open position in the latest platform snapshot. A wallet on two chains counts twice.",
+  openPositions: "Number of non-zero user positions in the latest platform snapshot.",
+  availableBalance: "Collateral currently available for new positions or withdrawals in the latest platform snapshot.",
+  marginUsed: "Initial margin currently reserved for open positions in the latest platform snapshot.",
+  marginUtilization: "Margin used divided by total equity in the latest platform snapshot.",
+} satisfies Record<keyof AnalyticsTotals, string>;

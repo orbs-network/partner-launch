@@ -1,0 +1,58 @@
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: var(--font-app);
+  --font-mono: var(--font-app);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--primary);
+  --color-primary-foreground: #fff;
+  --color-secondary: var(--soft);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--soft);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--primary-soft);
+  --color-accent-foreground: var(--link, var(--primary));
+  --color-destructive: var(--danger-button, var(--danger));
+  --color-destructive-foreground: #fff;
+  --color-border: var(--edge);
+  --color-input: var(--edge);
+  --color-ring: #7786ff;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 1.75rem;
+}
+
+@theme {
+  --animate-dialog-overlay-in: dialog-overlay-in var(--dialog-duration) var(--ease-out);
+  --animate-dialog-overlay-out: dialog-overlay-out var(--dialog-duration) var(--ease-out);
+  --animate-dialog-content-in: dialog-content-in var(--dialog-duration) var(--ease-out);
+  --animate-dialog-content-out: dialog-content-out var(--dialog-duration) var(--ease-out);
+
+  @keyframes dialog-overlay-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes dialog-overlay-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes dialog-content-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes dialog-content-out {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.96); }
+  }
+}

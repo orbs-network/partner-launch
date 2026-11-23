@@ -1,0 +1,79 @@
+@layer components {
+  /* Keep native range interaction, with stable pointer-state artwork. */
+  .fee-share-slider {
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    padding: 0;
+    background: transparent;
+  }
+
+  .fee-share-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(to right, var(--link) var(--slider-progress), var(--edge) var(--slider-progress));
+  }
+
+  .fee-share-slider::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    margin-top: -5px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--link);
+    box-shadow: 0 0 0 1px var(--link);
+  }
+
+  .fee-share-slider::-moz-range-track {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--edge);
+  }
+
+  .fee-share-slider::-moz-range-progress {
+    height: 6px;
+    border-radius: 999px;
+    background: var(--link);
+  }
+
+  .fee-share-slider::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--link);
+    box-shadow: 0 0 0 1px var(--link);
+  }
+
+  .fee-share-slider:focus-visible {
+    outline: none;
+  }
+
+  .fee-share-slider:focus-visible::-webkit-slider-thumb {
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+
+  .fee-share-slider:focus-visible::-moz-range-thumb {
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+}
+/* RainbowKit's compact panel has a 368px minimum; keep its close action on screen. */
+@media (max-width: 399px) {
+  [data-rk][aria-labelledby="rk_connect_title"] [role="document"] > div > div {
+    min-width: 0 !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+}
+
+/* RainbowKit's close button is 30px; give it a 44px touch target without changing its look. */
+[data-rk] button[aria-label="Close"] {
+  position: relative;
+}
+[data-rk] button[aria-label="Close"]::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+}

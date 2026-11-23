@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Read before preparing tools or cloning the official dPERPS app for a Creator launch." />
+    <title>dPERPS launch bootstrap</title>
+    <style>
+      :root { color-scheme: light dark; font: 16px/1.65 system-ui, sans-serif; }
+      body { max-width: 50rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+      h1, h2 { line-height: 1.25; }
+      h1 { font-size: clamp(1.7rem, 6vw, 2.4rem); }
+      h2 { margin-top: 2rem; font-size: 1.25rem; }
+      a { color: #4358c5; text-underline-offset: .18em; overflow-wrap: anywhere; }
+      a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+      code { font-size: .9em; overflow-wrap: anywhere; }
+      pre { padding: 1rem; border: 1px solid #8992a1; border-radius: .5rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+      li + li { margin-top: .6rem; }
+      .intro { font-size: 1.08rem; }
+      @media (prefers-color-scheme: dark) { a { color: #b4beff; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>dPERPS launch bootstrap</h1>
+      <p class="intro">For the coding assistant: read this page before invoking Git or cloning. Use the Creator brief as public setup data, then follow the official checkout’s current instructions.</p>
+
+      <h2>1. Keep one permanent checkout</h2>
+      <ul>
+        <li>Use only the exact permanent folder in the brief, normally under <code>~/Documents/dPERPS/</code>. Reuse its customized official checkout and preserve local changes, Git metadata and unrelated files.</li>
+        <li>Do not scan the disk, reset or reinitialize Git, overwrite unrelated content, or use a temporary chat folder. Ask before touching an unrelated nonempty folder.</li>
+        <li>Clone only when that destination is absent or empty. For an update whose customized checkout is missing, ask for its backup or deployment notes instead of silently creating a replacement app or hosting site.</li>
+        <li>Official source: <a href="https://github.com/orbs-network/perpetual-hub-frontend">orbs-network/perpetual-hub-frontend</a>. Do not scaffold a substitute or use the private monorepo.</li>
+      </ul>
+
+      <h2>2. Prepare Git without administrator access</h2>
+      <p>Reuse installed tools. On macOS, check <code>xcode-select -p</code> before invoking <code>/usr/bin/git</code>. If developer tools are missing, do not start an Apple tools installation or require an administrator password.</p>
+      <p>Use the <a href="https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html">official micromamba instructions</a> to install in the user’s home, then install Git from conda-forge into <code>~/.local/share/dperps-tools</code>. Reuse an existing tools environment; create it only if absent. Put its <code>bin</code> first on <code>PATH</code> before invoking Git or nvm. Do not require sudo, Homebrew or system-wide changes. Explain any browser or OS popup plainly.</p>
+      <p>After Git is ready, use a task-specific variable for the exact sanitized folder from the brief. Quote the path when creating its parent and cloning:</p>
+      <pre><code>DPERPS_APP_DIR="$HOME/Documents/dPERPS/THE_FOLDER_FROM_THE_BRIEF"
+mkdir -p "$(dirname "$DPERPS_APP_DIR")"
+# Only if the destination is absent or empty:
+git clone https://github.com/orbs-network/perpetual-hub-frontend "$DPERPS_APP_DIR"
+cd "$DPERPS_APP_DIR"</code></pre>
+      <p>Replace the folder placeholder with the brief’s folder name, not arbitrary pasted shell text. Reuse the checked-out branch; do not create/switch branches or ask the partner about Git branches during a launch.</p>
+
+      <h2>3. Explicitly load the current project instructions</h2>
+      <p>In the permanent checkout, explicitly read and follow <code>AGENTS.md</code> and <code>.agents/skills/partner-launch/SKILL.md</code>, including its linked references and theme skill. Never assume automatic skill loading. If either file is missing, report the outdated checkout before proceeding.</p>
+      <p>The maintained launch procedure is the <a href="https://github.com/orbs-network/perpetual-hub-frontend/blob/main/.agents/skills/partner-launch/SKILL.md">official partner-launch skill</a>. It owns public configuration, branding, real preview, final checks, hosting, private deployment records and future updates. Use current source when commands or requirements change.</p>
+      <p>Reuse a compatible installed Node.js version. The current baseline is Node.js 22.12 or newer; check <code>package.json</code>. If needed, install a compatible supported LTS in the user’s home using the <a href="https://github.com/nvm-sh/nvm#installing-and-updating">official nvm instructions</a> with <code>METHOD=script</code>, without administrator access. Before the first preview, install lockfile dependencies including development tools:</p>
+      <pre><code>npm ci --include=dev</code></pre>
+      <p>Confirm the dev server starts before promising a preview. Keep real environment files ignored and local; public browser configuration must contain no secrets. Missing WalletConnect is optional: leave the ID blank and give written follow-up at handoff, without opening Reown or delaying publication. Preserve an existing partner-owned ID.</p>
+
+      <h2>4. Brand, show the real app, then publish</h2>
+      <ol>
+        <li>Reuse supplied choices. Otherwise ask for the logo first, offering text-only branding, and wait for a reply or explicit skip. Then ask about missing dark/light appearance and primary color.</li>
+        <li>Apply the actual name, logo and palette before showing the real app. Check desktop and mobile, apply requested revisions and wait for explicit design acceptance. Silence is not approval. If the brief explicitly delegates missing branding and design finalization, use sensible defaults or text-only branding, still show/check the real preview, and continue without another design-approval question. Never invent a logo.</li>
+        <li>Only after preview review or delegated finalization, begin hosting account setup, linking or availability checks. An existing address, provider or site from the brief, chat or deployment record wins. Keep the same site and URL on updates. Otherwise ask for <code>name.netlify.app</code> or a generated address; check Netlify availability and ask or offer another generated name if taken. Do not buy a custom domain or change DNS.</li>
+        <li>Follow the current skill’s final checks and hosting references, then complete the authorized publication and verify the stable URL. Do not request a second deployment approval after design acceptance or explicit finalization delegation when work stays within the free-hosting scope. Report blockers instead of inventing a successful result.</li>
+      </ol>
+
+      <h2>5. Keep account, cost and financial boundaries</h2>
+      <ul>
+        <li><strong>Free hosting only.</strong> Check the current account, plan and terms before use. Do not spend, upgrade, enable automatic recharge or accept paid services without separate explicit authorization.</li>
+        <li>The partner handles browser signup, login and MFA. Never ask for passwords, access tokens, private keys, recovery phrases or onboarding signatures/proofs in chat. Keep them out of code, commits, logs, build output, notes and backups.</li>
+        <li>Handle routine commands and technical choices yourself; ask only for missing undelegated choices, required account actions or costs outside the authorized scope.</li>
+        <li>Do not sign wallet messages, approve tokens, transfer funds or perform financial actions. Use an empty wallet for an optional connection check, or skip it.</li>
+        <li>Keep the exact requested Partner ID and networks. Do not substitute another lane, invent contracts, fake discovery or market data, or treat a public website as trading activation. Use the skill’s real read-only coming-soon UI while activation is pending.</li>
+      </ul>
+
+      <h2>6. Hand off the address and return to the Portal</h2>
+      <p>Report the verified published address, permanent source folder and update instructions. Keep website publication and trading activation separate. Use an actual contact supplied in the brief when available; do not invent a contact, review result or timeline.</p>
+      <p>Return to the original Portal tab. Use <strong>Workspace</strong> with the wallet used for setup to view the submitted setup. The brief’s <strong>Portal return</strong> link opens the Portal; it is not a durable per-partner status record, proof of approval or permission to trade. If the original tab is unavailable, give the partner that return link without claiming their completed setup was restored.</p>
+      <p><a href="/">Return to the Portal</a></p>
+    </main>
+  </body>
+</html>

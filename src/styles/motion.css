@@ -1,0 +1,87 @@
+[data-slot="drawer-content"][data-vaul-drawer],
+[data-slot="drawer-overlay"][data-vaul-overlay] {
+  animation-duration: var(--dialog-duration);
+  transition-duration: var(--dialog-duration);
+}
+
+/* Only the handle drags; let long prompts and nested detail lists scroll normally. */
+[data-slot="drawer-content"][data-vaul-drawer] {
+  touch-action: pan-y;
+}
+[data-slot="drawer-content"] [data-vaul-handle] {
+  touch-action: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  [data-slot="dialog-overlay"],
+  [data-slot="dialog-content"] {
+    animation-duration: 150ms !important;
+    animation-timing-function: var(--ease-out) !important;
+  }
+  [data-slot="dialog-overlay"][data-state="open"],
+  [data-slot="dialog-content"][data-state="open"] {
+    animation-name: dialog-overlay-in !important;
+  }
+  [data-slot="dialog-overlay"][data-state="closed"],
+  [data-slot="dialog-content"][data-state="closed"] {
+    animation-name: dialog-overlay-out !important;
+  }
+}
+
+/* Native disclosures keep their keyboard, open-attribute and focus behavior. */
+.animated-disclosure > summary .disclosure-chevron {
+  transform: rotate(0deg);
+}
+.animated-disclosure[open] > summary .disclosure-chevron {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animated-disclosure > summary .disclosure-chevron {
+    transition: transform var(--disclosure-duration) var(--ease-out);
+  }
+  .animated-disclosure:is(:has(:focus-visible), [data-disclosure-instant]) > summary .disclosure-chevron {
+    transition: none;
+  }
+}
+
+@supports selector(details::details-content) and (transition-behavior: allow-discrete) {
+  .animated-disclosure::details-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 0fr;
+    opacity: 0;
+    contain: layout;
+  }
+  .animated-disclosure[open]::details-content {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  .animated-disclosure > .disclosure-content {
+    min-block-size: 0;
+    min-inline-size: 0;
+    overflow: clip;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .animated-disclosure::details-content {
+      transition:
+        grid-template-rows var(--disclosure-duration) var(--ease-out),
+        opacity var(--disclosure-duration) var(--ease-out),
+        content-visibility var(--disclosure-duration) var(--ease-out) allow-discrete;
+    }
+  }
+  /* Keyboard activation and validation focus reveal the whole field immediately. */
+  .animated-disclosure:is(:has(:focus-visible), [data-disclosure-instant])::details-content {
+    transition: none;
+  }
+  .animated-disclosure:is(:has(:focus-visible), [data-disclosure-instant]) > .disclosure-content {
+    overflow: visible;
+  }
+}
