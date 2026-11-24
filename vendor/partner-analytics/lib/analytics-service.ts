@@ -1,8 +1,8 @@
 import type { PartnerOperationalConfig } from "./partner-scope";
-import { hasPartnerAdminAccess, PartnerAdminProxyError } from "./auth";
-import { buildStatsQuery, parseStatsResponse } from "../src/elasticsearch";
-import { parseAnalyticsPeriod } from "../src/analytics-period";
-import { statsCacheKey, withStatsCache } from "../app/api/stats/stats-cache";
+import { hasPartnerAdminAccess, PartnerAdminProxyError } from "./auth.js";
+import { buildStatsQuery, parseStatsResponse } from "../src/elasticsearch.js";
+import { parseAnalyticsPeriod } from "../src/analytics-period.js";
+import { statsCacheKey, withStatsCache } from "../app/api/stats/stats-cache.js";
 
 const DEFAULT_ANALYTICS_BI_QUERY_URL = "https://api.bi.orbs.network";
 

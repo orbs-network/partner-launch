@@ -17,6 +17,7 @@ export function createSetupExport(
     exportedAt,
     launchPath: draft.launchPath,
     displayName: draft.displayName,
+    ...(draft.appUrl ? { appUrl: draft.appUrl } : {}),
     platformName: draft.partnerName,
     partnerId: draft.partnerName,
     branding: { brandColor: draft.brandColor, logoDataUrl: draft.logoDataUrl },

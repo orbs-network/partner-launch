@@ -17,11 +17,12 @@ import { FUNDING_STEP, TERMS_STEP, WELCOME_STEP } from "./onboarding-steps";
 const loadSetupComplete = () => import("./SetupComplete");
 const SetupComplete = lazy(() => loadSetupComplete().then((m) => ({ default: m.SetupComplete })));
 
-export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = false, onSpot }: {
+export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = false, onSpot, onPendingRequests }: {
   renderHeaderActions?: (busy: boolean) => ReactNode;
   notice?: ReactNode;
   externalBusy?: boolean;
   onSpot: () => void;
+  onPendingRequests?: () => void;
 }) {
   const {
     showCompletion,
@@ -72,7 +73,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
         ) : null}
         {showCompletion ? (
           <Suspense fallback={<ContentSkeleton label="Loading setup details" />}>
-            <SetupComplete onSend={() => navigate(TERMS_STEP)} onCreateNew={openReset} createNewButtonRef={resetButtonRef} busy={busy} />
+            <SetupComplete onSend={() => navigate(TERMS_STEP)} onCreateNew={openReset} onOpenSetups={onPendingRequests} createNewButtonRef={resetButtonRef} busy={busy} />
           </Suspense>
         ) : (
           <>

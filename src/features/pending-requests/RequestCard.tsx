@@ -1,3 +1,4 @@
+import { formatSpotFeePercent } from "../onboarding/spot/spot-fee";
 import { ArrowLeftRight, CircleAlert, CircleCheck, LoaderCircle, Rocket } from "lucide-react";
 import { chainById } from "@/config/chains";
 import { WalletExplorerLink } from "./WalletExplorerLink";
@@ -12,10 +13,10 @@ export function RequestCard({ request, registryStatus, tradingEnabled = false }:
   const statusLabel = status === "approved" ? "Approved" : status === "ready" ? request.kind === "spot" ? "Configuration found" : "Trading enabled" : status === "error" ? "Status unavailable" : status === "checking" ? "Checking status" : "Approval pending";
   const Icon = request.kind === "spot" ? ArrowLeftRight : Rocket;
   const label = request.kind === "spot" ? "Fees wallet" : "Revenue wallet";
-  const rows = request.kind === "spot" ? [...(request.partnerId ? [{ label: "Partner ID", value: request.partnerId }] : []), ...(request.dexUrl ? [{ label: "DEX URL", value: request.dexUrl }] : [])] : [
+  const rows = request.kind === "spot" ? [...(request.partnerId ? [{ label: "Partner ID", value: request.partnerId }] : []), ...(request.dexUrl ? [{ label: "DEX URL", value: request.dexUrl }] : []), ...(request.tradingFeeTenthsBps === undefined ? [] : [{ label: "Trading fee", value: `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` }])] : [
     { label: "Partner ID", value: request.partnerId },
     { label: "Networks", value: request.chainIds.map(id => chainById(id)?.name ?? `Chain ${id}`).join(", ") },
-    ...(request.extraFeePercent === undefined ? [] : [{ label: "Extra trading fee", value: `${request.extraFeePercent}%` }]),
+    ...(request.extraFeePercent === undefined ? [] : [{ label: "Additional fees", value: `${request.extraFeePercent}%` }]),
   ];
   return (
     <article aria-label={`${request.appName} ${request.kind === "spot" ? "Spot" : "Perps"} request`} className="overflow-hidden rounded-[22px] border border-(--edge) bg-(--control-bg)">

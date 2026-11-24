@@ -1,1 +1,1 @@
-export { chainCollateralHandler as default } from "../server/chain-collateral";
+export { chainCollateralHandler as default } from "../server/chain-collateral.js";

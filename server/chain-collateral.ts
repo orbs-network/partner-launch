@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createPublicClient, fallback, getAddress, http, isAddress, zeroAddress } from "viem";
-import { chainById, rpcUrls } from "../src/config/chains";
-import { registryLanes } from "./partner-registry";
+import { chainById, rpcUrls } from "../src/config/chains.js";
+import { registryLanes } from "./partner-registry.js";
 
 const tokenAbi = [
   { type: "function", name: "symbol", stateMutability: "view", inputs: [], outputs: [{ type: "string" }] },

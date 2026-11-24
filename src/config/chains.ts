@@ -12,8 +12,8 @@ import {
 import { fallback, http } from "wagmi";
 import type { Chain } from "viem";
 
-import { supportedChains } from "./supported-chains";
-export { supportedChains, selectablePerpsChains, chainById } from "./supported-chains";
+import { supportedChains } from "./supported-chains.js";
+export { supportedChains, selectablePerpsChains, chainById } from "./supported-chains.js";
 
 /**
  * Every network the wallet connection accepts. Ethereum and Optimism are not

@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 import { chainById, chainLogo } from "../../../config/chains";
 import { formatBuilderFeePercent } from "../builder-fee";
 import { formatCreatorSharePercent } from "../creator-revenue";
-import { NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
+import { APP_URL_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
 import type { OnboardingDraft } from "../state/types";
 import { RevenueWalletLink } from "./RevenueWalletLink";
 
-export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps"> & { contact?: string };
+export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps"> & { contact?: string; appUrl?: string };
 
 const rowClass = "flex items-start justify-between gap-3 border-t border-(--edge) py-3.5";
 const labelClass = "mb-1.5 block text-[11px] leading-normal text-(--muted)";
@@ -60,7 +60,7 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
       <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-3">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <dt className="text-[11px] leading-normal text-(--muted)">{draft.builderFeeTenthsBps === undefined ? "Requested fee share" : "Extra trading fee"}</dt>
+            <dt className="text-[11px] leading-normal text-(--muted)">{draft.builderFeeTenthsBps === undefined ? "Requested fee share" : "Additional fees"}</dt>
             <dd className="m-0 text-xl leading-tight font-semibold tracking-tight text-(--link) tabular-nums">{feeValue}</dd>
           </div>
           <div className="grid min-w-0 gap-1">
@@ -72,6 +72,10 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
           <Pencil size={13} aria-hidden="true" /> Edit
         </Button> : null}
       </div>
+      {draft.appUrl || onEdit ? <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">App URL</dt><dd className="m-0 text-sm wrap-anywhere text-(--secondary-text)">{draft.appUrl || "Not provided"}</dd></dl>
+        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(APP_URL_STEP)} aria-label="Edit app URL"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
+      </div> : null}
       {draft.contact || onEdit ? <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-1">
           <dt className="text-[11px] leading-normal text-(--muted)">Contact</dt>

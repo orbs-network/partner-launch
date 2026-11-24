@@ -1,1 +1,1 @@
-export { adminRequestsHandler as default } from "../server/admin-requests";
+export { adminRequestsHandler as default } from "../server/admin-requests.js";

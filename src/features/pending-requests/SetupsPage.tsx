@@ -1,4 +1,4 @@
-import { ArrowLeft, BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
+import { BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
@@ -16,10 +16,9 @@ import { useWalletRequests } from "./wallet-requests-context";
 /**
  * My setups dashboard (`/setups?id=…&section=overview|analytics`).
  */
-export function SetupsPage({ onCancellationBusyChange, onCreateSetup, onBackToSetup }: {
+export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
   onCancellationBusyChange?: (busy: boolean) => void;
   onCreateSetup: () => void;
-  onBackToSetup: () => void;
 }) {
   const { requests, error, statusOf } = useSetupCounts();
   const { loading: requestsLoading, address } = useWalletRequests();
@@ -56,9 +55,6 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup, onBackToSe
   }
   return (
     <main id="main" className="mx-auto mt-8 mb-10 w-[min(1200px,calc(100%-40px))] flex-1 max-[767px]:mt-4 max-[720px]:w-[calc(100%-24px)]">
-      <Button type="button" variant="ghost" size="sm" disabled={cancelling} onClick={onBackToSetup} className="-ml-3 mb-2 min-h-11 gap-2 bg-transparent px-3 text-[13px] text-(--muted) hover:enabled:bg-(--control-hover) hover:enabled:text-(--link)">
-        <ArrowLeft size={16} aria-hidden="true" />Back to setup
-      </Button>
       <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2">
         <h1 ref={headingRef} tabIndex={-1} className="text-[31px] leading-[1.25] font-semibold tracking-[-1px] focus:outline-none max-[720px]:text-[28px]">My setups</h1>
         {address && !loading && !error && selected ? <Button type="button" size="sm" disabled={cancelling} onClick={onCreateSetup} aria-label="Create new setup" className="min-h-11 rounded-xl px-4 text-sm max-[767px]:size-11 max-[767px]:p-0"><Plus size={18} aria-hidden="true" /><span className="max-[767px]:sr-only">Create new setup</span></Button> : null}

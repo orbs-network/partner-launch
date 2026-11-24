@@ -13,7 +13,7 @@ export async function spotAppIdStatusHandler(request: IncomingMessage, response:
   if (names.length !== 1 || validateDexName(names[0])) { response.writeHead(400).end(JSON.stringify({ error: "Enter a valid app name." })); return; }
   const appId = generateSpotAppId(names[0]);
   try {
-    const exists = await partnerIdExists(requestDatabase(), appId) || (await fetchSpotConfigDexKeys()).some(key => key.toLowerCase() === appId.toLowerCase());
+    const exists = await partnerIdExists(requestDatabase(), appId, "spot") || (await fetchSpotConfigDexKeys()).some(key => key.toLowerCase() === appId.toLowerCase());
     response.writeHead(200).end(JSON.stringify({ appId, exists }));
   } catch { response.writeHead(503).end(JSON.stringify({ error: "Spot App ID availability is temporarily unavailable." })); }
 }

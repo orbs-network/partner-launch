@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { CircleAlert, CircleCheck, LoaderCircle, RefreshCw } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useSetupRequestStatus } from "../hooks/useSetupRequestStatus";
 import type { SavedSetupRequestReceipt } from "../setup-request-receipt";
@@ -39,10 +38,10 @@ export function TradingActivationStatus({ receipt, chainIds, titleId, descriptio
           disabled={isRefreshing}
           onClick={refresh}
         >
-          {isRefreshing ? <Skeleton className="size-[18px] rounded-md" /> : <RefreshCw size={18} aria-hidden="true" />}
+          <RefreshCw size={18} className={isRefreshing ? "animate-spin motion-reduce:animate-none" : undefined} aria-hidden="true" />
         </Button>}
     >
-      {pending ? "The dPERPS team will review your setup before activating trading." : null}
+      {pending ? `The dPERPS team will review your setup before activating trading.${status.isError ? "" : " Partner approval can take up to 48 hours."}` : null}
     </ActivationStatusCard>
   );
 }

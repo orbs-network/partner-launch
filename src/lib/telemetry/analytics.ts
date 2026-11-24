@@ -1,9 +1,9 @@
 type Product = "perps" | "spot";
 type StoryEvent = "deployment-success" | "configuration-found" | "submission-request" | "signature-request" | "signature-success" |
   "delivery-success" | "submission-success" | "submission-failed";
-export type StoryFields = { appName?: string; partnerId?: string; chainId?: number; dexUrl?: string;
+export type StoryFields = { appName?: string; appUrl?: string; partnerId?: string; chainId?: number; dexUrl?: string;
   hasDexUrl?: boolean; feesWallet?: string; revenueWallet?: string; walletAddress?: string;
-  extraTradingFeePercent?: string; builderFeeTenthsBps?: number; policyAccepted?: boolean };
+  integrationMode?: "ui" | "api" | "existing"; extraTradingFeePercent?: string; builderFeeTenthsBps?: number; policyAccepted?: boolean };
 type EventDetails = StoryFields & { product?: Product; step?: string; retry?: boolean; evidence?: "perps-enabled-lanes" | "spot-config-key" };
 
 const endpoint = "https://bi.orbs.network/putes/partner-launch";

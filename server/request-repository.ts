@@ -46,9 +46,9 @@ export async function saveSetupRequest(database: Database, request: NewSetupRequ
   }
 }
 
-/** IDs are shared across products and remain reserved after cancellation. */
-export async function partnerIdExists(database: Database, partnerId: string): Promise<boolean> {
-  const result = await database.query("SELECT 1 FROM portal_setup_requests WHERE lower(partner_id) = lower($1) LIMIT 1", [partnerId]);
+/** IDs are unique within each product and remain reserved after cancellation. */
+export async function partnerIdExists(database: Database, partnerId: string, product: NewSetupRequest["product"]): Promise<boolean> {
+  const result = await database.query("SELECT 1 FROM portal_setup_requests WHERE product = $1 AND lower(partner_id) = lower($2) LIMIT 1", [product, partnerId]);
   return !!result.rowCount;
 }
 
@@ -67,8 +67,11 @@ export async function listWalletRequests(database: Pool, address: string) {
       id: row.id, kind: row.product, status: row.status, appName: details.appName,
       savedAt: new Date(row.created_at).toISOString(), ownerWallets: [...new Set([...(row.owner_wallet ? [row.owner_wallet] : []),
         ...(Array.isArray(details.ownerWallets) ? details.ownerWallets.filter((value): value is string => typeof value === "string") : [])].map(value => value.toLowerCase()))],
-      ...(row.product === "spot" ? { feesWallet: details.feesWallet, ...(row.partner_id ? { partnerId: row.partner_id } : {}), ...(details.dexUrl ? { dexUrl: details.dexUrl } : {}) } : {
+      ...(row.product === "spot" ? { feesWallet: details.feesWallet, ...(details.integrationMode === "ui" || details.integrationMode === "existing" ? { integrationMode: details.integrationMode } : {}), ...(typeof details.tradingFeeTenthsBps === "number" ? { tradingFeeTenthsBps: details.tradingFeeTenthsBps } : {}), ...(row.partner_id ? { partnerId: row.partner_id } : {}), ...(details.dexUrl ? { dexUrl: details.dexUrl } : {}) } : {
         partnerId: details.partnerId, chainIds: details.chainIds, revenueWallet: details.revenueWallet,
+        ...(typeof details.appUrl === "string" && details.appUrl ? { appUrl: details.appUrl } : {}),
+        appUrlVersion: Number.isSafeInteger(details.appUrlVersion) && Number(details.appUrlVersion) >= 0 ? details.appUrlVersion : 0,
+        ...(details.integrationMode === "ui" || details.integrationMode === "api" ? { integrationMode: details.integrationMode } : {}),
         ...(typeof details.builderFeeTenthsBps === "number" ? { builderFeeTenthsBps: details.builderFeeTenthsBps } : {}),
       }),
     };

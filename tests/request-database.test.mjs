@@ -176,16 +176,18 @@ test("request repository protects status and requires delivery before approval",
     memory.public.none(await readFile("migrations/002_request_wallet.sql", "utf8"));
     memory.public.none(await readFile("migrations/003_request_owners.sql", "utf8"));
     memory.public.none("ALTER TABLE portal_setup_requests ADD COLUMN partner_id text");
-    memory.public.none("CREATE UNIQUE INDEX portal_partner_id_unique ON portal_setup_requests (lower(partner_id))");
+    memory.public.none("CREATE UNIQUE INDEX portal_partner_id_unique ON portal_setup_requests (product, lower(partner_id))");
     const { saveSetupRequest, partnerIdExists, markRequestDelivered, getRequestStatus, approveSetupRequest, listWalletRequests } = await server.ssrLoadModule("/server/request-repository.ts");
     const { lockOwnedSpotRequest, cancelOwnedSpotRequest } = await server.ssrLoadModule("/server/spot-owner-authorization.ts");
     const { walletRequestsHandler } = await server.ssrLoadModule("/server/wallet-requests.ts");
     const id = crypto.randomUUID(), token = "a".repeat(64), admin = "0x0000000000000000000000000000000000000001";
     const coOwner = "0x0000000000000000000000000000000000000003";
-    const request = { id, accessToken: token, product: "spot", partnerId: "sampleDex", ownerWallet: admin, ownerWallets: [coOwner], details: { appName: "Sample Dex", feesWallet: admin, ownerWallets: [coOwner], contact: "private@example.com" } };
+    const request = { id, accessToken: token, product: "spot", partnerId: "sampleDex", ownerWallet: admin, ownerWallets: [coOwner], details: { appName: "Sample Dex", feesWallet: admin, integrationMode: "ui", ownerWallets: [coOwner], contact: "private@example.com" } };
     await saveSetupRequest(database, request);
-    assert.equal(await partnerIdExists(database, "SAMPLEDEX"), true);
-    await assert.rejects(saveSetupRequest(database, { id: crypto.randomUUID(), accessToken: token, product: "perps", partnerId: "SAMPLEDEX", details: {} }));
+    assert.equal(await partnerIdExists(database, "SAMPLEDEX", "spot"), true);
+    assert.equal(await partnerIdExists(database, "SAMPLEDEX", "perps"), false);
+    await saveSetupRequest(database, { id: crypto.randomUUID(), accessToken: token, product: "perps", partnerId: "SAMPLEDEX", details: {} });
+    await assert.rejects(saveSetupRequest(database, { id: crypto.randomUUID(), accessToken: token, product: "spot", partnerId: "SAMPLEDEX", details: {} }));
     await assert.rejects(saveSetupRequest(database, { ...request, ownerWallets: ["0x0000000000000000000000000000000000000004"] }));
     assert.equal(await getRequestStatus(database, id, token), undefined);
     assert.equal(await approveSetupRequest(database, id, admin), false);
@@ -193,6 +195,7 @@ test("request repository protects status and requires delivery before approval",
     assert.equal((await listWalletRequests(database, "0x0000000000000000000000000000000000000002")).length, 0);
     const visible = await listWalletRequests(database, admin);
     assert.equal(visible.length, 1);
+    assert.equal(visible[0].integrationMode, "ui");
     assert.equal((await listWalletRequests(database, coOwner)).length, 0);
     const teammateId = crypto.randomUUID();
     await saveSetupRequest(database, { id: teammateId, accessToken: token, product: "spot", partnerId: "teammateDex", ownerWallet: coOwner,
@@ -252,7 +255,7 @@ test("submission saves a delivered wallet request and retries do not resend", as
     const { listWalletRequests } = await server.ssrLoadModule("/server/request-repository.ts");
     const owner = "0x0000000000000000000000000000000000000001";
     const record = { id: crypto.randomUUID(), product: "spot", partnerId: "example", accessToken: "a".repeat(64), ownerWallet: owner,
-      details: { appName: "Example", feesWallet: owner } };
+      details: { appName: "Example", feesWallet: owner, tradingFeeTenthsBps: 1000 } };
     const options = { database, unavailable: "Unavailable", prepare: () => ({ text: "Test", submittedAt: new Date().toISOString(), record }) };
     async function submit() {
       let status, body;
@@ -264,11 +267,71 @@ test("submission saves a delivered wallet request and retries do not resend", as
     assert.equal((await submit()).status, 200);
     assert.equal((await submit()).status, 200);
     assert.equal(deliveries, 1);
-    assert.equal((await listWalletRequests(database, owner)).length, 1);
+    const saved = await listWalletRequests(database, owner);
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].tradingFeeTenthsBps, 1000);
   } finally {
     globalThis.fetch = originalFetch;
     if (oldToken === undefined) delete process.env.SPOT_TELEGRAM_BOT_TOKEN; else process.env.SPOT_TELEGRAM_BOT_TOKEN = oldToken;
     if (oldChat === undefined) delete process.env.SPOT_TELEGRAM_CHAT_ID; else process.env.SPOT_TELEGRAM_CHAT_ID = oldChat;
     await database.end(); await server.close();
   }
+});
+
+test("Perps app URL updates require the owner signature and reject stale proofs", async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
+  try {
+    const { perpsAppUrlHandler } = await server.ssrLoadModule("/server/perps-app-url.ts");
+    const { appUrlMessage } = await server.ssrLoadModule("/src/features/pending-requests/app-url-proof.ts");
+    const owner = privateKeyToAccount(`0x${"1".repeat(64)}`);
+    const other = privateKeyToAccount(`0x${"2".repeat(64)}`);
+    const id = crypto.randomUUID();
+    let version = 0, savedUrl = "";
+    const database = { async query(sql, params) {
+      assert.match(sql, /lower\(owner_wallet\) = lower\(\$2\)/);
+      const [requestId, address, url, expected] = params;
+      if (requestId !== id || address.toLowerCase() !== owner.address.toLowerCase() || expected !== version) return { rowCount: 0 };
+      version++; savedUrl = url; return { rowCount: 1 };
+    } };
+    async function call(proof, origin = "http://localhost:5173") {
+      let status, body;
+      const response = { setHeader() {}, writeHead(code) { status = code; return this; }, end(value) { body = JSON.parse(value); } };
+      const request = { method: "POST", headers: { host: "localhost:5173", origin, "content-type": "application/json" }, socket: {}, body: proof };
+      await perpsAppUrlHandler(request, response, database);
+      return { status, body };
+    }
+    async function sign(account, changes = {}) {
+      const details = { address: account.address, origin: "http://localhost:5173", issuedAt: new Date().toISOString(), nonce: crypto.randomUUID(), requestId: id, appUrl: "https://app.example", version: 0, ...changes };
+      return { ...details, signature: await account.signMessage({ message: appUrlMessage(details) }) };
+    }
+    const proof = await sign(owner);
+    assert.equal((await call({ ...proof, appUrl: "https://attacker.example" })).status, 401);
+    assert.equal((await call(await sign(other))).status, 409);
+    assert.equal((await call(proof, "http://other.example")).status, 403);
+    assert.equal((await call(proof)).status, 200);
+    assert.equal(savedUrl, "https://app.example");
+    assert.equal((await call(proof)).status, 409);
+    assert.equal((await call(await sign(owner, { appUrl: "javascript:alert(1)", version: 1 }))).status, 400);
+  } finally { await server.close(); }
+});
+
+test("Spot submission retains the chosen integration path", async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
+  const originalFetch = globalThis.fetch;
+  try {
+    const { submitSpot } = await server.ssrLoadModule("/src/features/onboarding/spot/submit-spot.ts");
+    const { emptySpotDraft } = await server.ssrLoadModule("/src/features/onboarding/spot/spot-setup.ts");
+    let sent;
+    globalThis.fetch = async (_url, init) => {
+      sent = JSON.parse(init.body);
+      return new Response(JSON.stringify({ delivered: true, submittedAt: new Date().toISOString() }), { status: 200 });
+    };
+    const wallet = "0x0000000000000000000000000000000000000001";
+    const draft = { ...emptySpotDraft(), integrationMode: "ui", appName: "Example", dexUrl: "https://old.example", feesWallet: wallet, policyAccepted: true };
+    const snapshot = await submitSpot(draft, wallet, { requestId: crypto.randomUUID(), accessToken: "a".repeat(64) });
+    assert.equal(sent.integrationMode, "ui");
+    assert.equal(sent.dexUrl, "");
+    assert.equal(snapshot.dexUrl, undefined);
+    assert.equal(snapshot.integrationMode, "ui");
+  } finally { globalThis.fetch = originalFetch; await server.close(); }
 });

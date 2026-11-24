@@ -1,4 +1,5 @@
 import { loadEnv, type Plugin, type PreviewServer, type ViteDevServer } from "vite";
+import { perpsAppUrlHandler } from "./perps-app-url";
 import { spotConfigStatusHandler } from "./spot-config-status";
 import { chainCollateralHandler } from "./chain-collateral";
 import { partnerRegistryStatusHandler } from "./partner-registry-status";
@@ -19,6 +20,7 @@ function installApiRoutes(server: ViteDevServer | PreviewServer) {
     else if (path === "/api/analytics-stats") void analyticsStatsHandler(request, response);
     else if (path === "/api/admin-requests") void adminRequestsHandler(request, response);
     else if (path === "/api/request-status") void requestStatusHandler(request, response);
+    else if (path === "/api/perps-app-url") void perpsAppUrlHandler(request, response);
     else if (path === "/api/wallet-requests") void walletRequestsHandler(request, response);
     else next();
   });

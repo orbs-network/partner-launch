@@ -33,3 +33,4 @@ export const SPOT_SKILLS_URL = "https://github.com/orbs-network/spot-ui/tree/mas
 
 /** Official Spot integration overview and setup documentation. */
 export const SPOT_DOCS_URL = "https://docs.orbs.com/advanced-orders/shared";
+export const SPOT_APP_REPO_URL = "https://github.com/orbs-network/orbs-spot";

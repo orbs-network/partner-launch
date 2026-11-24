@@ -1,13 +1,13 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { isIP } from "node:net";
-import { loadPartnerAnalytics } from "../vendor/partner-analytics/lib/analytics-service";
+import { loadPartnerAnalytics } from "../vendor/partner-analytics/lib/analytics-service.js";
 import {
   hasPartnerAdminAccess,
   partnerPayload,
   PartnerAdminProxyError,
-} from "../vendor/partner-analytics/lib/auth";
-import { authenticateAnalyticsSession } from "./analytics-session";
-import { AnalyticsScopeError, resolveAnalyticsScope } from "./analytics-scope";
+} from "../vendor/partner-analytics/lib/auth.js";
+import { authenticateAnalyticsSession } from "./analytics-session.js";
+import { AnalyticsScopeError, resolveAnalyticsScope } from "./analytics-scope.js";
 
 const MAX_BODY_BYTES = 16 * 1024;
 type AnalyticsRoute = "access" | "stats";

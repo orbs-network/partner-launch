@@ -6,7 +6,7 @@ import { useStepHistory } from "@/hooks/useStepHistory";
 import { focusStepStart } from "@/lib/step-focus";
 import { spotStoryDetails } from "../story-details";
 import { safeStorage } from "../state/storage";
-import { emptySpotDraft, restoreSpotDraft, SPOT_DRAFT_KEY, spotStepError, spotSteps } from "./spot-setup";
+import { emptySpotDraft, restoreSpotDraft, SPOT_DRAFT_KEY, spotStepError, spotStepsForMode } from "./spot-setup";
 import { SpotAppIdTakenError, submitSpot } from "./submit-spot";
 import { spotAppIdExists } from "./spot-app-id-availability";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
@@ -45,6 +45,7 @@ export function useSpotSetup(disabled: boolean) {
   const submissionToast = useRef<{ id: string | number; succeeded: boolean } | null>(null);
   const busy = disabled || walletBusy || submitting || checkingAppId;
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const spotSteps = spotStepsForMode(draft.integrationMode);
   const index = spotSteps.findIndex((step) => step.id === draft.step);
   const step = spotSteps[index];
   const error = tried ? spotStepError(draft.step, draft) ?? (draft.step === "app" && appIdCheck?.name === draft.appName && appIdCheck.kind === "taken"
@@ -70,11 +71,15 @@ export function useSpotSetup(disabled: boolean) {
     focusStepStart(saved || draft.step === "review" ? null : document.getElementById(field), headingRef.current);
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [draft.step, saved]);
-  function update(field: "appName" | "contact" | "dexUrl" | "feesWallet", value: string) {
+  function update(field: "appName" | "contact" | "dexUrl" | "feesWallet" | "tradingFeePercent", value: string) {
     if (busy || saved || inFlight.current) return;
     dismissSaveError();
     // Contact only reaches the team's message, so editing it keeps the policy acceptance.
     setDraft((current) => ({ ...current, [field]: value, policyAccepted: field === "contact" ? current.policyAccepted : false }));
+  }
+  function selectIntegration(mode: "ui" | "existing") {
+    if (busy || saved || inFlight.current) return;
+    setDraft(current => ({ ...current, integrationMode: mode, policyAccepted: false }));
   }
   function navigate(target: number) {
     if (busy || saved || inFlight.current || !spotSteps[target]) return;
@@ -104,7 +109,7 @@ export function useSpotSetup(disabled: boolean) {
       requestAnimationFrame(() => (document.querySelector<HTMLElement>('main [aria-invalid="true"]') ?? document.getElementById(`spot-${invalid.id}`))?.focus());
       return;
     }
-    if (draft.step !== "review") {
+    if (draft.step !== "deposit") {
       const review = spotSteps.findIndex((item) => item.id === "review");
       const canReturn = returnToReview && !spotSteps.slice(0, review).some((item) => spotStepError(item.id, draft));
       if (draft.step === "app") {
@@ -202,7 +207,7 @@ export function useSpotSetup(disabled: boolean) {
     setDraft((current) => current.step === "wallet" && JSON.stringify(current) === scope
       ? { ...current, feesWallet: address, policyAccepted: false } : current);
   }
-  return { draft, saved, step, index, error, headingRef, progress, update, navigate, next, acceptPolicy, reset, busy, submitting, checkingAppId,
+  return { draft, saved, step, index, error, headingRef, progress, update, selectIntegration, navigate, next, acceptPolicy, reset, busy, submitting, checkingAppId,
     appIdUnavailable: draft.step === "app" && appIdCheck?.name === draft.appName && appIdCheck.kind === "unavailable",
     fillWallet, onWalletBusyChange: setWalletBusy, returnToReview: returnToReview && draft.step !== "review",
     // While editing from Review, Back returns there once the edited step is valid again.

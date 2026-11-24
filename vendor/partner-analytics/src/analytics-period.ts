@@ -2,7 +2,7 @@ import {
   TIME_RANGES,
   type AnalyticsPeriod,
   type AnalyticsRange,
-} from "../lib/analytics-range";
+} from "../lib/analytics-range.js";
 
 const RANGE_DAYS: Record<Exclude<AnalyticsRange, "24h">, number> = {
   "7d": 7,

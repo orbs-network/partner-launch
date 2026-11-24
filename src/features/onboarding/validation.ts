@@ -17,7 +17,8 @@ import { reservedPartnerNames, validateDexName, validatePartnerName } from "./de
 import { validateCreatorShareBps } from "./creator-revenue";
 import { validateBuilderFee } from "./builder-fee";
 export { reservedPartnerNames, validatePartnerName } from "./dex-identity";
-import { FUNDING_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP, TERMS_STEP, WEBSITES_STEP, WELCOME_STEP } from "./onboarding-steps";
+import { validateDexUrl } from "../../lib/dex-url";
+import { APP_URL_STEP, INTEGRATION_CHOICE_STEP, FUNDING_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP, TERMS_STEP, WEBSITES_STEP, WELCOME_STEP } from "./onboarding-steps";
 
 export function validateDepositAmount(value: string): string | undefined {
   const amount = value.trim();
@@ -77,6 +78,11 @@ export function getStepError(
   switch (step) {
     case WELCOME_STEP:
       break;
+    case INTEGRATION_CHOICE_STEP:
+      if (draft.integrationMode === null) return "Choose how you want to add Perps.";
+      break;
+    case APP_URL_STEP:
+      return validateDexUrl(draft.appUrl ?? "")?.replaceAll("DEX URL", "app URL");
     case NETWORKS_STEP:
       if (
         !draft.chainIds.length ||

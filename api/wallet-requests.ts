@@ -1,1 +1,1 @@
-export { walletRequestsHandler as default } from "../server/wallet-requests";
+export { walletRequestsHandler as default } from "../server/wallet-requests.js";

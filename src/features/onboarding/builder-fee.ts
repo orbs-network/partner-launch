@@ -4,7 +4,7 @@ export const DEFAULT_BUILDER_FEE_TENTHS_BPS = 0;
 
 export function validateBuilderFee(value: number | null | undefined): string | undefined {
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > MAX_BUILDER_FEE_TENTHS_BPS)
-    return "Choose an extra trading fee from 0% to 0.1%, in 0.001% steps.";
+    return "Choose additional fees from 0% to 0.1%, in 0.001% steps.";
 }
 
 /** Parse without rounding or clamping; reject precision finer than f supports. */

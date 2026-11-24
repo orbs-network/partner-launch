@@ -1,3 +1,4 @@
+import { parseSpotFeePercent } from "./spot-fee";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,21 +8,28 @@ import { MAX_DEX_URL_LENGTH } from "@/lib/dex-url";
 import { MAX_CONTACT_LENGTH, validateContact } from "@/lib/contact";
 import type { SpotDraft, SpotStep } from "./spot-setup";
 import { SpotSummary } from "./SpotSummary";
+import { IntegrationChoice } from "../components/IntegrationChoice";
+import { SpotSupportedChains } from "./SpotSupportedChains";
+import { SpotDepositSummary } from "./SpotDepositSummary";
 import { SpotWalletField } from "./SpotWalletField";
 
-export function SpotFields({ draft, error, appIdUnavailable, update, acceptPolicy, edit, fillWallet, onWalletBusyChange }: {
+export function SpotFields({ draft, error, appIdUnavailable, update, selectIntegration, acceptPolicy, edit, fillWallet, onWalletBusyChange }: {
   draft: SpotDraft;
   error?: string;
   appIdUnavailable?: boolean;
-  update: (field: "appName" | "contact" | "dexUrl" | "feesWallet", value: string) => void;
+  update: (field: "appName" | "contact" | "dexUrl" | "feesWallet" | "tradingFeePercent", value: string) => void;
+  selectIntegration: (mode: "ui" | "existing") => void;
   acceptPolicy: (value: boolean) => void;
   edit: (step: SpotStep, field?: string) => void;
   fillWallet: (address: string, scope: string) => void;
   onWalletBusyChange: (busy: boolean) => void;
 }) {
+  if (draft.step === "integration") return <IntegrationChoice product="Spot" selected={draft.integrationMode} onSelect={selectIntegration} error={error} disabled={false} />;
+  if (draft.step === "deposit") return <SpotDepositSummary />;
   if (draft.step === "review") return (
     <>
-      <SpotSummary appName={draft.appName} contact={draft.contact} dexUrl={draft.dexUrl} feesWallet={draft.feesWallet} onEdit={edit} />
+      <SpotSummary integrationMode={draft.integrationMode ?? undefined} appName={draft.appName} contact={draft.contact} dexUrl={draft.dexUrl} feesWallet={draft.feesWallet} tradingFeeTenthsBps={parseSpotFeePercent(draft.tradingFeePercent) ?? 0} onEdit={edit} />
+      <SpotSupportedChains />
       <Label htmlFor="spot-review" className={`mt-5 flex cursor-pointer items-start gap-3 rounded-[14px] border bg-(--control-bg) px-4 py-3.5 text-[13px] leading-[1.75] font-normal text-(--secondary-text) ${error ? "border-(--status-danger)" : "border-(--edge)"}`}>
         <Checkbox id="spot-review" name="policyAccepted" className="mt-[3px] size-[18px] shrink-0" checked={draft.policyAccepted} onCheckedChange={(value) => acceptPolicy(value === true)} aria-invalid={!!error} aria-describedby={error ? "spot-error" : undefined} />
         <span>I agree to the <a className="text-(--link) underline underline-offset-3" href="https://perps.orbs.network/terms" target="_blank" rel="noreferrer">Terms of Use</a> and have read and accept the <a className="text-(--link) underline underline-offset-3" href="https://perps.orbs.network/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span>

@@ -26,6 +26,9 @@ export const createOnboardingState: StateCreator<OnboardingState> = (
   ...initialDraft,
   revision: 0,
   ...createDexActions(set, get),
+  setIntegrationMode(integrationMode) {
+    if ((integrationMode === "ui" || integrationMode === "api") && get().integrationMode !== integrationMode) set({ integrationMode });
+  },
   setSetupSubmission(setupSubmission) {
     const current = get();
     if (current.termsAcceptedVersion === TERMS_VERSION && isSetupSubmission(setupSubmission, current)) {
@@ -82,6 +85,11 @@ export const createOnboardingState: StateCreator<OnboardingState> = (
         completed: false,
         revision: current.revision + 1,
       });
+  },
+  setAppUrl(appUrl) {
+    const current = get();
+    if (appUrl === (current.appUrl ?? "")) return;
+    set({ appUrl, termsAcceptedVersion: null, termsSignatures: {}, setupSubmission: undefined, setupRequestReceipt: undefined, completed: false, revision: current.revision + 1 });
   },
   setContact(contact) {
     // Contact is not signed setup data, so editing it keeps terms and proofs.

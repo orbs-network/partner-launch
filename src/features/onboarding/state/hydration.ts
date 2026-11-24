@@ -130,6 +130,7 @@ export function sanitizeDraft(value: unknown): SavedDraft {
   const draft: OnboardingDraft = {
     step: restoreStep(value),
     launchPath: value.launchPath === "creator" || value.launchPath === "api" ? value.launchPath : null,
+    integrationMode: value.integrationMode === "ui" || value.integrationMode === "api" ? value.integrationMode : value.integrationMode === null ? null : undefined,
     chainIds: normalizeChainIds(chainIds),
     chainId:
       isSupported(value.chainId) && chainIds.includes(value.chainId)
@@ -141,6 +142,7 @@ export function sanitizeDraft(value: unknown): SavedDraft {
         : legacy && typeof value.partnerName === "string"
           ? value.partnerName.slice(0, MAX_RETAINED_DISPLAY_NAME_LENGTH)
           : "",
+    appUrl: typeof value.appUrl === "string" ? value.appUrl.slice(0, 2049) : "",
     contact: typeof value.contact === "string" ? value.contact.slice(0, MAX_CONTACT_LENGTH + 1) : "",
     ownerWallets: restoreOwnerWallets(value.ownerWallets),
     partnerName:
@@ -226,9 +228,11 @@ export function selectDraft(state: OnboardingDraft): SavedDraft {
     step: state.step,
     stepId: getStepId(state.step),
     launchPath: state.launchPath,
+    integrationMode: state.integrationMode,
     chainIds: state.chainIds,
     chainId: state.chainId,
     displayName: state.displayName,
+    appUrl: state.appUrl ?? "",
     contact: state.contact ?? "",
     ownerWallets: state.ownerWallets ?? [],
     partnerName: state.partnerName,

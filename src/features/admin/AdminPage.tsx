@@ -15,7 +15,7 @@ export function AdminPage() {
   const pending = rows.filter(row => row.request.status === "pending");
   const approved = rows.filter(row => row.request.status === "approved");
   const visible = view === "pending" ? pending : approved;
-  return <AppLayout hideDisconnectedWallet><main id="main" className="mx-auto w-[min(900px,calc(100%-40px))] flex-1 py-10 max-[720px]:w-[calc(100%-24px)] max-[720px]:py-6">
+  return <AppLayout hideDisconnectedWallet homeDisabled={busy || signingIn}><main id="main" className="mx-auto w-[min(900px,calc(100%-40px))] flex-1 py-10 max-[720px]:w-[calc(100%-24px)] max-[720px]:py-6">
     <a href="/" onClick={navigateWithinApp} className="inline-flex min-h-11 items-center gap-2 text-sm text-(--link) hover:underline"><ArrowLeft size={16} aria-hidden="true" /> Back to setup</a>
     <h1 className="mt-4 text-3xl font-semibold tracking-tight">Review setup requests</h1>
     <p className="mt-2 text-sm text-(--muted)">Connect an authorized wallet and sign in to review requests. Signing does not move funds. Trading activation is checked separately.</p>

@@ -1,10 +1,12 @@
 import type { RefObject } from "react";
-import { Building2, ClipboardCheck, Globe2, Handshake, Network, Percent, Wallet } from "lucide-react";
+import { Building2, ClipboardCheck, PanelsTopLeft, Globe2, Handshake, Network, Percent, Wallet } from "lucide-react";
 import type { OnboardingStepId } from "../onboarding-steps";
 import { SetupLabel } from "./SetupLabel";
 
 const icons = {
   welcome: Handshake,
+  "integration-choice": PanelsTopLeft,
+  "app-url": Globe2,
   networks: Network,
   partner: Building2,
   websites: Globe2,

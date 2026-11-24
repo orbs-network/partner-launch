@@ -7,7 +7,7 @@ export async function submitPerps(draft: OnboardingDraft, ownerWallet: Address, 
   assertCurrent();
   const details = preparePerpsRequest({ appName: draft.displayName || draft.partnerName, partnerId: draft.partnerName,
     ownerWallet, chainIds: draft.chainIds, revenueWallet: draft.revenueWallet, builderFeeTenthsBps: draft.builderFeeTenthsBps,
-    launchPath: draft.launchPath, contact: draft.contact ?? "", policyAccepted: draft.termsAcceptedVersion === TERMS_VERSION, policyVersion: draft.termsAcceptedVersion });
+    appUrl: draft.appUrl ?? "", launchPath: draft.launchPath, integrationMode: draft.integrationMode ?? undefined, contact: draft.contact ?? "", policyAccepted: draft.termsAcceptedVersion === TERMS_VERSION, policyVersion: draft.termsAcceptedVersion });
   let response: Response;
   try {
     response = await fetch("/api/perps-submit", {

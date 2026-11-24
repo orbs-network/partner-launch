@@ -22,7 +22,6 @@ export function DepositStep({ disabled, onBack, onBusyChange, onComplete }: {
   const { openConnectModal } = useConnectModal();
   const needsWallet = !isConnected || !address;
   const controlsDisabled = disabled || submission.busy;
-  const progress = { connecting: "Connecting…", sending: "Submitting…" };
 
   return (
     <>
@@ -47,9 +46,11 @@ export function DepositStep({ disabled, onBack, onBusyChange, onComplete }: {
           disabled={controlsDisabled || (needsWallet && !openConnectModal)}
           aria-busy={submission.busy}
         >
-          {submission.busy ? <><LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> {submission.phase ? progress[submission.phase] : "Preparing…"}</> : needsWallet ? "Connect wallet to submit" : "Submit setup"}
+          {submission.busy && submission.phase === "sending" ? "Submit setup" : needsWallet ? "Connect wallet to submit" : "Submit setup"}
+          {submission.busy ? <LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : null}
         </Button>
       </div>
+      <span role="status" className="sr-only">{submission.busy ? submission.phase === "connecting" ? "Connecting your wallet." : "Submitting your setup." : ""}</span>
     </>
   );
 }

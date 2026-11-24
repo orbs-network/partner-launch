@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { WalletButton } from "./WalletButton";
 import { ThemeToggle } from "./ThemeToggle";
-import { navigateWithinApp } from "@/hooks/useSearchLocation";
 
 export interface AppLayoutProps {
   children: ReactNode;
@@ -22,7 +21,10 @@ export function AppLayout({ children, headerActions, notice, hideDisconnectedWal
           if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
           event.preventDefault();
           if (homeDisabled) return;
-          if (window.dispatchEvent(new Event("portal-home", { cancelable: true }))) navigateWithinApp(event);
+          if (window.dispatchEvent(new Event("portal-home", { cancelable: true }))) {
+            window.history.pushState({ portalHome: true, portalWelcome: true }, "", "/");
+            window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+          }
         }} className="inline-flex shrink-0 rounded-md text-(--text) transition-colors hover:text-(--link)" aria-label="Orbs home">
           <span aria-hidden="true" className="inline-flex items-center gap-[0.6em] text-xl leading-none font-normal tracking-wider uppercase">
             <img src="/orbs/orbs-mark.svg" alt="" width={42} height={41} className="size-[1.4em] shrink-0" />

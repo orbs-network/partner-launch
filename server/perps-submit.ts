@@ -27,6 +27,8 @@ export function perpsSubmitHandler(request: IncomingMessage, response: ServerRes
       const chain = chainById(setup.chainIds[0])!;
       return { submittedAt: new Date().toISOString(), text: [
         "New Perps setup request", `App name: ${setup.appName}`, `Partner ID: ${setup.partnerId}`,
+        ...(setup.integrationMode ? [`Integration: ${setup.integrationMode === "ui" ? "Complete trading app" : "API integration"}`] : []),
+        ...(setup.appUrl ? [`App URL: ${setup.appUrl}`] : []),
         `Network: ${chain.name} (${chain.id})`, `Owner wallet (unverified): ${setup.ownerWallet}`, `Revenue wallet: ${setup.revenueWallet}`,
         ...setup.ownerWallets.map(wallet => `Additional owner wallet (unverified): ${wallet}`),
         `Extra trading fee: ${formatBuilderFeePercent(setup.builderFeeTenthsBps)}%`,

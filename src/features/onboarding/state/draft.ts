@@ -13,9 +13,11 @@ export const emptyChainFunding: ChainFunding = {
 export const initialDraft: OnboardingDraft = {
   step: 0,
   launchPath: null,
+  integrationMode: null,
   chainIds: [],
   chainId: null,
   displayName: "",
+  appUrl: "",
   contact: "",
   ownerWallets: [],
   partnerName: "",

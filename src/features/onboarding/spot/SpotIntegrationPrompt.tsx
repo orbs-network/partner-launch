@@ -7,6 +7,7 @@ import { createSpotIntegrationPrompt, type SpotIntegrationDetails } from "./spot
 
 export function SpotIntegrationPrompt({ setup, disabled = false, compact = false }: { setup: SpotIntegrationDetails; disabled?: boolean; compact?: boolean }) {
   const prompt = createSpotIntegrationPrompt(setup);
+  const isApp = setup.integrationMode === "ui";
   const { copied, copyPrompt } = usePromptClipboard(prompt, "Prompt copied", "spot-integration-prompt-copy");
   const triggerRef = useRef<HTMLButtonElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -27,9 +28,9 @@ export function SpotIntegrationPrompt({ setup, disabled = false, compact = false
         </DialogClose>
         <div className="flex items-center gap-3 pr-10">
           <span className="flex size-[54px] shrink-0 items-center justify-center rounded-[19px] bg-(--primary-soft) text-(--link)" aria-hidden="true"><MessageSquareText size={24} /></span>
-          <DialogTitle ref={titleRef} tabIndex={-1} className="text-[23px] outline-none">Your Spot integration prompt</DialogTitle>
+          <DialogTitle ref={titleRef} tabIndex={-1} className="text-[23px] outline-none">{isApp ? "Build your Spot app" : "Your Spot integration prompt"}</DialogTitle>
         </div>
-        <DialogDescription>Copy this prompt for your team or a coding assistant. You can start integrating while your setup is reviewed.</DialogDescription>
+        <DialogDescription>{isApp ? "Share this prompt with a coding assistant to customize the official Spot app while your setup is reviewed." : "Copy this prompt for your team or a coding assistant. You can start integrating while your setup is reviewed."}</DialogDescription>
         <textarea aria-label="Spot integration prompt" value={prompt} readOnly spellCheck={false} rows={9}
           className="mt-5 block h-[clamp(160px,30dvh,260px)] w-full resize-y rounded-[14px] border border-(--panel-border) bg-(--control-bg) p-[15px] text-[13px] leading-[1.75] wrap-anywhere text-(--secondary-text) focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-(--focus-ring) max-[720px]:text-base max-[720px]:leading-[1.6]" />
         <Button type="button" className="mt-3 w-full" onClick={() => { void copyPrompt(); }}>

@@ -26,11 +26,12 @@ try {
     const incomplete = await client.query("SELECT count(*)::int AS count FROM portal_setup_requests WHERE partner_id IS NULL OR partner_id = ''");
     if (incomplete.rows[0].count) throw new Error("Some requests have no usable Partner ID; resolve them before migrating.");
     await client.query(await readFile(new URL("../migrations/007_unique_partner_id.sql", import.meta.url), "utf8"));
+    await client.query(await readFile(new URL("../migrations/008_product_partner_id.sql", import.meta.url), "utf8"));
     await client.query("COMMIT");
     console.log("Partner ID migration completed for Spot and Perps requests.");
   } catch (error) {
     await client.query("ROLLBACK");
-    if (error && typeof error === "object" && error.code === "23505") throw new Error("Existing requests have duplicate Partner IDs; resolve them before migrating.");
+    if (error && typeof error === "object" && error.code === "23505") throw new Error("Existing requests have duplicate Partner IDs within a product; resolve them before migrating.");
     throw error;
   } finally { client.release(); }
 } finally { await pool.end(); }

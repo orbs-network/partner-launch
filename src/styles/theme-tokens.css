@@ -4,6 +4,8 @@
   --surface: #fff;
   --soft: #f2f5fb;
   --edge: #e5eaf4;
+  --scrollbar-thumb: #aab6ce;
+  --scrollbar-thumb-hover: #8797b6;
   --text: #252b3d;
   --muted: #657089;
   --secondary-text: #535f79;
@@ -60,6 +62,8 @@
   --surface: #1b2230;
   --soft: #232d3e;
   --edge: #333e52;
+  --scrollbar-thumb: #71809b;
+  --scrollbar-thumb-hover: #9caaca;
   --text: #f2f5fc;
   --muted: #adb7cc;
   --primary: #5364eb;

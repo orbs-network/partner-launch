@@ -6,7 +6,7 @@ import { createFundingMessage, getFundingSigner, isFundingStepComplete } from ".
 import { getChainFunding, getPendingDeposit } from "./state/draft";
 import type { OnboardingState } from "./state/types";
 import { getStepError } from "./validation";
-import { FUNDING_STEP, onboardingSteps } from "./onboarding-steps";
+import { FUNDING_STEP, onboardingStepOrder } from "./onboarding-steps";
 
 export type ConfirmationPhase = "signature" | "verification";
 interface WalletSnapshot { status: string; address?: Address; chainId?: number }
@@ -39,8 +39,8 @@ export async function confirmFundingSetup(intent: FundingIntent, controls: {
   };
   assertCurrent();
   parseFixedFundingAmount(intent.amount);
-  const invalid = onboardingSteps.slice(0, FUNDING_STEP)
-    .map((_, step) => getStepError(step, snapshot)).find(Boolean);
+  const invalid = onboardingStepOrder.filter(step => step !== FUNDING_STEP)
+    .map(step => getStepError(step, snapshot)).find(Boolean);
   if (invalid) throw new Error(invalid);
   if (alreadyFunded) {
     if (getFundingSigner(snapshot)?.toLowerCase() !== signer.toLowerCase())

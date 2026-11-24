@@ -11,14 +11,15 @@ import { SetupActions } from "./components/completion/SetupActions";
 import { SetupLabel } from "./components/SetupLabel";
 
 
-export function SetupComplete({ onSend, onCreateNew, createNewButtonRef, busy = false }: {
+export function SetupComplete({ onSend, onCreateNew, onOpenSetups, createNewButtonRef, busy = false }: {
   onSend: () => void;
   onCreateNew: () => void;
+  onOpenSetups?: () => void;
   createNewButtonRef: RefObject<HTMLButtonElement | null>;
   busy?: boolean;
 }) {
   const { draft } = useSetupExport();
-  const creator = draft.launchPath !== "api";
+  const creator = draft.integrationMode ? draft.integrationMode === "ui" : draft.launchPath !== "api";
   const displayName = draft.displayName || draft.partnerName;
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
@@ -37,10 +38,10 @@ export function SetupComplete({ onSend, onCreateNew, createNewButtonRef, busy = 
       <BuildApp launchPath={draft.launchPath} draft={draft} />
       <ExpandableSection title="Setup details" id="completion-details" headingId="setup-details-title" contentId="completion-summary" disabled={busy}>
         <CompletionSummary
-          displayName={draft.displayName} partnerName={draft.partnerName} chainIds={draft.chainIds} revenueWallet={draft.revenueWallet} requestedCreatorShareBps={draft.requestedCreatorShareBps} builderFeeTenthsBps={draft.builderFeeTenthsBps} launchPath={draft.launchPath}
+          appUrl={draft.appUrl} displayName={draft.displayName} partnerName={draft.partnerName} chainIds={draft.chainIds} revenueWallet={draft.revenueWallet} requestedCreatorShareBps={draft.requestedCreatorShareBps} builderFeeTenthsBps={draft.builderFeeTenthsBps} launchPath={draft.launchPath}
         />
       </ExpandableSection>
-      <SetupActions onCreateNew={onCreateNew} createNewButtonRef={createNewButtonRef} busy={busy}>
+      <SetupActions onCreateNew={onCreateNew} onOpenSetups={onOpenSetups} createNewButtonRef={createNewButtonRef} busy={busy}>
         {creator ? <SharePreviewDialog displayName={displayName} partnerId={draft.partnerName} brandColor={draft.brandColor} logoDataUrl={draft.logoDataUrl} /> : null}
       </SetupActions>
     </Card>

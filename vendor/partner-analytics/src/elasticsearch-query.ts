@@ -1,11 +1,11 @@
-import { getPeriodBounds } from "./analytics-period";
+import { getPeriodBounds } from "./analytics-period.js";
 import type { AnalyticsPeriod } from "../lib/analytics-range";
 import {
   HISTORY_ACCOUNT_METRIC_FIELDS,
   LIVE_ACCOUNT_METRIC_FIELDS,
   PLATFORM_METRIC_FIELDS,
   type AccountMetricField,
-} from "./elasticsearch-fields";
+} from "./elasticsearch-fields.js";
 import type { AnalyticsScope } from "./types";
 
 function equalsFilter(field: string, value: string) {

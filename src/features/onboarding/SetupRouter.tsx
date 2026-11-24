@@ -3,7 +3,7 @@ import { PageSkeleton } from "@/components/ContentSkeleton";
 import { OnboardingLayout } from "./components/OnboardingLayout";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { useOnboardingStore } from "./store";
-import { PARTNER_STEP, WELCOME_STEP } from "./onboarding-steps";
+import { INTEGRATION_CHOICE_STEP, WELCOME_STEP } from "./onboarding-steps";
 
 const SpotSetup = lazy(() => import("./spot/SpotSetup").then((module) => ({ default: module.SpotSetup })));
 
@@ -19,7 +19,7 @@ export function SetupRouter(props: {
 }) {
   const [spot, setSpot] = useState(spotSelected);
   useEffect(() => {
-    const restore = () => { if (window.location.pathname !== "/setups") setSpot(spotSelected()); };
+    const restore = (event: PopStateEvent) => { if (window.location.pathname !== "/setups" && !event.state?.portalWelcome) setSpot(spotSelected()); };
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
@@ -59,7 +59,7 @@ function PerpsEntry(props: Parameters<typeof OnboardingWizard>[0]) {
     const current = useOnboardingStore.getState();
     if (new URL(window.location.href).searchParams.get("setup") === "perps" && current.step === WELCOME_STEP && !current.completed) {
       if (!current.launchPath) current.setLaunchPath("creator");
-      useOnboardingStore.getState().setStep(PARTNER_STEP);
+      useOnboardingStore.getState().setStep(INTEGRATION_CHOICE_STEP);
     } else {
       queueMicrotask(() => { if (active) setReady(true); });
     }

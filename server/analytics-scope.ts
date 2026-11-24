@@ -1,7 +1,7 @@
 import type { PartnerOperationalConfig } from "../vendor/partner-analytics/lib/partner-scope";
-import { analyticsScope } from "../src/config/analytics";
+import { analyticsScope } from "../src/config/analytics.js";
 
-import { registryLanes } from "./partner-registry";
+import { registryLanes } from "./partner-registry.js";
 
 export class AnalyticsScopeError extends Error {
   constructor(message: string, readonly status: number) { super(message); }

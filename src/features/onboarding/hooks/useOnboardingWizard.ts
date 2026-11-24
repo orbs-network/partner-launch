@@ -16,6 +16,7 @@ import { selectablePerpsChains } from "@/config/chains";
 import { fetchPartnerRegistryStatus } from "../registry-status";
 import { useMountedRef } from "@/hooks/useMountedRef";
 import {
+  INTEGRATION_CHOICE_STEP,
   FUNDING_STEP,
   NETWORKS_STEP,
   PARTNER_STEP,
@@ -58,7 +59,7 @@ export function useOnboardingWizard(externalBusy = false) {
       ? "Get started"
       : activeStep.id === "funding"
         ? "Submit setup"
-        : returning ? "Save changes" : "Next step";
+        : returning ? "Save changes" : activeStep.id === "app-url" && !(draft.appUrl ?? "").trim() ? "Skip for now" : "Next step";
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStepRef = useRef(draft.step);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
@@ -120,7 +121,7 @@ export function useOnboardingWizard(externalBusy = false) {
   function choosePath(path: "creator" | null) {
     if (busy) return;
     draft.setLaunchPath(path);
-    navigate(path === null ? WELCOME_STEP : PARTNER_STEP);
+    navigate(path === null ? WELCOME_STEP : INTEGRATION_CHOICE_STEP);
   }
   function finish() {
     const currentDraft = useOnboardingStore.getState();

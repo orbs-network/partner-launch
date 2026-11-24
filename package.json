@@ -14,7 +14,7 @@
     "test:deploy": "node --test tests/deploy.test.mjs",
     "lint": "eslint .",
     "typecheck": "tsc -b --pretty false",
-    "test": "npm run test:deploy && node --test --test-concurrency=1 tests/app-identity.test.mjs tests/admin-mock.test.mjs tests/request-database.test.mjs tests/partner-availability.test.mjs"
+    "test": "npm run test:deploy && node --test --test-concurrency=1 tests/app-identity.test.mjs tests/admin-mock.test.mjs tests/request-database.test.mjs tests/partner-availability.test.mjs tests/server-module-loading.test.mjs"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.10",

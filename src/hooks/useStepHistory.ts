@@ -36,8 +36,8 @@ export function useStepHistory<T extends string | number>(flow: string, step: T 
   });
   useEffect(() => {
     stepRef.current = step;
-    // A setup stays mounted behind My setups; it must not rewrite that page's URL or history.
-    if (window.location.pathname === "/setups") return;
+    // A setup stays mounted behind the dashboard or welcome view without rewriting their history.
+    if (window.location.pathname === "/setups" || window.history.state?.portalWelcome) return;
     if (step === null) {
       if (urlForStepRef.current) completionEntry.current = { url: window.location.href, state: window.history.state };
       return;

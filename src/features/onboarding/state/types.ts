@@ -34,11 +34,15 @@ export interface OnboardingDraft {
   depositStepConfirmations?: DepositStepConfirmation[];
   step: number;
   launchPath: "creator" | "api" | null;
+  /** Prompt preference; undefined on historical setups. */
+  integrationMode?: "ui" | "api" | null;
   chainIds: number[];
   /** The network currently being viewed in the funding step. */
   chainId: number | null;
   /** Human-facing DEX name; existing saved account IDs remain independent. */
   displayName: string;
+  /** Optional app URL, separate from historical signed origins. */
+  appUrl?: string;
   /** Optional email/Telegram for the team. Not part of the signed setup hash, exports or Pending requests. */
   contact?: string;
   ownerWallets?: string[];
@@ -71,6 +75,7 @@ export interface OnboardingActions {
   setSetupRequestReceipt: (receipt: SavedSetupRequestReceipt) => void;
   rememberDepositStepConfirmation: (confirmation: DepositStepConfirmation) => void;
   revision: number;
+  setIntegrationMode: (mode: "ui" | "api") => void;
   setLaunchPath: (path: OnboardingDraft["launchPath"]) => void;
   toggleChain: (chainId: number) => void;
   setChainIds: (chainIds: number[]) => void;
@@ -79,6 +84,7 @@ export interface OnboardingActions {
   setDisplayName: (name: string) => void;
   setDexName: (name: string) => void;
   setContact: (contact: string) => void;
+  setAppUrl: (url: string) => void;
   setBranding: (branding: { brandColor?: string; logoDataUrl?: string }) => void;
   setStep: (step: number) => void;
   setPartnerName: (partnerName: string) => void;

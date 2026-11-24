@@ -1,5 +1,5 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { registryLanes } from "./partner-registry";
+import { registryLanes } from "./partner-registry.js";
 import { partnerIdExists } from "./request-repository.js";
 import { requestDatabase } from "./request-database.js";
 
@@ -38,7 +38,7 @@ export async function partnerRegistryStatusHandler(request: IncomingMessage, res
   }
   try {
     const result = await registryPartnerStatus(partnerId);
-    if (url.searchParams.get("availability") === "1") result.exists ||= await partnerIdExists(requestDatabase(), partnerId);
+    if (url.searchParams.get("availability") === "1") result.exists ||= await partnerIdExists(requestDatabase(), partnerId, "perps");
     response.writeHead(200).end(JSON.stringify(result));
   } catch {
     response.writeHead(502).end(JSON.stringify({ error: "Partner registry is temporarily unavailable." }));

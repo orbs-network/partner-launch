@@ -1,3 +1,4 @@
+import { formatSpotFeePercent } from "../onboarding/spot/spot-fee";
 import { Check, Clock3, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { chainById } from "@/config/chains";
@@ -16,9 +17,9 @@ export function AdminRequestCard({ request, approvedAt, onApprove, busy, approvi
   partnerId?: string;
 }) {
   const rows = request.kind === "spot"
-    ? [...(partnerId ? [{ label: "Partner ID", value: partnerId }] : []), { label: "Fees wallet", value: request.feesWallet }, ...(request.dexUrl ? [{ label: "DEX URL", value: request.dexUrl }] : [])]
+    ? [...(partnerId ? [{ label: "Partner ID", value: partnerId }] : []), { label: "Fees wallet", value: request.feesWallet }, ...(request.dexUrl ? [{ label: "DEX URL", value: request.dexUrl }] : []), ...(request.tradingFeeTenthsBps === undefined ? [] : [{ label: "Trading fee", value: `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` }])]
     : [{ label: "Partner ID", value: request.partnerId }, { label: "Network", value: request.chainIds.map(id => chainById(id)?.name ?? `Chain ${id}`).join(", ") },
-      { label: "Revenue wallet", value: request.revenueWallet }, ...(request.extraFeePercent === undefined ? [] : [{ label: "Extra trading fee", value: `${request.extraFeePercent}%` }])];
+      { label: "Revenue wallet", value: request.revenueWallet }, ...(request.appUrl ? [{ label: "App URL", value: request.appUrl }] : []), ...(request.extraFeePercent === undefined ? [] : [{ label: "Additional fees", value: `${request.extraFeePercent}%` }])];
   return (
     <article className="rounded-2xl border border-(--edge) bg-(--surface) p-5 max-[480px]:p-4" aria-label={`${request.appName} ${request.kind} request`}>
       <div className="flex flex-wrap items-start justify-between gap-3">

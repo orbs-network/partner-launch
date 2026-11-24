@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "node:http";
 import { verifyMessage } from "viem";
-import { createLoginMessage } from "../src/features/login/login-message";
+import { createLoginMessage } from "../src/features/login/login-message.js";
 import type { LoginSession } from "../src/features/login/login-session";
 
 function isRecord(value: unknown): value is Record<string, unknown> {

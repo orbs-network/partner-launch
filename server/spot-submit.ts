@@ -1,3 +1,4 @@
+import { formatSpotFeePercent } from "../src/features/onboarding/spot/spot-fee.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { PoolClient } from "pg";
 import { emptySpotDraft, prepareSpotSetup, spotStepError } from "../src/features/onboarding/spot/spot-setup.js";
@@ -14,17 +15,18 @@ import { setupNotificationHandler } from "./setup-notification.js";
 
 function prepareSpotNotification(body: unknown, cancelling: boolean) {
   if (!isRecord(body) || typeof body.appName !== "string" || typeof body.feesWallet !== "string" ||
-    (body.dexUrl !== undefined && typeof body.dexUrl !== "string") || (body.contact !== undefined && typeof body.contact !== "string") ||
+    (body.integrationMode !== undefined && body.integrationMode !== "ui" && body.integrationMode !== "existing") ||
+    (body.tradingFeePercent !== undefined && typeof body.tradingFeePercent !== "string") || (body.dexUrl !== undefined && typeof body.dexUrl !== "string") || (body.contact !== undefined && typeof body.contact !== "string") ||
     body.feesWallet.length > 100 || (!cancelling && (body.policyAccepted !== true || body.policyVersion !== TERMS_VERSION))) {
     throw new Error(cancelling ? "Check the Spot request details." : "Check your Spot details and accept the current policy.");
   }
   if (!cancelling && (typeof body.ownerWallet !== "string" || validateRevenueWallet(body.ownerWallet) ||
     typeof body.requestId !== "string" || typeof body.accessToken !== "string" || validateOwnerWallets(body.ownerWallets ?? []))) throw new Error("Check your owner wallets and try again.");
   const ownerWallets = !cancelling ? normalizeOwnerWallets((body.ownerWallets ?? []) as string[]) : [];
-  let setup: { appName: string; feesWallet: string; dexUrl?: string; contact?: string };
+  let setup: { appName: string; feesWallet: string; dexUrl?: string; contact?: string; integrationMode?: "ui" | "existing"; tradingFeeTenthsBps?: number };
   let submittedAt: string;
   try {
-    const draft = { ...emptySpotDraft(), appName: body.appName, contact: typeof body.contact === "string" ? body.contact : "", dexUrl: typeof body.dexUrl === "string" ? body.dexUrl : "", feesWallet: body.feesWallet };
+    const draft = { ...emptySpotDraft(), integrationMode: body.integrationMode === "ui" ? "ui" as const : "existing" as const, appName: body.appName, contact: typeof body.contact === "string" ? body.contact : "", dexUrl: typeof body.dexUrl === "string" ? body.dexUrl : "", feesWallet: body.feesWallet, tradingFeePercent: typeof body.tradingFeePercent === "string" ? body.tradingFeePercent : "0" };
     if (cancelling) {
       // Cancelling existing details does not accept a new policy or prove ownership.
       // Pending requests never keep a contact, so cancellations carry none.
@@ -44,9 +46,9 @@ function prepareSpotNotification(body: unknown, cancelling: boolean) {
   return { submittedAt, text: [cancelling ? "Spot setup cancellation request" : "New Spot setup request", `App name: ${setup.appName}`,
     `Partner ID: ${generateSpotAppId(setup.appName)}`,
     ...(setup.dexUrl ? [`DEX URL: ${setup.dexUrl}`] : []), `Fees wallet: ${setup.feesWallet}`,
-    ...(!cancelling ? [`Owner wallet (unverified): ${body.ownerWallet}`, ...ownerWallets.map(wallet => `Additional owner wallet (unverified): ${wallet}`), `Contact: ${setup.contact ?? "Not provided"}`] : [])].join("\n"),
+    ...(!cancelling ? [`Integration: ${setup.integrationMode === "ui" ? "Complete trading app" : "Existing app"}`, `Trading fee: ${formatSpotFeePercent(setup.tradingFeeTenthsBps!)}%`, `Owner wallet (unverified): ${body.ownerWallet}`, ...ownerWallets.map(wallet => `Additional owner wallet (unverified): ${wallet}`), `Contact: ${setup.contact ?? "Not provided"}`] : [])].join("\n"),
     ...(!cancelling ? { record: { id: body.requestId as string, accessToken: body.accessToken as string, product: "spot" as const,
-      ownerWallet: body.ownerWallet as string, ownerWallets, partnerId: generateSpotAppId(setup.appName), details: { appName: setup.appName, feesWallet: setup.feesWallet, ownerWallets,
+      ownerWallet: body.ownerWallet as string, ownerWallets, partnerId: generateSpotAppId(setup.appName), details: { appName: setup.appName, feesWallet: setup.feesWallet, tradingFeeTenthsBps: setup.tradingFeeTenthsBps, integrationMode: setup.integrationMode, ownerWallets,
         // Contact goes only to the team's Telegram message; it is never stored.
         ...(setup.dexUrl ? { dexUrl: setup.dexUrl } : {}) } } } : {}) };
 }

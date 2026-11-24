@@ -17,7 +17,8 @@ import { toast } from "sonner";
 import { getPendingDeposit, useOnboardingStore } from "../features/onboarding/store";
 import { safeStorage } from "../features/onboarding/state/storage";
 import { SPOT_DRAFT_KEY } from "../features/onboarding/spot/spot-setup";
-import { WELCOME_STEP } from "../features/onboarding/onboarding-steps";
+import { PARTNER_STEP, WELCOME_STEP } from "../features/onboarding/onboarding-steps";
+import { HomePage } from "../features/onboarding/HomePage";
 
 // The workspace is only reachable after wallet login; keep it out of the first download.
 const AuthenticatedWorkspace = lazy(() => import("./AuthenticatedWorkspace").then((m) => ({ default: m.AuthenticatedWorkspace })));
@@ -36,23 +37,13 @@ function PortalApp() {
   const [view, setView] = useState<"setup" | "manage">("setup");
   const [requestCancellationBusy, setRequestCancellationBusy] = useState(false);
   const [setupInstance, setSetupInstance] = useState(0);
+  const [showHome, setShowHome] = useState(() => !!window.history.state?.portalWelcome);
   const setupsView = usePathLocation() === "/setups";
   const openSetups = useCallback(() => {
     if (window.location.pathname === "/setups") return;
-    window.history.pushState({ fromSetup: true }, "", "/setups");
+    window.history.pushState(null, "", "/setups");
     window.dispatchEvent(new PopStateEvent("popstate"));
   }, []);
-  // Return to the setup entry My setups was opened from, or else reopen the unfinished draft.
-  const backToSetup = () => {
-    if (requestCancellationBusy) return;
-    if ((window.history.state as { fromSetup?: boolean } | null)?.fromSetup) { window.history.back(); return; }
-    const url = new URL("/", window.location.origin);
-    const perps = useOnboardingStore.getState();
-    if (safeStorage.getItem(SPOT_DRAFT_KEY)) url.searchParams.set("setup", "spot");
-    else if (perps.step !== WELCOME_STEP && !perps.completed) url.searchParams.set("setup", "perps");
-    window.history.pushState({ portalHome: true }, "", url);
-    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
-  };
   const auth = useDemoLogin(() => { if (window.location.pathname !== "/setups") setView("manage"); });
   const createSetup = () => {
     if (requestCancellationBusy || auth.busy || auth.walletConnecting) return;
@@ -62,6 +53,7 @@ function PortalApp() {
     }
     safeStorage.removeItem(SPOT_DRAFT_KEY);
     useOnboardingStore.getState().reset();
+    setShowHome(false);
     setSetupInstance(current => current + 1);
     setView("setup");
     window.history.pushState({ portalHome: true }, "", "/");
@@ -71,28 +63,51 @@ function PortalApp() {
     const goHome = (event: Event) => {
       event.preventDefault();
       if (requestCancellationBusy || auth.busy || auth.walletConnecting) return;
-      if (window.location.pathname === "/" && !window.location.search && view === "setup") return;
       setView("setup");
-      window.history.pushState({ portalHome: true }, "", "/");
+      setShowHome(true);
+      window.history.pushState({ portalHome: true, portalWelcome: true }, "", "/");
       window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
     };
     window.addEventListener("portal-home", goHome);
     return () => window.removeEventListener("portal-home", goHome);
   }, [requestCancellationBusy, auth.busy, auth.walletConnecting, view]);
+  useEffect(() => {
+    const restore = (event: PopStateEvent) => {
+      if (event.state?.portalWelcome) setShowHome(true);
+      else if (window.location.pathname !== "/setups" && !event.state?.portalHome) setShowHome(false);
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, []);
+  const chooseProduct = (product: "spot" | "perps") => {
+    if (requestCancellationBusy || auth.busy || auth.walletConnecting) return;
+    if (product === "perps") {
+      const draft = useOnboardingStore.getState();
+      if (draft.step === WELCOME_STEP && !draft.completed) {
+        if (!draft.launchPath) draft.setLaunchPath("creator");
+        useOnboardingStore.getState().setStep(PARTNER_STEP);
+      }
+    }
+    setShowHome(false);
+    window.history.pushState({ portalHome: true }, "", `/?setup=${product}`);
+    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+  };
   const requestInFlightRef = useRef(false);
   const onRequestsConnected = useCallback(() => { requestInFlightRef.current = false; openSetups(); }, [openSetups]);
   const onRequestsConnectError = useCallback((message: string) => { toast.error(message); }, []);
   const { requestLogin: requestConnection } = useLoginConnection({ operationInFlightRef: requestInFlightRef, onLogin: onRequestsConnected, onError: onRequestsConnectError });
   const openRequests = () => { if (requestInFlightRef.current) return; requestInFlightRef.current = true; requestConnection(); };
   const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} />;
-  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} onBackToSetup={backToSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
+  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
 }
 
-function PortalContent({ auth, view, setView, setupInstance, onPendingRequests, headerTrigger, setupsPage }: {
+function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseProduct, onPendingRequests, headerTrigger, setupsPage }: {
   auth: DemoLogin;
   view: "setup" | "manage";
   setView: (view: "setup" | "manage") => void;
   setupInstance: number;
+  showHome: boolean;
+  onChooseProduct: (product: "spot" | "perps") => void;
   onPendingRequests: () => void;
   headerTrigger: ReactNode;
   setupsPage: ReactNode;
@@ -146,7 +161,8 @@ function PortalContent({ auth, view, setView, setupInstance, onPendingRequests, 
     </AppLayout>
   );
   return <>
-    <div hidden={!!setupsPage && !auth.restoring}>{content}</div>
+    <div hidden={(!!setupsPage || showHome) && !auth.restoring}>{content}</div>
     {setupsPage && !auth.restoring ? <AppLayout headerActions={header()} notice={notice}>{setupsPage}</AppLayout> : null}
+    {showHome && !auth.restoring ? <AppLayout headerActions={header()} notice={notice}><HomePage onSpot={() => onChooseProduct("spot")} onPerps={() => onChooseProduct("perps")} /></AppLayout> : null}
   </>;
 }

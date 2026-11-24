@@ -2,14 +2,14 @@ import {
   type AnalyticsPoint,
   type AnalyticsScope,
   type PartnerAnalyticsStats,
-} from "./types";
+} from "./types.js";
 import type { AnalyticsPeriod } from "../lib/analytics-range";
 import {
   ACCOUNT_METRIC_FIELDS,
   type AccountMetricField,
-} from "./elasticsearch-fields";
+} from "./elasticsearch-fields.js";
 
-export { buildStatsQuery } from "./elasticsearch-query";
+export { buildStatsQuery } from "./elasticsearch-query.js";
 
 const AMOUNT_SCALE = 1_000_000;
 

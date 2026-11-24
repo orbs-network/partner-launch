@@ -1,3 +1,5 @@
+import { AppUrlStep } from "../steps/AppUrlStep";
+import { IntegrationChoiceStep } from "../steps/IntegrationChoiceStep";
 import { ChainStep } from "../steps/ChainStep";
 import { PartnerStep } from "../steps/PartnerStep";
 import { RevenueStep } from "../steps/RevenueStep";
@@ -38,6 +40,10 @@ export function WizardStep({
   switch (onboardingSteps[step]?.id) {
     case "welcome":
       return <WelcomeStep onCreator={onCreator} onSpot={onSpot} />;
+    case "app-url":
+      return <AppUrlStep error={stepError} disabled={busy} />;
+    case "integration-choice":
+      return <IntegrationChoiceStep error={stepError} disabled={busy} />;
     case "networks":
       return <ChainStep error={stepError} disabled={busy} onSelect={onSelectNetwork} />;
     case "partner":

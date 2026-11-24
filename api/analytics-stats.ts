@@ -1,1 +1,1 @@
-export { analyticsStatsHandler as default } from "../server/analytics";
+export { analyticsStatsHandler as default } from "../server/analytics.js";
