@@ -4,6 +4,7 @@ import { useState, type CSSProperties } from "react";
 import { Wallet } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldHelp } from "@/components/FieldHelp";
 import { useOnboardingStore } from "../store";
 import { REVENUE_STEP } from "../onboarding-steps";
 import { formatBuilderFeePercent, parseBuilderFeePercent, validateBuilderFee } from "../builder-fee";
@@ -38,7 +39,7 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
     <div className="grid gap-6">
       <section aria-labelledby="revenue-wallet-label">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <Label id="revenue-wallet-label" htmlFor="revenue-wallet" className="text-sm font-semibold text-(--text)">Revenue wallet</Label>
+          <div className="flex items-center gap-1"><Label id="revenue-wallet-label" htmlFor="revenue-wallet" className="text-sm font-semibold text-(--text)">Revenue wallet</Label><FieldHelp label="Revenue wallet">Enter the EVM wallet address where you want to receive Perps earnings. The team confirms it during activation.</FieldHelp></div>
           <UseMyWalletButton value={revenueWallet} busy={wallet.busy} disabled={controlsDisabled} onClick={wallet.useMyWallet} />
         </div>
         <div className="relative">
@@ -63,13 +64,12 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
           />
         </div>
         <FieldError id="revenue-wallet-error" message={walletError} />
-        <p id="revenue-wallet-hint" className="mt-2.5 text-xs leading-[1.7] text-(--muted)">Where you want to receive earnings. Confirmed at activation.</p>
+        <p id="revenue-wallet-hint" className="sr-only">Where you want to receive earnings. Confirmed at activation.</p>
       </section>
       <section className="rounded-3xl border border-(--edge) bg-(--control-bg) p-5 max-[480px]:p-4" aria-labelledby="builder-fee-label">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <Label id="builder-fee-label" htmlFor="builder-fee-percent" className="text-sm font-medium">Extra trading fee</Label>
-            <p className="mt-1.5 text-[11px] leading-relaxed text-(--muted)">Added to each filled trade</p>
+            <div className="flex items-center gap-1"><Label id="builder-fee-label" htmlFor="builder-fee-percent" className="text-sm font-medium">Extra trading fee</Label><FieldHelp label="Extra trading fee">Choose a fee from 0% to 0.1%, in 0.001% increments. This requests an extra fee on each filled trade, on top of the protocol fee, after activation.</FieldHelp></div>
           </div>
           <div className="relative w-[124px] shrink-0">
             <Input id="builder-fee-percent" name="builderFeePercent" inputMode="decimal" type="text" autoComplete="off" aria-label="Extra trading fee percentage" value={feeInput} maxLength={8} disabled={controlsDisabled} aria-invalid={!!feeError} aria-describedby={feeError ? "builder-fee-hint builder-fee-error" : "builder-fee-hint"} className="h-14 bg-(--surface) pl-3 pr-8 text-right text-[22px] font-semibold tracking-tight tabular-nums" onChange={event => { setFeeInput(event.target.value); setFee(parseBuilderFeePercent(event.target.value)); }} onBlur={() => { if (!validateBuilderFee(fee)) setFeeInput(formatBuilderFeePercent(fee)); }} />
@@ -81,7 +81,7 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
         <div className="flex justify-between text-[11px] text-(--muted)" aria-hidden="true"><span>0%</span><span>0.1%</span></div>
         <FieldError id="builder-fee-error" message={feeError} />
         {feeNeedsReset && <Button type="button" variant="ghost" className="mt-2" disabled={controlsDisabled} onClick={restoreDefaultFee}>Use default fee</Button>}
-        <p id="builder-fee-hint" className="mt-3 text-[11px] leading-relaxed text-(--muted)">Added on top of the protocol fee after activation.</p>
+        <p id="builder-fee-hint" className="sr-only">Added on top of the protocol fee after activation.</p>
       </section>
     </div>
   );

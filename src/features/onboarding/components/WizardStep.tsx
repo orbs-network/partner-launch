@@ -10,10 +10,11 @@ export function WizardStep({
   step,
   busy,
   stepError = "",
+  partnerCheckUnavailable = false,
   onBack,
   onNext,
   onBusyChange,
-  onNavigate,
+  onEdit,
   onSelectNetwork,
   onFundingConfirmed,
   onCreator,
@@ -23,10 +24,12 @@ export function WizardStep({
   busy: boolean;
   /** Validation message for this step, set only after the user pressed Next. */
   stepError?: string;
+  partnerCheckUnavailable?: boolean;
   onBack?: () => void;
   onNext: () => void;
   onBusyChange: (busy: boolean) => void;
-  onNavigate: (step: number) => void;
+  /** Review's Edit links: open a step that returns to Review on Next. */
+  onEdit: (step: number, field?: string) => void;
   onSelectNetwork: (chainId: number) => void;
   onFundingConfirmed: () => void;
   onCreator: () => void;
@@ -38,11 +41,11 @@ export function WizardStep({
     case "networks":
       return <ChainStep error={stepError} disabled={busy} onSelect={onSelectNetwork} />;
     case "partner":
-      return <PartnerStep error={stepError} />;
+      return <PartnerStep error={stepError} unavailable={partnerCheckUnavailable} disabled={busy} />;
     case "revenue":
       return <RevenueStep error={stepError} disabled={busy} onBusyChange={onBusyChange} />;
     case "terms":
-      return <ReviewStep error={stepError} onEdit={onNavigate} disabled={busy} onBack={onBack} onContinue={onNext} />;
+      return <ReviewStep error={stepError} onEdit={onEdit} disabled={busy} onBack={onBack} onContinue={onNext} />;
     case "funding":
       return <DepositStep disabled={busy} onBack={onBack} onBusyChange={onBusyChange} onComplete={onFundingConfirmed} />;
     default:

@@ -11,7 +11,7 @@ export function WizardProgress({
   onNavigate: (step: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-6 px-8 pt-[23px] max-[720px]:gap-3.5 max-[720px]:px-[21px] max-[720px]:pt-[10px] max-[370px]:gap-2.5 max-[370px]:px-[17px]">
+    <div className="flex flex-wrap items-center justify-between gap-x-6 px-8 pt-[23px] max-[720px]:gap-x-3.5 max-[720px]:px-[21px] max-[720px]:pt-[10px] max-[370px]:gap-x-1 max-[370px]:px-2">
       <nav className="min-w-0" aria-label="Setup steps">
         <ol className="m-0 flex list-none gap-1.5 p-0 max-[720px]:gap-[3px] max-[370px]:gap-[2px]">
           {steps.map((item, index) => (
@@ -21,7 +21,7 @@ export function WizardProgress({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-11 min-h-0 w-[33px] rounded-[9px] border-0 bg-transparent p-0 hover:enabled:bg-transparent [&:hover:enabled>span]:bg-(--progress-hover) max-[720px]:h-11 max-[720px]:min-h-0 max-[720px]:w-[30px] max-[720px]:p-0 max-[370px]:w-[27px]"
+                className="size-11 min-h-0 rounded-[9px] border-0 bg-transparent p-0 hover:enabled:bg-transparent max-[720px]:size-11 [&:hover:enabled>span]:bg-(--progress-hover)"
                 type="button"
                 aria-label={item.name}
                 title={item.name}

@@ -80,11 +80,3 @@
     color: var(--selection-text, #25339e);
   }
 }
-
-/* Reserve the desktop reminder's row when it cannot fit beside the main card.
-   Keep the space while its dialog is open so the background does not jump. */
-@media (min-width: 768px) and (max-width: 1440px) {
-  html:has([data-pending-requests-space="true"]) #main {
-    padding-block-start: 100px;
-  }
-}

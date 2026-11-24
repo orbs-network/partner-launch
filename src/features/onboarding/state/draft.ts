@@ -16,6 +16,8 @@ export const initialDraft: OnboardingDraft = {
   chainIds: [],
   chainId: null,
   displayName: "",
+  contact: "",
+  ownerWallets: [],
   partnerName: "",
   brandColor: DEFAULT_BRAND_COLOR,
   logoDataUrl: "",

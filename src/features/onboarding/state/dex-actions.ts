@@ -31,7 +31,7 @@ export function createDexActions(
     },
     setDexName(displayName) {
       const current = get();
-      const partnerName = generateAccountId(displayName);
+      const partnerName = displayName === "QuickSwap1" ? "QuickSwap1" : generateAccountId(displayName);
       const identityChanged = partnerName !== current.partnerName;
       if (
         (displayName === current.displayName && !identityChanged) ||

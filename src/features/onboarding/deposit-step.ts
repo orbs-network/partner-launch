@@ -1,5 +1,5 @@
 import { chainById } from "../../config/chains";
-import { MAX_RETAINED_DISPLAY_NAME_LENGTH } from "./dex-identity";
+import { isPartnerIdFormat, MAX_RETAINED_DISPLAY_NAME_LENGTH } from "./dex-identity";
 import { createDepositAndSetupMessageFromDetails, isSetupSubmission, isSetupSubmissionProof, type SetupSubmission } from "./setup-submission";
 import type { OnboardingDraft } from "./state/types";
 
@@ -11,18 +11,19 @@ export interface DepositStepConfirmation {
   submission: SetupSubmission;
 }
 
-/** Reconstruct exact original v2 bytes; signature recovery remains the caller's responsibility. */
+/** Reconstruct exact original v2 or v3 bytes; signature recovery remains the caller's responsibility. */
 export function isDepositStepConfirmation(value: unknown): value is DepositStepConfirmation {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const item = value as Record<string, unknown>;
   if (typeof item.partnerId !== "string" || item.partnerId.length < 3 || item.partnerId.length > 40 ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.partnerId) ||
+    !isPartnerIdFormat(item.partnerId) ||
     typeof item.chainId !== "number" || !Number.isSafeInteger(item.chainId) || !chainById(item.chainId) ||
     typeof item.projectName !== "string" || !item.projectName || item.projectName.length > MAX_RETAINED_DISPLAY_NAME_LENGTH ||
     !isSetupSubmissionProof(item.submission) || item.submission.includesDepositConfirmation !== true) return false;
   return item.submission.message === createDepositAndSetupMessageFromDetails({
     partnerId: item.partnerId, chainId: item.chainId, projectName: item.projectName, setupHash: item.submission.setupHash,
-  }, item.submission.signedAt);
+  }, item.submission.signedAt, item.submission.collateral) &&
+    (!item.submission.collateral || item.submission.collateral.chainId === item.chainId);
 }
 
 export function depositStepConfirmation(draft: OnboardingDraft): DepositStepConfirmation | undefined {
@@ -46,7 +47,7 @@ export function sanitizeDepositStepConfirmations(value: unknown): DepositStepCon
     const proof = candidate.submission;
     byScope.set(key, {
       partnerId: candidate.partnerId, chainId: candidate.chainId, projectName: candidate.projectName,
-      submission: { address: proof.address, signature: proof.signature, message: proof.message, signedAt: proof.signedAt, setupHash: proof.setupHash, termsVersion: proof.termsVersion, includesDepositConfirmation: true },
+      submission: { address: proof.address, signature: proof.signature, message: proof.message, signedAt: proof.signedAt, setupHash: proof.setupHash, termsVersion: proof.termsVersion, includesDepositConfirmation: true, ...(proof.collateral ? { collateral: proof.collateral } : {}) },
     });
   }
   return byScope.size ? [...byScope.values()] : undefined;

@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useMountedRef } from "@/hooks/useMountedRef";
 import type { WorkspaceContext } from "@/types/workspace";
-import { supportedChains } from "../../../config/chains";
+import { selectablePerpsChains } from "../../../config/chains";
 import {
   normalizePartnerProfile,
   validatePartnerProfile,
@@ -89,7 +89,7 @@ export function usePartnerSettings(address: `0x${string}`, workspace?: Workspace
     saved: state.saved,
     saveError: state.saveError,
     toggleChain(id: number) {
-      if (!supportedChains.some((chain) => chain.id === id)) return;
+      if (!selectablePerpsChains.some((chain) => chain.id === id)) return;
       edit({
         ...state.profile,
         chainIds: [id],

@@ -1,13 +1,15 @@
+import { trackStory } from "@/lib/telemetry/analytics";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { useAccount, useConfig, useSignMessage } from "wagmi";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAccount, useConfig } from "wagmi";
 import { getAccount } from "wagmi/actions";
 import { toast } from "sonner";
-import { verifyMessage } from "viem";
+import { chainById } from "@/config/chains";
+import { perpsStoryDetails } from "../story-details";
 import { useOnboardingStore } from "../store";
-import { isSetupSubmission, setupHash } from "../setup-submission";
+import { setupHash } from "../setup-submission";
 import { submitPerps } from "../submit-perps";
-import { mockDeposit, mockSetupRequest } from "../local-mock-submission";
+import { createRequestAttempt } from "../request-attempt";
 import { TERMS_VERSION } from "../terms-policy";
 import { FUNDING_STEP, onboardingSteps } from "../onboarding-steps";
 import { getStepError } from "../validation";
@@ -16,15 +18,15 @@ import { useFundingConnection } from "./useFundingConnection";
 import { useMountedRef } from "./useMountedRef";
 import { useStepBusy } from "./useStepBusy";
 import { fundingError } from "../funding";
-import { hasSetupRequestReceipt } from "../setup-request-receipt";
 
 export function useSetupSubmission({ onBusyChange, onComplete }: { onBusyChange: (busy: boolean) => void; onComplete: () => void }) {
   const config = useConfig();
+  const queryClient = useQueryClient();
   const wallet = useAccount();
-  const { signMessageAsync } = useSignMessage();
   const mounted = useMountedRef();
-  const [phase, setPhase] = useState<"signing" | "sending" | null>(null);
+  const [phase, setPhase] = useState<"sending" | null>(null);
   const inFlight = useRef(false);
+  const requestAttempt = useRef(createRequestAttempt());
   const delivered = useRef<{ scope: string; submittedAt: string } | null>(null);
   const toastPrefix = useId();
   const attempt = useRef({ sequence: 0, id: undefined as string | undefined, succeeded: false, hash: "" });
@@ -34,7 +36,12 @@ export function useSetupSubmission({ onBusyChange, onComplete }: { onBusyChange:
   const reportError = useCallback((cause: unknown) => {
     if (!mounted.current) return;
     const message = fundingError(cause);
-    toast.error(/reject|denied|cancelled|canceled/i.test(message) ? "You cancelled the confirmation. You can try again." : message.length > 220 ? "We couldn’t save your setup. Please try again." : message, { id: attempt.current.id });
+    // Closing the wallet picker or rejecting the signature is a choice, not a failure: reset quietly.
+    if (!message.startsWith("Network switch cancelled.") && /reject|denied|cancelled|canceled/i.test(message)) {
+      if (attempt.current.id) toast.dismiss(attempt.current.id);
+      return;
+    }
+    toast.error(message.length > 220 ? "We couldn’t submit your setup. Please try again." : message, { id: attempt.current.id });
   }, [mounted]);
   const mutation = useMutation({
     retry: false,
@@ -48,48 +55,50 @@ export function useSetupSubmission({ onBusyChange, onComplete }: { onBusyChange:
         const current = useOnboardingStore.getState();
         const live = getAccount(config);
         if (!mounted.current || current.revision !== intent.revision || current.partnerName !== intent.partnerId || setupHash(current) !== expectedHash ||
-          live.status !== "connected" || live.address?.toLowerCase() !== address.toLowerCase())
+          live.status !== "connected" || live.address?.toLowerCase() !== address.toLowerCase() || live.connector?.uid !== account.connector.uid)
           throw new Error("Your wallet or setup changed. Check your details and try again.");
       };
       assertCurrent();
       if (draft.chainIds.length !== 1) throw new Error("Choose one network for this setup.");
+      const selectedChain = chainById(draft.chainIds[0]);
+      if (!selectedChain) throw new Error("Choose a supported network for this setup.");
       const invalid = onboardingSteps.slice(0, FUNDING_STEP).map((_, step) => getStepError(step, draft)).find(Boolean);
       if (invalid) throw new Error(invalid);
       if (draft.termsAcceptedVersion !== TERMS_VERSION) throw new Error("Accept the terms before saving your setup.");
-      const retained = draft.setupSubmission;
-      const reusable = isSetupSubmission(retained, draft) && retained.includesDepositConfirmation === true &&
-        retained.address.toLowerCase() === address.toLowerCase() &&
-        await verifyMessage({ address, message: retained.message, signature: retained.signature });
-      assertCurrent();
-      if (!reusable) {
-        setPhase("signing");
-        toast.loading("Sign the deposit confirmation in your wallet…", { id: attempt.current.id });
-        const submission = await mockDeposit(draft, address, message => signMessageAsync({ account: address, message }));
-        assertCurrent();
-        useOnboardingStore.getState().setSetupSubmission(submission);
-      }
-      const signedDraft = useOnboardingStore.getState();
+      const scope = `${expectedHash}:${address.toLowerCase()}:${draft.contact ?? ""}`;
+      const storageRetry = delivered.current?.scope === scope;
+      void trackStory("submission-request", { product: "perps", retry: storageRetry, ...perpsStoryDetails(draft), walletAddress: address });
       setPhase("sending");
       toast.loading("Sending your setup to the team…", { id: attempt.current.id });
-      const receipt = hasSetupRequestReceipt(signedDraft) ? signedDraft.setupRequestReceipt! : await mockSetupRequest(signedDraft);
-      assertCurrent();
-      const scope = `${expectedHash}:${address.toLowerCase()}`;
-      const delivery = delivered.current?.scope === scope ? delivered.current : await submitPerps(signedDraft);
+      const delivery = delivered.current?.scope === scope ? delivered.current : await submitPerps(draft, address, assertCurrent, requestAttempt.current(scope));
+      if (!storageRetry) void trackStory("delivery-success", { product: "perps", ...perpsStoryDetails(draft), walletAddress: address });
       delivered.current = { scope, submittedAt: delivery.submittedAt };
+      void queryClient.invalidateQueries({ queryKey: ["wallet-requests"] });
       assertCurrent();
-      useOnboardingStore.getState().setSetupRequestReceipt({ ...receipt, setupHash: expectedHash,
-        receivedAt: delivery.submittedAt, notification: "telegram" });
+      useOnboardingStore.getState().setSetupRequestReceipt({
+        requestId: crypto.randomUUID(), partnerId: draft.partnerName, status: "pending-review", mock: true,
+        transport: "local", setupHash: expectedHash, receivedAt: delivery.submittedAt,
+        notification: "telegram", verification: "unsigned", ownerWallet: address,
+      });
       assertCurrent();
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       if (!mounted.current) { if (attempt.current.id) toast.dismiss(attempt.current.id); return; }
       onComplete();
-      if (useOnboardingStore.getState().completed) {
+      const currentDraft = useOnboardingStore.getState();
+      const account = getAccount(config);
+      void trackStory(currentDraft.completed ? "submission-success" : "submission-failed", {
+        product: "perps", ...perpsStoryDetails(currentDraft), ...(account.address ? { walletAddress: account.address } : {}),
+      });
+      if (currentDraft.completed) {
         attempt.current.succeeded = true;
         toast.success("Setup submitted", { id: attempt.current.id });
       } else if (attempt.current.id) toast.dismiss(attempt.current.id);
     },
-    onError: reportError,
+    onError: async (cause) => {
+      if (mounted.current) void trackStory("submission-failed", { product: "perps", ...perpsStoryDetails(useOnboardingStore.getState()) });
+      reportError(cause);
+    },
     onSettled: () => { inFlight.current = false; if (mounted.current) setPhase(null); },
   });
   const { awaitingConnection, requestFunding } = useFundingConnection({ operationInFlightRef: inFlight, onFunding: mutation.mutate, onError: reportError });

@@ -7,9 +7,11 @@ import {
 import type { OnboardingDraft } from "./store";
 import { fundingFingerprint, parseFundingTargets } from "./funding";
 import { hasAcceptedTerms } from "./terms-review";
+import { validateContact } from "../../lib/contact";
 export { getTermsConfirmationError } from "./terms-review";
 import { isFundingStepComplete } from "./placeholder-funding";
 import { isSetupSubmission } from "./setup-submission";
+import { hasSetupRequestReceipt } from "./setup-request-receipt";
 import { validateFeeCapBps, validateRevenueWallet } from "./revenue-settings";
 import { reservedPartnerNames, validateDexName, validatePartnerName } from "./dex-identity";
 import { validateCreatorShareBps } from "./creator-revenue";
@@ -85,7 +87,7 @@ export function getStepError(
         return "Choose at least one network to continue.";
       break;
     case PARTNER_STEP: {
-      if (draft.launchPath === "api") return validatePartnerName(draft.partnerName);
+      if (draft.launchPath === "api") return validatePartnerName(draft.partnerName) ?? validateContact(draft.contact ?? "");
       // Check the name the user typed first, so an empty field reads "Enter a name…".
       const nameError = validateDexName(draft.displayName || draft.partnerName);
       if (nameError) return nameError;
@@ -94,7 +96,7 @@ export function getStepError(
         return "Use a longer app name with letters or numbers.";
       if (idError && reservedPartnerNames.has(draft.partnerName))
         return "This name is reserved. Choose another app name.";
-      return idError;
+      return idError ?? validateContact(draft.contact ?? "");
     }
     case WEBSITES_STEP: // Reserved historical position; no current input or validation.
       break;
@@ -109,7 +111,7 @@ export function getStepError(
     case FUNDING_STEP: {
       if (!draft.chainIds.length) return "Choose your networks first.";
       if (!hasAcceptedTerms(draft)) return "Accept the terms before continuing.";
-      if (!isSetupSubmission(draft.setupSubmission, draft) && !isFundingStepComplete(draft))
+      if (!hasSetupRequestReceipt(draft) && !isSetupSubmission(draft.setupSubmission, draft) && !isFundingStepComplete(draft))
         return "Confirm your setup with your wallet to finish.";
       break;
     }

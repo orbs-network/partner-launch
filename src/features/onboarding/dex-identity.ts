@@ -24,10 +24,10 @@ export function validateDexName(name: string): string | undefined {
   if (!name.trim()) return "Enter a name for your app.";
   if (name.trim().length < 3) return "Use at least 3 characters for your app name.";
   if (name.length > 80) return "Keep your app name to 80 characters or fewer.";
-  if (name !== name.trim() || !/^\p{L}[\p{L}\p{M}]*(?:[ -]\p{L}[\p{L}\p{M}]*)*$/u.test(name))
-    return "Use letters only, with a single space or hyphen between words.";
+  if (name !== name.trim() || !/^[\p{L}\p{N}][\p{L}\p{M}\p{N} ._&'’-]*$/u.test(name))
+    return "Start with a letter or number; use letters, numbers, spaces, or . _ & ' - in your app name.";
   if (!generateAccountId(name))
-    return "Include at least one letter from A to Z in your app name.";
+    return "Include at least one letter from A to Z or number in your app name.";
 }
 
 export function validateBrandColor(color: string): string | undefined {
@@ -43,13 +43,18 @@ export function validateLogoDataUrl(value: string): string | undefined {
     return "Choose a PNG, JPEG, or WebP logo.";
 }
 
+/** Keep the existing ID format, with the explicitly supported mixed-case partner ID. */
+export function isPartnerIdFormat(value: string): boolean {
+  return value === "QuickSwap1" || /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value);
+}
+
 export function validatePartnerName(value: string): string | undefined {
   const name = value.trim();
   if (name.length < 3)
     return "Use at least 3 characters for your partner ID.";
   if (name.length > 40)
     return "Keep your partner ID to 40 characters or fewer.";
-  if (name !== value || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+  if (name !== value || !isPartnerIdFormat(name)) {
     return "Use lowercase letters, numbers, and single hyphens, with no spaces.";
   }
   if (reservedPartnerNames.has(name))

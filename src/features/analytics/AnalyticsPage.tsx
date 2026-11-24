@@ -17,9 +17,10 @@ import { AnalyticsLive } from "./components/AnalyticsLive";
 
 const AnalyticsCharts = lazy(() => import("./components/AnalyticsCharts").then((module) => ({ default: module.AnalyticsCharts })));
 
-export function AnalyticsPage({ session, workspace }: { session: LoginSession; workspace?: WorkspaceContext }) {
+/** embedded: a section inside the My setups dashboard (no page landmark, focus or scroll changes). */
+export function AnalyticsPage({ session, workspace, embedded = false }: { session: LoginSession; workspace?: WorkspaceContext; embedded?: boolean }) {
   const heading = useRef<HTMLHeadingElement>(null);
-  const location = useAnalyticsLocation();
+  const location = useAnalyticsLocation(embedded);
   const { range, view } = location;
   const { access, stats } = useAnalytics(session, range, workspace);
   const name = workspace?.name || workspace?.partnerId || analyticsPartner.name;
@@ -30,15 +31,18 @@ export function AnalyticsPage({ session, workspace }: { session: LoginSession; w
   const data = !error && access.isSuccess ? stats.data : undefined;
   const busy = access.isFetching || stats.isFetching;
   useEffect(() => {
+    if (embedded) return;
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+  }, [embedded]);
+  const Root = embedded ? "section" : "main";
+  const Heading = embedded ? "h2" : "h1";
 
   return (
-    <main id="main" className="mx-auto mt-8 mb-12 w-[min(1200px,calc(100%_-_48px))] flex-1 max-[720px]:mt-5 max-[720px]:w-[calc(100%_-_24px)]">
+    <Root {...(embedded ? { "aria-label": "Analytics" } : { id: "main" })} className={embedded ? "min-w-0" : "mx-auto mt-8 mb-12 w-[min(1200px,calc(100%_-_48px))] flex-1 max-[720px]:mt-5 max-[720px]:w-[calc(100%_-_24px)]"}>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 ref={heading} tabIndex={-1} className="text-[34px] font-medium tracking-[-1.2px] focus:outline-none max-[720px]:text-[28px]">Analytics</h1>
+          <Heading ref={heading} tabIndex={-1} className={embedded ? "text-xl font-semibold tracking-[-0.5px] focus:outline-none" : "text-[34px] font-medium tracking-[-1.2px] focus:outline-none max-[720px]:text-[28px]"}>Analytics</Heading>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed wrap-anywhere text-(--muted)">Trading activity and account metrics for {name} on {networks}.</p>
         </div>
         <div className="flex gap-2">
@@ -70,6 +74,6 @@ export function AnalyticsPage({ session, workspace }: { session: LoginSession; w
           <p className="mt-5 text-xs leading-relaxed text-(--muted)">{view === "live" ? "Live figures use the latest platform snapshots and do not depend on the selected time range. " : "Trading activity covers the selected time range. "}Cumulative fees are trading commissions paid by users, not partner earnings or available payouts.</p>
         </>
       )}
-    </main>
+    </Root>
   );
 }

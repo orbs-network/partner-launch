@@ -3,7 +3,7 @@ import { PageSkeleton } from "@/components/ContentSkeleton";
 import { OnboardingLayout } from "./components/OnboardingLayout";
 import { OnboardingWizard } from "./OnboardingWizard";
 import { useOnboardingStore } from "./store";
-import { WELCOME_STEP } from "./onboarding-steps";
+import { PARTNER_STEP, WELCOME_STEP } from "./onboarding-steps";
 
 const SpotSetup = lazy(() => import("./spot/SpotSetup").then((module) => ({ default: module.SpotSetup })));
 
@@ -15,12 +15,11 @@ export function SetupRouter(props: {
   renderHeaderActions?: (busy: boolean) => ReactNode;
   notice?: ReactNode;
   externalBusy?: boolean;
-  onManage?: () => void;
   onPendingRequests?: () => void;
 }) {
   const [spot, setSpot] = useState(spotSelected);
   useEffect(() => {
-    const restore = () => setSpot(spotSelected());
+    const restore = () => { if (window.location.pathname !== "/setups") setSpot(spotSelected()); };
     window.addEventListener("popstate", restore);
     return () => window.removeEventListener("popstate", restore);
   }, []);
@@ -43,5 +42,29 @@ export function SetupRouter(props: {
       <SpotSetup {...props} onExit={() => selectSpot(false)} onStartOver={returnToWelcome} />
     </Suspense>
   );
-  return <OnboardingWizard {...props} onSpot={() => selectSpot(true)} />;
+  return <PerpsEntry {...props} onSpot={() => selectSpot(true)} />;
+}
+
+function PerpsEntry(props: Parameters<typeof OnboardingWizard>[0]) {
+  const [ready, setReady] = useState(() => {
+    const current = useOnboardingStore.getState();
+    return new URL(window.location.href).searchParams.get("setup") !== "perps" || current.step !== WELCOME_STEP || current.completed;
+  });
+  useEffect(() => {
+    if (ready) return;
+    let active = true;
+    const unsubscribe = useOnboardingStore.subscribe(state => {
+      if (state.step !== WELCOME_STEP || state.completed) setReady(true);
+    });
+    const current = useOnboardingStore.getState();
+    if (new URL(window.location.href).searchParams.get("setup") === "perps" && current.step === WELCOME_STEP && !current.completed) {
+      if (!current.launchPath) current.setLaunchPath("creator");
+      useOnboardingStore.getState().setStep(PARTNER_STEP);
+    } else {
+      queueMicrotask(() => { if (active) setReady(true); });
+    }
+    return () => { active = false; unsubscribe(); };
+  }, [ready]);
+  if (!ready) return <OnboardingLayout headerActions={props.renderHeaderActions?.(props.externalBusy ?? false)} notice={props.notice} hideDisconnectedWallet><PageSkeleton label="Loading Perps setup" /></OnboardingLayout>;
+  return <OnboardingWizard {...props} />;
 }

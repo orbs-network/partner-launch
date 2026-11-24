@@ -1,7 +1,8 @@
 import { FieldError } from "@/components/ui/field-error";
 import { Network } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { chainLogo, supportedChains } from "@/config/chains";
+import { FieldHelp } from "@/components/FieldHelp";
+import { chainLogo, selectablePerpsChains } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { usePartnerSettings } from "../hooks/usePartnerSettings";
 import { SettingsCard } from "./SettingsCard";
@@ -12,11 +13,11 @@ export function NetworkSettings({ settings }: { settings: Settings }) {
   return (
     <SettingsCard title="Networks" description="Choose one network where your customers can trade." icon={Network} className="col-span-full max-[720px]:col-auto max-[720px]:row-auto">
       <div className="mb-[14px] flex items-center justify-between gap-2.5 text-[11px] text-(--muted)">
-        <span>Select one network</span>
+        <span className="flex items-center gap-1">Select one network<FieldHelp label="Trading networks">Choose the network for this workspace. Saving requests a change; it does not activate trading.</FieldHelp></span>
         <strong className="rounded-lg bg-(--primary-soft) px-2 py-[5px] text-[10px] font-medium text-(--link)">{settings.profile.chainIds.length} selected</strong>
       </div>
       <div className="grid grid-cols-4 gap-2.5 max-[1100px]:grid-cols-3 max-[720px]:grid-cols-2 max-[370px]:grid-cols-1" role="group" aria-label="Trading networks" aria-describedby={settings.errors.chainIds ? "managed-network-error" : undefined}>
-        {supportedChains.map((chain) => {
+        {selectablePerpsChains.map((chain) => {
           const selected = settings.profile.chainIds.length === 1 && settings.profile.chainIds[0] === chain.id;
           return (
             <Label key={chain.id} htmlFor={`managed-chain-${chain.id}`} className={cn(

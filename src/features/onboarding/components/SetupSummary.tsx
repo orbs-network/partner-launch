@@ -8,7 +8,7 @@ import { NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
 import type { OnboardingDraft } from "../state/types";
 import { RevenueWalletLink } from "./RevenueWalletLink";
 
-export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps">;
+export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps"> & { contact?: string };
 
 const rowClass = "flex items-start justify-between gap-3 border-t border-(--edge) py-3.5";
 const labelClass = "mb-1.5 block text-[11px] leading-normal text-(--muted)";
@@ -18,7 +18,7 @@ const networkClass = "inline-flex h-8 min-h-0 max-w-full items-center gap-1.5 ro
 /** The same snapshot preview before confirmation and after saving. */
 export function SetupSummary({ draft, onEdit, disabled = false, className }: {
   draft: SetupSummaryData;
-  onEdit?: (step: number) => void;
+  onEdit?: (step: number, field?: string) => void;
   disabled?: boolean;
   className?: string;
 }) {
@@ -72,6 +72,15 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
           <Pencil size={13} aria-hidden="true" /> Edit
         </Button> : null}
       </div>
+      {draft.contact || onEdit ? <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1">
+          <dt className="text-[11px] leading-normal text-(--muted)">Contact</dt>
+          <dd className="m-0 text-sm leading-[1.6] wrap-anywhere text-(--secondary-text)">{draft.contact || "Not provided"}</dd>
+        </dl>
+        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(PARTNER_STEP, "partner-contact")} aria-label="Edit contact">
+          <Pencil size={13} aria-hidden="true" /> Edit
+        </Button> : null}
+      </div> : null}
 
     </section>
   );

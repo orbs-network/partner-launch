@@ -1,7 +1,9 @@
-import { FUNDING_AMOUNT, FUNDING_TOKEN_SYMBOL } from "@/config/funding";
+import { FUNDING_AMOUNT } from "@/config/funding";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { Collateral } from "../collateral";
 import { chainById, chainLogo } from "@/config/chains";
 
-export function DepositSummary({ chainId }: { chainId: number | null }) {
+export function DepositSummary({ chainId, collateral, loading, error, onRetry }: { chainId: number | null; collateral?: Collateral; loading: boolean; error: boolean; onRetry: () => void }) {
   const chain = chainById(chainId);
   return (
     <>
@@ -9,14 +11,14 @@ export function DepositSummary({ chainId }: { chainId: number | null }) {
         <div className="p-5 max-[720px]:p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 id="required-deposit-title" className="text-[13px] font-medium text-(--secondary-text)">Trading deposit</h2>
-            <span className="text-[11px] text-(--muted)">One-time</span>
+            <span className="text-xs font-medium text-(--secondary-text)">Not collected yet</span>
           </div>
           <div className="mt-4 flex items-center gap-3">
-            <img src="/usdc.svg" alt="" width={44} height={44} className="size-11 shrink-0" />
-            <p className="flex min-w-0 items-baseline gap-2.5">
+            {collateral?.symbol === "USDC" ? <img src="/usdc.svg" alt="" width={44} height={44} className="size-11 shrink-0" /> : collateral ? <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-emerald-600 text-lg font-bold text-white">₮</span> : loading ? <Skeleton className="size-11 shrink-0 rounded-full" /> : <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-(--soft) text-lg text-(--muted)">?</span>}
+            <div className="flex min-w-0 items-baseline gap-2.5">
               <strong className="text-[48px] leading-none font-semibold tracking-[-1.8px] text-(--text) tabular-nums max-[370px]:text-[44px]">{FUNDING_AMOUNT}</strong>{" "}
-              <span className="text-lg font-medium text-(--muted)">{FUNDING_TOKEN_SYMBOL}</span>
-            </p>
+              {collateral ? <span className="text-lg font-medium text-(--muted)">{collateral.symbol}</span> : loading ? <div aria-label="Checking collateral"><Skeleton className="h-6 w-16" /></div> : <span className="text-sm text-(--muted)">Unavailable</span>}
+            </div>
           </div>
         </div>
         <dl className="m-0 flex items-center justify-between gap-4 border-t border-(--edge) bg-(--surface) px-5 py-3.5 max-[720px]:px-4">
@@ -27,7 +29,8 @@ export function DepositSummary({ chainId }: { chainId: number | null }) {
           </dd>
         </dl>
       </section>
-      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">Your deposit will be available for leveraged trading.</p>
+      {error ? <p role="alert" className="mt-3 text-[13px] text-(--danger)">We couldn’t load the deposit token for this network. <button type="button" onClick={onRetry} className="min-h-11 underline">Try again</button></p> : null}
+      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">Submitting connects your wallet but does not request a signature or collect a deposit. The team will review your setup before activating trading.</p>
     </>
   );
 }

@@ -39,6 +39,9 @@ export interface OnboardingDraft {
   chainId: number | null;
   /** Human-facing DEX name; existing saved account IDs remain independent. */
   displayName: string;
+  /** Optional email/Telegram for the team. Not part of the signed setup hash, exports or Pending requests. */
+  contact?: string;
+  ownerWallets?: string[];
   /** The partner name used by setup, funding targets, and exported configuration. */
   partnerName: string;
   brandColor: string;
@@ -75,6 +78,7 @@ export interface OnboardingActions {
   /** @deprecated Retained for compatibility with older draft consumers. */
   setDisplayName: (name: string) => void;
   setDexName: (name: string) => void;
+  setContact: (contact: string) => void;
   setBranding: (branding: { brandColor?: string; logoDataUrl?: string }) => void;
   setStep: (step: number) => void;
   setPartnerName: (partnerName: string) => void;

@@ -86,3 +86,27 @@ export function removeCancelledSpotRequest(request: SpotRequest): number {
   }
   return remaining.length;
 }
+
+/** Update only an unchanged Perps snapshot after a successful registry check. */
+export function setRequestRegistryState(request: PendingRequest, status: "pending" | "ready"): boolean {
+  const clean = readRequest(request);
+  if (!clean) throw new Error("This request could not be read. Reopen pending requests and try again.");
+  let requests: PendingRequest[];
+  try { requests = readRequests(localStorage.getItem(PENDING_REQUESTS_KEY)); }
+  catch { throw new Error("We couldn’t update pending requests. Restore browser storage and try again."); }
+  const current = requests.find(row => row.id === clean.id);
+  if (!current) return false;
+  if (JSON.stringify(current) !== JSON.stringify(clean))
+    throw new Error("This request changed in another tab. Review its latest details.");
+  if (current.kind !== "perps" || current.status === status) return false;
+  const remaining = requests.map(row => row.id === clean.id ? { ...row, status } : row);
+  try {
+    const raw = JSON.stringify({ version: 1, requests: remaining });
+    localStorage.setItem(PENDING_REQUESTS_KEY, raw);
+    lastRaw = raw;
+    publish({ requests: remaining, error: null });
+  } catch {
+    throw new Error("We couldn’t update pending requests. Restore browser storage and try again.");
+  }
+  return true;
+}

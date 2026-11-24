@@ -17,11 +17,10 @@ import { FUNDING_STEP, TERMS_STEP, WELCOME_STEP } from "./onboarding-steps";
 const loadSetupComplete = () => import("./SetupComplete");
 const SetupComplete = lazy(() => loadSetupComplete().then((m) => ({ default: m.SetupComplete })));
 
-export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = false, onManage, onSpot }: {
+export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = false, onSpot }: {
   renderHeaderActions?: (busy: boolean) => ReactNode;
   notice?: ReactNode;
   externalBusy?: boolean;
-  onManage?: () => void;
   onSpot: () => void;
 }) {
   const {
@@ -39,9 +38,12 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
     busy,
     onBusyChange,
     onFundingConfirmed,
+    editFromReview,
     canContinue,
     continueLabel,
+    checkingPartner,
     stepError,
+    partnerCheckUnavailable,
     resetButtonRef,
     openReset,
     resetOpen,
@@ -56,6 +58,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
   return (
     <OnboardingLayout
       headerActions={renderHeaderActions?.(busy)}
+      homeDisabled={busy}
       notice={notice}
       // Signing the deposit confirmation connects the wallet, so setup never shows a second "Connect wallet".
       hideDisconnectedWallet={!showCompletion}
@@ -69,7 +72,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
         ) : null}
         {showCompletion ? (
           <Suspense fallback={<ContentSkeleton label="Loading setup details" />}>
-            <SetupComplete onSend={() => navigate(TERMS_STEP)} onManage={onManage} onCreateNew={openReset} createNewButtonRef={resetButtonRef} busy={busy} />
+            <SetupComplete onSend={() => navigate(TERMS_STEP)} onCreateNew={openReset} createNewButtonRef={resetButtonRef} busy={busy} />
           </Suspense>
         ) : (
           <>
@@ -100,10 +103,11 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
                     step={step}
                     busy={busy}
                     stepError={stepError}
+                    partnerCheckUnavailable={partnerCheckUnavailable}
                     onBack={back}
                     onNext={next}
                     onBusyChange={onBusyChange}
-                    onNavigate={navigate}
+                    onEdit={editFromReview}
                     onSelectNetwork={selectNetwork}
                     onFundingConfirmed={onFundingConfirmed}
                     onCreator={() => choosePath("creator")}
@@ -115,6 +119,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
                   busy={busy}
                   canContinue={canContinue}
                   continueLabel={continueLabel}
+                  checkingPartner={checkingPartner}
                   onBack={back}
                 /> : null}
               </div>

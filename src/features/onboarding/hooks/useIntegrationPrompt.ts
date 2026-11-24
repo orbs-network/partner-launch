@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { toast } from "sonner";
 import { chainById } from "../../../config/chains";
 import { createIntegrationPrompt } from "../integration-prompt";
 import { useOnboardingStore } from "../store";
-import { useMountedRef } from "./useMountedRef";
+import { usePromptClipboard } from "./usePromptClipboard";
 import type { OnboardingDraft } from "../state/types";
 
-export function useIntegrationPrompt(draft?: OnboardingDraft, path?: OnboardingDraft["launchPath"]) {
-  const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
-  const mountedRef = useMountedRef();
+export type PromptSetup = Pick<OnboardingDraft, "partnerName" | "chainIds" | "launchPath" | "displayName"> & Partial<Pick<OnboardingDraft, "setupRequestReceipt">>;
+
+export function useIntegrationPrompt(draft?: PromptSetup, path?: OnboardingDraft["launchPath"]) {
   const partnerName = useOnboardingStore((state) => state.partnerName);
   const chainIds = useOnboardingStore((state) => state.chainIds);
   const launchPath = useOnboardingStore((state) => state.launchPath);
@@ -29,24 +28,7 @@ export function useIntegrationPrompt(draft?: OnboardingDraft, path?: OnboardingD
     chooseBranding,
     portalOrigin: typeof window === "undefined" ? undefined : window.location.origin,
   });
-  const copied = copiedPrompt === prompt;
-
-  async function copyPrompt() {
-    try {
-      await navigator.clipboard.writeText(prompt);
-      if (!mountedRef.current) return false;
-      setCopiedPrompt(prompt);
-      toast.success(promptPath === "api" ? "Prompt copied" : "Instructions copied", { id: "integration-prompt-copy" });
-      return true;
-    } catch {
-      if (!mountedRef.current) return false;
-      setCopiedPrompt(null);
-      toast.error("Copy didn’t work. Select the prompt and copy it manually.", {
-        id: "integration-prompt-copy",
-      });
-      return false;
-    }
-  }
+  const { copied, copyPrompt } = usePromptClipboard(prompt, promptPath === "api" ? "Prompt copied" : "Instructions copied", "integration-prompt-copy");
 
   function setChooseBranding(chosen: boolean) {
     setBrandingChoice({ scope, chosen });

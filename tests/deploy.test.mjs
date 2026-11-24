@@ -23,7 +23,7 @@ async function fixture(t, changes = {}) {
   const sourceIndex = changes.sourceHtml ?? sourceHtml;
   const compiledHtml = viteHtml(sourceIndex);
   const files = [
-    'package.json', 'package-lock.json', 'vendor/partner-config/package.json',
+    'package.json', 'package-lock.json',
     'vendor/partner-analytics/lib/auth.ts',
     'index.html', 'src/main.tsx',
     'src/new-component.tsx', 'public/favicon.svg',
@@ -186,7 +186,7 @@ test('standalone package and deployment target are self-contained', async () => 
   assert.equal(pkg.scripts.deploy, 'node scripts/deploy.mjs');
   assert.equal(pkg.scripts['test:deploy'], 'node --test tests/deploy.test.mjs');
   assert.equal(pkg.workspaces, undefined);
-  assert.equal(pkg.dependencies['@perpetual-hub/partner-config'], 'file:vendor/partner-config');
+  assert.equal(pkg.dependencies['@perpetual-hub/partner-config'], undefined);
   const vercel = JSON.parse(await readFile(path.join(sourceRoot, 'vercel.json'), 'utf8'));
   assert.equal(vercel.installCommand, 'npm ci');
   for (const dependency of Object.values(pkg.dependencies))

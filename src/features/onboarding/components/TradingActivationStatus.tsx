@@ -6,12 +6,13 @@ import { useSetupRequestStatus } from "../hooks/useSetupRequestStatus";
 import type { SavedSetupRequestReceipt } from "../setup-request-receipt";
 import { ActivationStatusCard } from "./ActivationStatusCard";
 
-export function TradingActivationStatus({ receipt, titleId, descriptionId }: {
+export function TradingActivationStatus({ receipt, chainIds, titleId, descriptionId }: {
   receipt: SavedSetupRequestReceipt;
+  chainIds: number[];
   titleId?: string;
   descriptionId?: string;
 }) {
-  const { status, refresh, isRefreshing } = useSetupRequestStatus(receipt);
+  const { status, refresh, isRefreshing } = useSetupRequestStatus(receipt, chainIds);
   const generatedDescriptionId = useId();
   const statusDescriptionId = descriptionId ?? generatedDescriptionId;
   const pending = status.data !== "active";

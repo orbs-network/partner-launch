@@ -16,7 +16,7 @@ export const onboardingSteps = [
     id: "partner",
     name: "App name",
     title: "App name",
-    intro: "Choose the name people will see in your app.",
+    intro: "Choose the name people will see in your app, and how our team can reach you.",
   },
   {
     id: "websites",
@@ -38,9 +38,9 @@ export const onboardingSteps = [
   },
   {
     id: "funding",
-    name: "Deposit funds",
-    title: "Deposit funds",
-    intro: "Confirm your trading deposit and submit your setup.",
+    name: "Deposit requirement",
+    title: "Deposit requirement",
+    intro: "Review the deposit for your network, then submit your setup to the team.",
   },
 ] as const;
 

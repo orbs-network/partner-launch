@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState, type RefObject } from "react";
-import { Check, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, type RefObject } from "react";
+import { Check } from "lucide-react";
+import { ExpandableSection } from "@/components/ExpandableSection";
 import { Card } from "@/components/ui/card";
 import { CompletionSummary } from "./components/completion/CompletionSummary";
 import { BuildApp } from "./components/completion/BuildApp";
@@ -11,15 +11,13 @@ import { SetupActions } from "./components/completion/SetupActions";
 import { SetupLabel } from "./components/SetupLabel";
 
 
-export function SetupComplete({ onSend, onManage, onCreateNew, createNewButtonRef, busy = false }: {
+export function SetupComplete({ onSend, onCreateNew, createNewButtonRef, busy = false }: {
   onSend: () => void;
-  onManage?: () => void;
   onCreateNew: () => void;
   createNewButtonRef: RefObject<HTMLButtonElement | null>;
   busy?: boolean;
 }) {
   const { draft } = useSetupExport();
-  const [detailsOpen, setDetailsOpen] = useState(false);
   const creator = draft.launchPath !== "api";
   const displayName = draft.displayName || draft.partnerName;
   const headingRef = useRef<HTMLHeadingElement>(null);
@@ -37,21 +35,12 @@ export function SetupComplete({ onSend, onManage, onCreateNew, createNewButtonRe
       </header>
       <ActivationChecklist draft={draft} onSend={onSend} busy={busy} />
       <BuildApp launchPath={draft.launchPath} draft={draft} />
-      <section id="completion-details" className="mt-5 border-t border-(--edge) pt-4" aria-labelledby="setup-details-title">
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="setup-details-title" className="min-w-0 text-sm font-medium">
-            <Button type="button" variant="ghost" size="sm" className="h-11 min-h-0 gap-2 rounded-lg px-0 text-sm text-(--text)" aria-expanded={detailsOpen} aria-controls="completion-summary" onClick={() => setDetailsOpen(value => !value)} disabled={busy}>
-              Setup details <ChevronDown size={15} className={detailsOpen ? "rotate-180" : undefined} aria-hidden="true" />
-            </Button>
-          </h2>
-        </div>
-        <div id="completion-summary" hidden={!detailsOpen}>
-          <CompletionSummary
-            displayName={draft.displayName} partnerName={draft.partnerName} chainIds={draft.chainIds} revenueWallet={draft.revenueWallet} requestedCreatorShareBps={draft.requestedCreatorShareBps} builderFeeTenthsBps={draft.builderFeeTenthsBps} launchPath={draft.launchPath}
-          />
-        </div>
-      </section>
-      <SetupActions onManage={onManage} onCreateNew={onCreateNew} createNewButtonRef={createNewButtonRef} busy={busy}>
+      <ExpandableSection title="Setup details" id="completion-details" headingId="setup-details-title" contentId="completion-summary" disabled={busy}>
+        <CompletionSummary
+          displayName={draft.displayName} partnerName={draft.partnerName} chainIds={draft.chainIds} revenueWallet={draft.revenueWallet} requestedCreatorShareBps={draft.requestedCreatorShareBps} builderFeeTenthsBps={draft.builderFeeTenthsBps} launchPath={draft.launchPath}
+        />
+      </ExpandableSection>
+      <SetupActions onCreateNew={onCreateNew} createNewButtonRef={createNewButtonRef} busy={busy}>
         {creator ? <SharePreviewDialog displayName={displayName} partnerId={draft.partnerName} brandColor={draft.brandColor} logoDataUrl={draft.logoDataUrl} /> : null}
       </SetupActions>
     </Card>

@@ -3,7 +3,7 @@ import { TermsStep } from "./TermsStep";
 
 export function ReviewStep({ error, onEdit, disabled, onBack, onContinue }: {
   error?: string;
-  onEdit: (step: number) => void;
+  onEdit: (step: number, field?: string) => void;
   disabled: boolean;
   onBack?: () => void;
   onContinue: () => void;

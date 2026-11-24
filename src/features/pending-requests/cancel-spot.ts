@@ -1,13 +1,14 @@
 import type { SpotRequest } from "./request-record";
+import type { SpotCancelProof } from "./spot-cancel-proof";
 
 /** Notify the team only; the browser record is removed separately after acknowledgement. */
-export async function cancelSpotRequest(request: SpotRequest): Promise<void> {
+export async function cancelSpotRequest(request: SpotRequest, proof: SpotCancelProof): Promise<void> {
   let response: Response;
   try {
     response = await fetch("/api/spot-cancel", {
       method: "POST", headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(15_000),
-      body: JSON.stringify({ appName: request.appName, feesWallet: request.feesWallet, dexUrl: request.dexUrl }),
+      body: JSON.stringify({ requestId: request.id, proof, appName: request.appName, feesWallet: request.feesWallet, dexUrl: request.dexUrl }),
     });
   } catch {
     throw new Error("We couldn’t confirm the cancellation reached the team. Your request is still here. Try again; a retry may send another message.");

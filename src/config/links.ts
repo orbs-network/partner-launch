@@ -28,5 +28,8 @@ export const PERPS_API_SKILL_URL = "https://github.com/orbs-network/spot-integra
 
 /** Official API docs; deployments may supply another HTTPS guide. */
 export const API_GUIDE_URL = httpsUrl(import.meta.env?.VITE_API_GUIDE_URL, "https://docs.orbs.com/perps/api")!;
+/** Spot integration skills; prefer the version bundled with an installed SDK. */
+export const SPOT_SKILLS_URL = "https://github.com/orbs-network/spot-ui/tree/master/skills";
+
 /** Official Spot integration overview and setup documentation. */
 export const SPOT_DOCS_URL = "https://docs.orbs.com/advanced-orders/shared";

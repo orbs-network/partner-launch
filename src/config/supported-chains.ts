@@ -1,7 +1,7 @@
 import { arbitrum, base, bsc, polygon, sonic, monad, sei, plasma, robinhood } from "viem/chains";
 
-// Only networks with a Perpetual Hub partner lane (perpetual-hub/partner-config
-// src/chains.ts). Names match that file because the terms signature includes them.
+// Supported onboarding networks remain separate from live partner lanes.
+// Preserve names because the terms signature includes them.
 export const supportedChains = [
   { ...arbitrum, name: "Arbitrum One" },
   { ...base, name: "Base" },
@@ -13,5 +13,8 @@ export const supportedChains = [
   { ...plasma, name: "Plasma" },
   { ...robinhood, name: "Robinhood Chain" },
 ] as const;
+
+// Existing Plasma setups still need their original network metadata and signed names.
+export const selectablePerpsChains = supportedChains.filter(chain => chain.id !== plasma.id);
 
 export const chainById = (id: number | null) => supportedChains.find(chain => chain.id === id);

@@ -1,6 +1,7 @@
 import { FieldError } from "@/components/ui/field-error";
 import { Label } from "@/components/ui/label";
-import { supportedChains, chainLogo } from "../../../config/chains";
+import { FieldHelp } from "@/components/FieldHelp";
+import { selectablePerpsChains, chainLogo } from "../../../config/chains";
 import { useOnboardingStore } from "../store";
 
 export function ChainStep({ error = "", disabled, onSelect }: { error?: string; disabled: boolean; onSelect: (chainId: number) => void }) {
@@ -9,9 +10,9 @@ export function ChainStep({ error = "", disabled, onSelect }: { error?: string; 
     <>
       <fieldset aria-describedby={error ? "chain-error" : undefined} className="m-0 min-w-0 border-0 p-0">
         <legend className="sr-only">Choose your network</legend>
-        <p className="mb-[13px] text-[13px] text-(--muted) max-[720px]:mb-3 max-[720px]:text-[12px]">Available networks</p>
+        <div className="mb-[13px] flex items-center gap-1 max-[720px]:mb-3"><p className="text-[13px] text-(--muted) max-[720px]:text-[12px]">Available networks</p><FieldHelp label="Network">Choose the network where your Perps setup will operate. The required deposit collateral depends on the network.</FieldHelp></div>
         <div className="grid grid-cols-2 gap-2.5 max-[720px]:gap-[9px] max-[370px]:grid-cols-1">
-          {supportedChains.map((chain) => {
+          {selectablePerpsChains.map((chain) => {
             const checked = selected.length === 1 && selected[0] === chain.id;
             return (
               <Label

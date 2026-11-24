@@ -5,6 +5,7 @@ import {
   zeroAddress,
   type Address,
 } from "viem";
+import { isPartnerIdFormat } from "./dex-identity";
 
 export interface FundingTarget {
   partnerId: string;
@@ -55,7 +56,7 @@ export function parseFundingTargets(raw: string | undefined): {
       if (
         !record(value) ||
         typeof value.partnerId !== "string" ||
-        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value.partnerId) ||
+        !isPartnerIdFormat(value.partnerId) ||
         typeof value.chainId !== "number" ||
         !Number.isSafeInteger(value.chainId) ||
         value.chainId <= 0 ||
@@ -215,7 +216,8 @@ export function fundingError(error: unknown): string {
   ) {
     return error.shortMessage;
   }
+  if (typeof error === "string" && error) return error;
   return error instanceof Error
     ? error.message
-    : "Funding could not be completed. Please try again.";
+    : "Something went wrong. Please try again.";
 }

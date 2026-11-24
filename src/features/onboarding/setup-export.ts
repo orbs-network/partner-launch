@@ -11,6 +11,7 @@ export function createSetupExport(
 ) {
   const depositStepConfirmations = sanitizeDepositStepConfirmations(draft.depositStepConfirmations);
   const localRequest = hasSetupRequestReceipt(draft) && draft.setupRequestReceipt?.transport === "local";
+  const unsignedRequest = hasSetupRequestReceipt(draft) && draft.setupRequestReceipt?.verification === "unsigned";
   return {
     version: 2 as const,
     exportedAt,
@@ -40,7 +41,7 @@ export function createSetupExport(
     ...(depositStepConfirmations ? { depositStepConfirmations } : {}),
     submissionStatus: localRequest ? "local-mock" as const : hasSetupRequestReceipt(draft) ? "sent-to-mock-api" as const : "saved-locally" as const,
     paymentStatus: "not-collected" as const,
-    tradingDeposit: { amount: "100", token: "USDC", chainId: draft.chainIds.length === 1 ? draft.chainIds[0] : null, mode: "mock-signature" as const },
+    tradingDeposit: { amount: "100", ...(unsignedRequest ? {} : { token: draft.setupSubmission?.collateral?.symbol ?? "USDC" }), chainId: draft.chainIds.length === 1 ? draft.chainIds[0] : null, mode: unsignedRequest || !draft.setupSubmission ? "not-collected" as const : "mock-signature" as const },
     provisioningStatus: "pending-team-activation" as const,
   };
 }

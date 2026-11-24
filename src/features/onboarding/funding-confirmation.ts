@@ -1,5 +1,6 @@
 import { isAddress, zeroAddress } from "viem";
 import { parseFixedFundingAmount } from "./funding-amount";
+import { isPartnerIdFormat } from "./dex-identity";
 
 export interface FundingConfirmation {
   mode: "signature-placeholder";
@@ -64,7 +65,7 @@ export function isFundingConfirmation(
     typeof item.partnerId !== "string" ||
     item.partnerId.length < 3 ||
     item.partnerId.length > 40 ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(item.partnerId) ||
+    !isPartnerIdFormat(item.partnerId) ||
     typeof item.amount !== "string" ||
     item.amount !== item.amount.trim() ||
     typeof item.address !== "string" ||

@@ -1,19 +1,22 @@
-import type { PartnerOperationalConfig } from "@perpetual-hub/partner-config";
-import { findPartnerById } from "../vendor/partner-analytics/lib/auth";
-import { analyticsPartner, analyticsScope } from "../src/config/analytics";
+import type { PartnerOperationalConfig } from "../vendor/partner-analytics/lib/partner-scope";
+import { analyticsScope } from "../src/config/analytics";
+
+import { registryLanes } from "./partner-registry";
 
 export class AnalyticsScopeError extends Error {
   constructor(message: string, readonly status: number) { super(message); }
 }
 
-/** Resolve only registered scope; local workspace records never grant access. */
-export function resolveAnalyticsScope(value: unknown): { partner: PartnerOperationalConfig; chainId: string } {
-  if (value === undefined) return { partner: analyticsPartner, chainId: analyticsScope.chainId };
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
+/** Registry membership selects a lane; a separate backend grant authorizes the wallet. */
+export async function resolveAnalyticsScope(value: unknown): Promise<{ partner: PartnerOperationalConfig; chainId: string }> {
+  const scope = value === undefined
+    ? { partnerId: analyticsScope.partnerId, chainIds: [Number(analyticsScope.chainId)] }
+    : value;
+  if (!scope || typeof scope !== "object" || Array.isArray(scope)) {
     throw new AnalyticsScopeError("Choose a valid workspace for analytics.", 400);
   }
-  const { partnerId, chainIds } = value as Record<string, unknown>;
-  if (typeof partnerId !== "string" || !/^[a-z0-9-]{1,64}$/.test(partnerId) ||
+  const { partnerId, chainIds } = scope as Record<string, unknown>;
+  if (typeof partnerId !== "string" || (partnerId !== "QuickSwap1" && !/^[a-z0-9-]{1,64}$/.test(partnerId)) ||
       !Array.isArray(chainIds) || !chainIds.length ||
       chainIds.some((id) => typeof id !== "number" || !Number.isSafeInteger(id) || id <= 0)) {
     throw new AnalyticsScopeError("Choose a valid workspace for analytics.", 400);
@@ -21,14 +24,17 @@ export function resolveAnalyticsScope(value: unknown): { partner: PartnerOperati
   if (chainIds.length !== 1) {
     throw new AnalyticsScopeError("Analytics is not available for a workspace with multiple networks. Select a workspace with one registered network.", 422);
   }
-  const registered = findPartnerById(partnerId);
-  if (!registered || registered.id !== partnerId) {
-    throw new AnalyticsScopeError("Analytics is not connected for this workspace yet. Team activation is required before live data is available.", 404);
+  const chainId = String(chainIds[0]);
+  let lanes: unknown[];
+  try { lanes = await registryLanes(partnerId); }
+  catch { throw new AnalyticsScopeError("Partner registry is temporarily unavailable. Try again.", 502); }
+  const matches = lanes.filter((lane) => {
+    if (!lane || typeof lane !== "object" || Array.isArray(lane)) return false;
+    const item = lane as Record<string, unknown>;
+    return item.partnerId === partnerId && item.chainId === chainId && item.status === "enabled";
+  });
+  if (matches.length !== 1) {
+    throw new AnalyticsScopeError("Analytics is not connected for this workspace’s network. Team activation is required before live data is available.", 404);
   }
-  const chain = registered.chains.find((item) => item.chainId === chainIds[0]);
-  if (!chain) {
-    throw new AnalyticsScopeError("Analytics is not connected for this workspace’s network.", 404);
-  }
-  // The grant check and BI service must both see the exact selected lane.
-  return { partner: { ...registered, chains: [chain] }, chainId: String(chain.chainId) };
+  return { partner: { id: partnerId, chains: [{ chainId: chainIds[0] }] }, chainId };
 }

@@ -1,4 +1,6 @@
 import { normalizeOrigin } from "../../../lib/website-origin";
+import { MAX_CONTACT_LENGTH } from "../../../lib/contact";
+import { restoreOwnerWallets } from "../owner-wallets";
 import { FUNDING_STEP, onboardingStepOrder, TERMS_STEP } from "../onboarding-steps";
 import { FUNDING_AMOUNT, FUNDING_CHAIN_ID } from "../../../config/funding";
 import { getStepId, restoreStep, type OnboardingStepId } from "./step-position";
@@ -139,6 +141,8 @@ export function sanitizeDraft(value: unknown): SavedDraft {
         : legacy && typeof value.partnerName === "string"
           ? value.partnerName.slice(0, MAX_RETAINED_DISPLAY_NAME_LENGTH)
           : "",
+    contact: typeof value.contact === "string" ? value.contact.slice(0, MAX_CONTACT_LENGTH + 1) : "",
+    ownerWallets: restoreOwnerWallets(value.ownerWallets),
     partnerName:
       typeof value.partnerName === "string"
         ? value.partnerName.slice(0, 200)
@@ -225,6 +229,8 @@ export function selectDraft(state: OnboardingDraft): SavedDraft {
     chainIds: state.chainIds,
     chainId: state.chainId,
     displayName: state.displayName,
+    contact: state.contact ?? "",
+    ownerWallets: state.ownerWallets ?? [],
     partnerName: state.partnerName,
     brandColor: state.brandColor,
     logoDataUrl: state.logoDataUrl,

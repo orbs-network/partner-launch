@@ -1,6 +1,6 @@
 /** Suggested Spot config key; deriving it does not reserve or activate it. */
 export function generateSpotAppId(appName: string): string {
-  return appName.trim().normalize("NFC").toLowerCase().split(/[ -]+/u)
+  return appName.trim().normalize("NFC").toLowerCase().split(/[^\p{L}\p{M}\p{N}]+/u).filter(Boolean)
     .map((word, index) => index === 0 ? word : word.replace(/^\p{L}/u, first => first.toUpperCase()))
     .join("");
 }

@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FUNDING_STEP, NETWORKS_STEP, TERMS_STEP } from "../onboarding-steps";
 
@@ -7,12 +7,14 @@ export function WizardNavigation({
   busy,
   canContinue,
   continueLabel,
+  checkingPartner,
   onBack,
 }: {
   step: number;
   busy: boolean;
   canContinue: boolean;
   continueLabel: string;
+  checkingPartner: boolean;
   onBack: () => void;
 }) {
   // Review and Deposit render their own navigation and guarded actions.
@@ -38,11 +40,13 @@ export function WizardNavigation({
             form="onboarding-step"
             type="submit"
             disabled={!canContinue}
+            aria-busy={checkingPartner}
           >
             {continueLabel}
-            <ArrowRight size={18} aria-hidden="true" />
+            {checkingPartner ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
           </Button>
         ) : null}
+        <span role="status" className="sr-only">{checkingPartner ? "Checking Partner ID availability." : ""}</span>
       </div>
     </footer>
   );

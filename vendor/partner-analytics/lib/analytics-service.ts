@@ -1,4 +1,4 @@
-import type { PartnerOperationalConfig } from "@perpetual-hub/partner-config";
+import type { PartnerOperationalConfig } from "./partner-scope";
 import { hasPartnerAdminAccess, PartnerAdminProxyError } from "./auth";
 import { buildStatsQuery, parseStatsResponse } from "../src/elasticsearch";
 import { parseAnalyticsPeriod } from "../src/analytics-period";

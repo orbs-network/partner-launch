@@ -83,6 +83,10 @@ export const createOnboardingState: StateCreator<OnboardingState> = (
         revision: current.revision + 1,
       });
   },
+  setContact(contact) {
+    // Contact is not signed setup data, so editing it keeps terms and proofs.
+    if (contact !== (get().contact ?? "")) set({ contact });
+  },
   setStep(step) {
     const target = Math.max(0, Math.min(onboardingSteps.length - 1, Math.trunc(step)));
     if (!Number.isFinite(target) || !onboardingStepOrder.includes(target)) return;

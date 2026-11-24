@@ -9,13 +9,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useIntegrationPrompt } from "../../hooks/useIntegrationPrompt";
-import type { OnboardingDraft } from "../../state/types";
+import { useIntegrationPrompt, type PromptSetup } from "../../hooks/useIntegrationPrompt";
 import { CreatorLaunchChoice } from "./CreatorLaunchChoice";
 
 export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, children }: {
   launchPath?: "creator" | "api" | null;
-  draft?: OnboardingDraft;
+  draft?: PromptSetup;
   triggerLabel?: string;
   trigger?: ReactElement;
   children?: ReactNode;
@@ -98,7 +97,7 @@ export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, ch
         <DialogDescription className="mt-[13px] text-[14px] leading-[1.7] text-(--secondary-text) max-[720px]:text-[12px]">
           {creator ? "Add your branding, review the app and publish it. Trading requires partner activation." : "Copy this prompt for your team or a coding assistant on a computer."}
         </DialogDescription>
-        {creator ? <p className="mt-2 hidden text-xs leading-[1.65] text-(--muted) min-[721px]:block">Use Codex or Claude with folder access on this computer. You’ll sign in to your own hosting account.</p> : null}
+        {creator ? <p className="mt-2 text-xs leading-[1.65] text-(--muted)">Copy the launch instructions below and paste them into a coding agent such as Codex or Claude with folder access on your computer. You’ll sign in to your own hosting account.</p> : null}
         {creator ? <CreatorLaunchChoice checked={chooseBranding} onCheckedChange={setChooseBranding} /> : null}
         {children}
         {creator ? (

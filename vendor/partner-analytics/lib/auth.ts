@@ -1,7 +1,4 @@
-import {
-  partnerRegistry,
-  type PartnerOperationalConfig,
-} from "@perpetual-hub/partner-config";
+import type { PartnerOperationalConfig } from "./partner-scope";
 import { isIP } from "node:net";
 const DEFAULT_BACKEND_URL = "https://perps-api.orbs.network";
 
@@ -13,11 +10,6 @@ export class PartnerAdminProxyError extends Error {
     super(message);
     this.name = "PartnerAdminProxyError";
   }
-}
-
-export function findPartnerById(partnerId: string) {
-  if (!Object.hasOwn(partnerRegistry, partnerId)) return undefined;
-  return partnerRegistry[partnerId as keyof typeof partnerRegistry];
 }
 
 export function partnerPayload(
@@ -71,7 +63,6 @@ export function partnerAdminHeaders(
   const headers = new Headers({
     Accept: "application/json",
     "Content-Type": "application/json",
-    Origin: partner.deployedOrigin,
     "X-Partner-Chain-Key": `${partner.id}:${chain.chainId}`,
     "X-Partner-ID": partner.id,
     "X-Chain-ID": String(chain.chainId),
@@ -115,9 +106,12 @@ async function checkPartnerAdminAccess(
   }
 
   if (!response.ok) {
+    const body: unknown = await response.json().catch(() => null);
+    const originRejected = !!body && typeof body === "object" &&
+      "code" in body && body.code === "PARTNER_ADMIN_ORIGIN_REJECTED";
     return {
       authorized: false,
-      unavailable: response.status === 429 || response.status >= 500,
+      unavailable: originRejected || response.status === 429 || response.status >= 500,
     };
   }
 

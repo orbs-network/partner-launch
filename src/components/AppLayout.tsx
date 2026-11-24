@@ -2,21 +2,28 @@ import type { ReactNode } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { WalletButton } from "./WalletButton";
 import { ThemeToggle } from "./ThemeToggle";
+import { navigateWithinApp } from "@/hooks/useSearchLocation";
 
 export interface AppLayoutProps {
   children: ReactNode;
   headerActions?: ReactNode;
   notice?: ReactNode;
-  /** Hide "Connect wallet" until it is useful; a connected wallet still shows. */
+  /** Hide "Connect wallet" only while a returning wallet reconnects; it shows once the state is known. */
   hideDisconnectedWallet?: boolean;
+  homeDisabled?: boolean;
 }
 
-export function AppLayout({ children, headerActions, notice, hideDisconnectedWallet }: AppLayoutProps) {
+export function AppLayout({ children, headerActions, notice, hideDisconnectedWallet, homeDisabled = false }: AppLayoutProps) {
   return (
     <div className="flex min-h-dvh flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] bg-[radial-gradient(ellipse_850px_500px_at_50%_0,var(--friendly-halo),transparent_75%)]">
       <a className="fixed -top-[70px] left-5 z-[99] rounded-[14px] bg-primary px-[18px] py-[13px] text-white focus:top-3" href="#main">Skip to main content</a>
       <header data-has-login={!!headerActions} className="group/header sticky top-0 z-30 flex h-[calc(var(--app-header-height)+env(safe-area-inset-top))] shrink-0 items-center justify-between gap-5 border-b border-(--edge) bg-(--bg) pt-[env(safe-area-inset-top)] px-9 min-[1500px]:px-12 max-[720px]:gap-2.5 max-[720px]:px-[19px] max-[370px]:gap-2 max-[370px]:px-[13px] max-[370px]:data-[has-login=true]:gap-[7px] max-[370px]:data-[has-login=true]:px-3">
-        <a href="/" className="inline-flex shrink-0 rounded-md text-(--text) transition-colors hover:text-(--link)" aria-label="Orbs home">
+        <a href="/" onClick={event => {
+          if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+          event.preventDefault();
+          if (homeDisabled) return;
+          if (window.dispatchEvent(new Event("portal-home", { cancelable: true }))) navigateWithinApp(event);
+        }} className="inline-flex shrink-0 rounded-md text-(--text) transition-colors hover:text-(--link)" aria-label="Orbs home">
           <span aria-hidden="true" className="inline-flex items-center gap-[0.6em] text-xl leading-none font-normal tracking-wider uppercase">
             <img src="/orbs/orbs-mark.svg" alt="" width={42} height={41} className="size-[1.4em] shrink-0" />
             <span>Orbs</span>
@@ -24,7 +31,7 @@ export function AppLayout({ children, headerActions, notice, hideDisconnectedWal
         </a>
         <div className="flex min-w-0 items-center gap-2.5 max-[720px]:gap-[7px] max-[720px]:group-data-[has-login=true]/header:gap-1.5 max-[370px]:gap-[5px]">
           <ThemeToggle />
-          <WalletButton hideWhenDisconnected={hideDisconnectedWallet} />
+          <WalletButton hideWhileConnecting={hideDisconnectedWallet} />
           {headerActions}
         </div>
       </header>

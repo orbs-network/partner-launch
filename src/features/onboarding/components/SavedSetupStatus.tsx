@@ -5,7 +5,7 @@ import { TradingActivationStatus } from "./TradingActivationStatus";
 
 export function SavedSetupStatus({ draft }: { draft: OnboardingDraft }) {
   const receipt = hasSetupRequestReceipt(draft) ? draft.setupRequestReceipt : undefined;
-  if (receipt) return <div className="mt-3"><TradingActivationStatus key={receipt.partnerId} receipt={receipt} /></div>;
+  if (receipt) return <div className="mt-3"><TradingActivationStatus key={receipt.partnerId} receipt={receipt} chainIds={draft.chainIds} /></div>;
   return (
     <div role="note" aria-label="Trading activation requirements" className="mt-3 flex items-start gap-2.5 rounded-xl border border-(--selected-border) bg-(--primary-soft) p-3 text-(--link)">
       <Clock3 size={19} className="mt-0.5 shrink-0" aria-hidden="true" />

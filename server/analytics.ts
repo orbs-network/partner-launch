@@ -90,7 +90,7 @@ async function analyticsHandler(route: AnalyticsRoute, request: IncomingMessage,
   }
   const headers = analyticsHeaders(request);
   try {
-    const { partner, chainId } = resolveAnalyticsScope(item.workspace);
+    const { partner, chainId } = await resolveAnalyticsScope(item.workspace);
     let upstream: Response;
     if (route === "access") {
       if (!await hasPartnerAdminAccess(partner, session.address, headers)) {

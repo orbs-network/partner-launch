@@ -2,6 +2,12 @@ import { keccak256, stringToHex, type Address } from "viem";
 import { sanitizeDraft, selectDraft } from "./state/hydration";
 import type { OnboardingDraft } from "./state/types";
 import { getFundingSigner } from "./placeholder-funding";
+import { hasSetupRequestReceipt } from "./setup-request-receipt";
+
+function setupOwner(draft: OnboardingDraft): Address | undefined {
+  return (hasSetupRequestReceipt(draft) && draft.setupRequestReceipt?.verification === "unsigned" ? draft.setupRequestReceipt.ownerWallet : undefined) ??
+    draft.setupSubmission?.address ?? getFundingSigner(draft);
+}
 
 export interface SavedSetup {
   id: string;
@@ -20,7 +26,7 @@ function walletKey(address: Address): string {
 
 function completedSnapshot(value: unknown, owner?: Address): OnboardingDraft {
   const draft = sanitizeDraft(value);
-  const signer = draft.setupSubmission?.address ?? getFundingSigner(draft);
+  const signer = setupOwner(draft);
   if (!draft.completed || !signer ||
     (owner && signer.toLowerCase() !== owner.toLowerCase())) {
     throw new Error("Only a completed setup can be saved to its wallet workspace.");
@@ -52,7 +58,7 @@ export function loadSavedSetups(address: Address): SavedSetup[] {
 /** Retain a detached, immutable completed snapshot for this page only. */
 export function rememberCompletedSetup(draft: OnboardingDraft): SavedSetup {
   const snapshot = completedSnapshot(selectDraft(draft));
-  const owner = snapshot.setupSubmission?.address ?? getFundingSigner(snapshot)!;
+  const owner = setupOwner(snapshot)!;
   const id = snapshotId(snapshot);
   const key = walletKey(owner);
   const setups = pageSetups.get(key) ?? new Map<string, string>();

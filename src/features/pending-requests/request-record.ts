@@ -5,10 +5,12 @@ interface RequestBase {
   id: string;
   savedAt: string;
   appName: string;
-  status: "pending";
+  status: "pending" | "ready" | "approved";
+  ownerWallets?: string[];
 }
 export interface SpotRequest extends RequestBase {
   kind: "spot";
+  partnerId?: string;
   feesWallet: string;
   dexUrl?: string;
   notification?: "telegram";
@@ -31,10 +33,15 @@ export function readRequest(value: unknown): PendingRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const row = value as Record<string, unknown>;
   if (!text(row.id, 220) || !text(row.appName, 80) || !text(row.savedAt, 30) ||
-    !Number.isFinite(Date.parse(row.savedAt)) || row.status !== "pending") return null;
-  const base: RequestBase = { id: row.id, appName: row.appName, savedAt: row.savedAt, status: "pending" };
+    !Number.isFinite(Date.parse(row.savedAt)) || (row.status !== "pending" && row.status !== "ready" && row.status !== "approved") ||
+    (row.status === "ready" && (row.kind !== "perps" || row.notification !== "telegram"))) return null;
+  if (row.ownerWallets !== undefined && (!Array.isArray(row.ownerWallets) || row.ownerWallets.length > 11 || !row.ownerWallets.every(wallet))) return null;
+  const base: RequestBase = { id: row.id, appName: row.appName, savedAt: row.savedAt, status: row.status,
+    ...(Array.isArray(row.ownerWallets) ? { ownerWallets: row.ownerWallets as string[] } : {}) };
   if (row.kind === "spot" && wallet(row.feesWallet) &&
+    (row.partnerId === undefined || text(row.partnerId, 80)) &&
     (row.dexUrl === undefined || (typeof row.dexUrl === "string" && !validateDexUrl(row.dexUrl)))) return { ...base, kind: "spot", feesWallet: row.feesWallet,
+    ...(typeof row.partnerId === "string" ? { partnerId: row.partnerId } : {}),
     ...(typeof row.dexUrl === "string" && row.dexUrl.trim() ? { dexUrl: row.dexUrl.trim() } : {}),
     ...(row.notification === "telegram" ? { notification: "telegram" as const } : {}) };
   if (row.kind !== "perps" || !text(row.partnerId, 80) || !wallet(row.revenueWallet) ||

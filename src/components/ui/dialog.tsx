@@ -92,9 +92,10 @@ function DialogContent({
   const primitiveRef = usePrimitiveRef(ref);
   const mobile = React.useContext(DialogMode);
   const closeButton = showCloseButton ? (
-    <DialogClose className="absolute top-3 right-3 flex size-11 items-center justify-center rounded-xl text-(--muted) hover:bg-(--control-hover) hover:text-(--link) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring) disabled:pointer-events-none">
-      <XIcon size={19} aria-hidden="true" />
-      <span className="sr-only">Close</span>
+    <DialogClose asChild>
+      <Button type="button" variant="ghost" size="icon" className="absolute top-3 right-3 size-11 max-[720px]:size-11" aria-label="Close">
+        <XIcon size={19} aria-hidden="true" />
+      </Button>
     </DialogClose>
   ) : null;
   if (mobile) return <DrawerContent ref={primitiveRef} bodyClassName={className} {...props} onOpenAutoFocus={event => {

@@ -1,6 +1,7 @@
 import type { OnboardingDraft } from "./state/types";
 import { isSetupSubmission, setupHash } from "./setup-submission";
 import { TERMS_VERSION } from "./terms-policy";
+import { isAddress, zeroAddress, type Address } from "viem";
 
 export interface SetupRequestReceipt {
   requestId: string;
@@ -10,6 +11,8 @@ export interface SetupRequestReceipt {
   mock: true;
   transport?: "local";
   notification?: "telegram";
+  verification?: "unsigned";
+  ownerWallet?: Address;
 }
 
 /** Acknowledgement bound to the signed setup; local functions mark their transport. */
@@ -24,6 +27,9 @@ export function isSetupRequestReceipt(value: unknown, partnerId: string): value 
     receipt.partnerId !== partnerId || receipt.status !== "pending-review" || receipt.mock !== true ||
     (receipt.transport !== undefined && receipt.transport !== "local") ||
     (receipt.notification !== undefined && receipt.notification !== "telegram") ||
+    (receipt.verification !== undefined && receipt.verification !== "unsigned") ||
+    (receipt.verification === "unsigned" && (receipt.notification !== "telegram" || typeof receipt.ownerWallet !== "string" || !isAddress(receipt.ownerWallet) || receipt.ownerWallet.toLowerCase() === zeroAddress)) ||
+    (receipt.verification !== "unsigned" && receipt.ownerWallet !== undefined) ||
     typeof receipt.receivedAt !== "string") return false;
   const time = Date.parse(receipt.receivedAt);
   return Number.isFinite(time) && new Date(time).toISOString() === receipt.receivedAt;
@@ -32,7 +38,7 @@ export function isSetupRequestReceipt(value: unknown, partnerId: string): value 
 export function isSavedSetupRequestReceipt(value: unknown, draft: OnboardingDraft): value is SavedSetupRequestReceipt {
   return isSetupRequestReceipt(value, draft.partnerName) && "setupHash" in value &&
     value.setupHash === setupHash(draft) && draft.termsAcceptedVersion === TERMS_VERSION &&
-    isSetupSubmission(draft.setupSubmission, draft);
+    (value.verification === "unsigned" || isSetupSubmission(draft.setupSubmission, draft));
 }
 
 export function hasSetupRequestReceipt(draft: OnboardingDraft): boolean {
