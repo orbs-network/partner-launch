@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { getAddress, type Address } from "viem";
@@ -23,7 +24,7 @@ function readCookie(request: IncomingMessage, name: string): string | undefined 
 }
 
 function writeCookie(request: IncomingMessage, response: ServerResponse, name: string, value: string, maxAge: number) {
-  const secure = !!process.env.VERCEL || ("encrypted" in request.socket && request.socket.encrypted);
+  const secure = servingOrigin(request)?.startsWith("https://") ?? false;
   const cookie = [`${name}=${value}`, "Path=/api", "HttpOnly", "SameSite=Strict", `Max-Age=${maxAge}`, ...(secure ? ["Secure"] : [])].join("; ");
   const existing = response.getHeader?.("Set-Cookie");
   response.setHeader("Set-Cookie", [...(Array.isArray(existing) ? existing : existing ? [String(existing)] : []), cookie]);

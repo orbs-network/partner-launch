@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Pool } from "pg";
 import { isAddress, verifyMessage, type Address, type Hex } from "viem";
@@ -12,9 +13,8 @@ export async function perpsAppUrlHandler(request: IncomingMessage, response: Ser
   const reply = (status: number, body: object) => { response.writeHead(status).end(JSON.stringify(body)); };
   if (request.method !== "POST") { response.setHeader("Allow", "POST"); reply(405, { error: "Use POST." }); return; }
   const host = request.headers.host;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  const origin = `${process.env.VERCEL || encrypted ? "https" : "http"}://${host}`;
-  if (!host || /[\s,/@?#]/.test(host) || request.headers.origin !== origin ||
+  const origin = servingOrigin(request);
+  if (!host || /[\s,/@?#]/.test(host) || !origin || request.headers.origin !== origin ||
     (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin") ||
     request.headers["content-type"]?.split(";")[0].trim() !== "application/json") { reply(403, { error: "Use the partner portal." }); return; }
   let value: unknown;

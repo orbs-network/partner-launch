@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage } from "node:http";
 import { verifyMessage } from "viem";
 import { createLoginMessage } from "../src/features/login/login-message.js";
@@ -17,18 +18,6 @@ function isOrigin(value: unknown): value is string {
   }
 }
 
-/** Use the serving host, never a caller-supplied forwarded host or proof origin. */
-function servingOrigin(request: IncomingMessage): string | undefined {
-  const host = request.headers.host;
-  if (!host || /[\s,/@?#]/.test(host)) return undefined;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  const protocol = process.env.VERCEL || encrypted ? "https" : "http";
-  try {
-    return new URL(`${protocol}://${host}`).origin;
-  } catch {
-    return undefined;
-  }
-}
 
 function parseSession(value: unknown): LoginSession | undefined {
   if (!isRecord(value)) return undefined;

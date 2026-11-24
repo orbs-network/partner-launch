@@ -44,7 +44,7 @@ export function isChainFunded(
   )
     return false;
   const target = parseFundingTargets(
-    import.meta.env.VITE_FUNDING_TARGETS,
+    process.env.VITE_FUNDING_TARGETS,
   ).targets.find(
     (item) => item.chainId === chainId && item.partnerId === draft.partnerName,
   );

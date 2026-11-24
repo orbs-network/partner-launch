@@ -34,7 +34,7 @@ const connectors = connectorsForWallets(
   ],
   {
     appName: "dPERPS Creator Studio",
-    projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID,
+    projectId: process.env.VITE_WALLETCONNECT_PROJECT_ID ?? "",
   },
 );
 export const wagmiConfig = createConfig({

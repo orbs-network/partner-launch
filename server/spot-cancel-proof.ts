@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage } from "node:http";
 import { isAddress, verifyMessage, type Address, type Hex } from "viem";
 import { spotCancelMessage } from "../src/features/pending-requests/spot-cancel-proof.js";
@@ -13,9 +14,8 @@ export async function verifySpotCancelProof(value: unknown, request: IncomingMes
   if (!Number.isFinite(time) || new Date(time).toISOString() !== proof.issuedAt || time > Date.now() + 30_000 || Date.now() - time > 5 * 60_000) return;
   const host = request.headers.host;
   if (!host || /[\s,/@?#]/.test(host)) return;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  const origin = `${process.env.VERCEL || encrypted ? "https" : "http"}://${host}`;
-  if (proof.origin !== origin || request.headers.origin !== origin ||
+  const origin = servingOrigin(request);
+  if (!origin || proof.origin !== origin || request.headers.origin !== origin ||
       (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) return;
   const address = proof.address as Address;
   try {

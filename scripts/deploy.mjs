@@ -7,9 +7,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const sourcePaths = [
-  'package.json', 'package-lock.json', 'index.html', 'vercel.json',
-  'vite.config.ts', 'tsconfig.json', 'eslint.config.js', 'components.json',
-  'api', 'server', 'src', 'public', 'vendor',
+  'package.json', 'package-lock.json', 'vercel.json',
+  'next.config.mjs', 'postcss.config.mjs', 'tsconfig.json', 'eslint.config.js', 'components.json',
+  'server', 'src', 'public', 'vendor',
 ];
 
 function pageTitle(html) {
@@ -41,7 +41,7 @@ export async function deployPartnerPortal(argv, {
   confirm = confirmProduction, log = console.log,
 } = {}) {
   if (argv.length === 1 && argv[0] === '--help') {
-    log('Run from the standalone partner-portal project:\nUsage: npm run deploy -- [--dry-run|--build-only]\nDefault: confirm, configure the project root/Vite preset if needed, build and publish to production, verify it, then log out.');
+    log('Run from the standalone partner-portal project:\nUsage: npm run deploy -- [--dry-run|--build-only]\nDefault: confirm, configure the project root/Next.js preset if needed, build and publish to production, verify it, then log out.');
     return;
   }
   if (argv.length > 1 || argv.some((flag) => !['--dry-run', '--build-only'].includes(flag)))
@@ -50,7 +50,7 @@ export async function deployPartnerPortal(argv, {
   if (target.name !== 'partner-portal' || !/^prj_\w+$/.test(target.vercelProjectId) || !/^team_\w+$/.test(target.vercelOrgId))
     throw new Error('Invalid Partner Portal deployment target.');
   log(`Target: Partner Portal production | Project: ${target.vercelProjectId} | Org: ${target.vercelOrgId}`);
-  log(`Plan: production pull → ${argv.includes('--build-only') ? 'check' : 'configure and verify'} project root/Vite preset → isolated Vite build → ${argv.includes('--build-only') ? 'save local output' : 'prebuilt deploy → verify READY and deployed HTML → cleanup → logout'}.`);
+  log(`Plan: production pull → ${argv.includes('--build-only') ? 'check' : 'configure and verify'} project root/Next.js preset → isolated Next.js build → ${argv.includes('--build-only') ? 'save local output' : 'prebuilt deploy → verify READY and deployed HTML → cleanup → logout'}.`);
   if (argv.includes('--dry-run')) return;
   const buildOnly = argv.includes('--build-only');
   if (!buildOnly && !await confirm(target)) { log('Deployment cancelled.'); return; }
@@ -94,27 +94,27 @@ export async function deployPartnerPortal(argv, {
           throw new Error(`Pulled Vercel project/org mismatch: expected ${target.vercelProjectId}/${target.vercelOrgId}, got ${project.projectId}/${project.orgId}.`);
         return project;
       };
-      const hasPortalSettings = (project) => (project.settings?.rootDirectory ?? null) === null && project.settings?.framework === 'vite';
+      const hasPortalSettings = (project) => (project.settings?.rootDirectory ?? null) === null && project.settings?.framework === 'nextjs';
       const describeSettings = (project) => `rootDirectory=${JSON.stringify(project.settings?.rootDirectory ?? null)}, framework=${JSON.stringify(project.settings?.framework ?? null)}`;
       let project = await pullProject();
       if (!hasPortalSettings(project)) {
         if (buildOnly)
-          throw new Error(`Partner Portal build settings mismatch: ${describeSettings(project)}. Build-only does not change remote settings. Set rootDirectory=null and framework=vite, or run npm run deploy to configure and publish.`);
-        log(`Current Vercel settings: ${describeSettings(project)}. Configuring the Partner Portal root and Vite preset…`);
-        vercel(['project', 'update', target.vercelProjectId, '--auto-detect', 'root-directory', '--framework', 'vite', '--scope', target.vercelOrgId, '--non-interactive']);
+          throw new Error(`Partner Portal build settings mismatch: ${describeSettings(project)}. Build-only does not change remote settings. Set rootDirectory=null and framework=nextjs, or run npm run deploy to configure and publish.`);
+        log(`Current Vercel settings: ${describeSettings(project)}. Configuring the Partner Portal root and Next.js preset…`);
+        vercel(['project', 'update', target.vercelProjectId, '--auto-detect', 'root-directory', '--framework', 'nextjs', '--scope', target.vercelOrgId, '--non-interactive']);
         project = await pullProject();
         if (!hasPortalSettings(project))
-          throw new Error(`Partner Portal settings readback failed: expected rootDirectory=null and framework=vite, got ${describeSettings(project)}.`);
+          throw new Error(`Partner Portal settings readback failed: expected rootDirectory=null and framework=nextjs, got ${describeSettings(project)}.`);
       }
-      const expectedTitle = pageTitle(await readFile(path.join(stage, 'index.html'), 'utf8'));
-      if (!expectedTitle) throw new Error('Partner Portal source HTML is missing its page title.');
+      const expectedTitle = pageTitle(await readFile(path.join(stage, 'src/pages/_app.tsx'), 'utf8'));
+      if (!expectedTitle) throw new Error('Partner Portal source page is missing its page title.');
       vercel(['build', '--prod']);
       const output = path.join(stage, '.vercel/output');
       const config = JSON.parse(await readFile(path.join(output, 'config.json'), 'utf8'));
-      const html = await readFile(path.join(output, 'static/index.html'), 'utf8');
-      const scripts = [...html.matchAll(/<script\b[^>]*\bsrc=["'](\/assets\/[^"']+\.js)["']/g)].map((match) => match[1]);
+      const html = await readFile(path.join(stage, '.next/server/pages/index.html'), 'utf8');
+      const scripts = [...html.matchAll(/<script\b[^>]*\bsrc=["'](\/_next\/static\/[^"']+\.js)["']/g)].map((match) => match[1]);
       if (config.version !== 3 || pageTitle(html) !== expectedTitle || !scripts.length)
-        throw new Error(`Partner Portal build did not produce valid Vite/Vercel static output (expected title ${JSON.stringify(expectedTitle)}, received ${JSON.stringify(pageTitle(html))}, output version ${JSON.stringify(config.version)}, entry scripts ${scripts.length}).`);
+        throw new Error(`Partner Portal build did not produce valid Next.js/Vercel build output (expected title ${JSON.stringify(expectedTitle)}, received ${JSON.stringify(pageTitle(html))}, output version ${JSON.stringify(config.version)}, entry scripts ${scripts.length}).`);
       for (const script of scripts) await readFile(path.join(output, 'static', script));
       if (buildOnly) {
         const destination = path.join(root, '.vercel/local-builds/partner-portal');

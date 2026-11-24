@@ -11,8 +11,8 @@ import { deployPartnerPortal } from '../scripts/deploy.mjs';
 const sourceRoot = fileURLToPath(new URL('..', import.meta.url));
 const target = JSON.parse(await readFile(path.join(sourceRoot, 'ops/deploy/partner-portal-deploy-target.json'), 'utf8'));
 const deployment = { id: 'dpl_partner123', url: 'https://partner-release.vercel.app', readyState: 'READY' };
-const sourceHtml = await readFile(path.join(sourceRoot, 'index.html'), 'utf8');
-const viteHtml = (html) => html.replace('/src/main.tsx', '/assets/portal-current.js');
+const sourceHtml = await readFile(path.join(sourceRoot, 'src/pages/_app.tsx'), 'utf8');
+const viteHtml = (source) => `<html><head>${source.match(/<title>[\s\S]*?<\/title>/i)?.[0] ?? ''}</head><body><script src="/_next/static/chunks/portal-current.js"></script></body></html>`;
 const withTitle = (html, title) => html.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
 const builtHtml = viteHtml(sourceHtml);
 
@@ -25,7 +25,7 @@ async function fixture(t, changes = {}) {
   const files = [
     'package.json', 'package-lock.json',
     'vendor/partner-analytics/lib/auth.ts',
-    'index.html', 'src/main.tsx',
+    'src/pages/_app.tsx', 'next.config.mjs',
     'src/new-component.tsx', 'public/favicon.svg',
     '.env.local', '.env.production.local',
     '.vercel/project.json', 'node_modules/stale.js',
@@ -38,7 +38,7 @@ async function fixture(t, changes = {}) {
   };
   for (const file of files.filter((file) => !file.endsWith('deleted.tsx')))
     save(root, file, `current source: ${file}`);
-  save(root, 'index.html', sourceIndex);
+  save(root, 'src/pages/_app.tsx', sourceIndex);
   save(root, 'ops/deploy/partner-portal-deploy-target.json', target);
   save(root, '.vercel/project.json', { projectId: 'prj_unrelated', orgId: 'team_unrelated' });
   // Non-selected sources must never be copied or used to build this app.
@@ -96,7 +96,7 @@ async function fixture(t, changes = {}) {
     if (args[0] === 'project') {
       assert.deepEqual(args, [
         'project', 'update', target.vercelProjectId,
-        '--auto-detect', 'root-directory', '--framework', 'vite',
+        '--auto-detect', 'root-directory', '--framework', 'nextjs',
         '--scope', target.vercelOrgId, '--non-interactive',
       ]);
       assert.equal(pulls, 1, 'only a pulled and identity-verified project may be updated');
@@ -123,7 +123,7 @@ async function fixture(t, changes = {}) {
       assert.notEqual(stage, root);
       if (!pulls) {
         for (const file of files.filter((file) => !/\.env|\.vercel|node_modules|^dist\/|tsbuildinfo|deleted/.test(file)))
-          assert.equal(readFileSync(path.join(stage, file), 'utf8'), file === 'index.html' ? sourceIndex : `current source: ${file}`);
+          assert.equal(readFileSync(path.join(stage, file), 'utf8'), file === 'src/pages/_app.tsx' ? sourceIndex : `current source: ${file}`);
         for (const file of files.filter((file) => /\.env|\.vercel|node_modules|^dist\/|tsbuildinfo|deleted/.test(file)))
           assert.equal(existsSync(path.join(stage, file)), false, `excluded source entered staging: ${file}`);
         for (const file of ['tee/internal/handlers/source.go', 'contracts/src/Protocol.sol', 'admin-frontend/app/page.tsx'])
@@ -134,7 +134,7 @@ async function fixture(t, changes = {}) {
         projectId: target.vercelProjectId,
         orgId: target.vercelOrgId,
         settings: {
-          rootDirectory: null, framework: 'vite',
+          rootDirectory: null, framework: 'nextjs',
           ...(!settingsRepaired || changes.settingsRemainWrong ? changes.projectSettings : {}),
         },
         ...changes.projectIdentity,
@@ -144,8 +144,8 @@ async function fixture(t, changes = {}) {
     }
     if (args[0] === 'build') {
       if (!changes.noConfig) save(stage, '.vercel/output/config.json', { version: changes.outputVersion ?? 3 });
-      if (!changes.noIndex) save(stage, '.vercel/output/static/index.html', changes.buildHtml ?? compiledHtml);
-      save(stage, '.vercel/output/static/assets/portal-current.js', 'console.log("current release");');
+      if (!changes.noIndex) save(stage, '.next/server/pages/index.html', changes.buildHtml ?? compiledHtml);
+      save(stage, '.vercel/output/static/_next/static/chunks/portal-current.js', 'console.log("current release");');
       return '';
     }
     if (args[0] === 'deploy') {
@@ -258,7 +258,7 @@ test('build-only produces inspectable output without confirmation, publishing or
   assert.deepEqual(vercelCommands(calls), ['whoami', 'pull', 'build']);
   const destination = path.join(root, '.vercel/local-builds/partner-portal');
   assert.equal(JSON.parse(readFileSync(path.join(destination, 'config.json'), 'utf8')).version, 3);
-  assert.equal(readFileSync(path.join(destination, 'static/index.html'), 'utf8'), builtHtml);
+  assert.equal(readFileSync(path.join(destination, 'static/_next/static/chunks/portal-current.js'), 'utf8'), 'console.log("current release");');
   assert.equal(existsSync(getStage()), false);
 });
 
@@ -277,7 +277,7 @@ test('wrong pulled project or organization stops before settings changes and sti
 test('publishing repairs wrong or missing build settings and reads them back before building', async (t) => {
   for (const projectSettings of [
     { rootDirectory: 'partner-portal' },
-    { framework: 'nextjs' },
+    { framework: 'vite' },
     { rootDirectory: null, framework: null },
     { rootDirectory: undefined, framework: undefined },
   ]) {

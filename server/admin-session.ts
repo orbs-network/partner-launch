@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage } from "node:http";
 import { isAddress, verifyMessage, type Address, type Hex } from "viem";
 import { adminSignInMessage } from "../src/features/admin/admin-proof.js";
@@ -21,9 +22,8 @@ export async function verifyAdminProof(value: unknown, request: IncomingMessage,
   if (!Number.isFinite(issuedAt) || new Date(issuedAt).toISOString() !== proof.issuedAt || issuedAt > now + 30000 || now - issuedAt > 5 * 60_000) return;
   const host = request.headers.host;
   if (!host || /[\s,/@?#]/.test(host)) return;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  const origin = `${process.env.VERCEL || encrypted ? "https" : "http"}://${host}`;
-  if (proof.origin !== origin || request.headers.origin !== origin ||
+  const origin = servingOrigin(request);
+  if (!origin || proof.origin !== origin || request.headers.origin !== origin ||
       (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) return;
   if (!isAdminWallet(proof.address)) return;
   const address = proof.address as Address;

@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { requestDatabase } from "./request-database.js";
 import { getRequestStatus } from "./request-repository.js";
@@ -9,8 +10,7 @@ export async function requestStatusHandler(request: IncomingMessage, response: S
   const reply = (code: number, body: object) => { response.writeHead(code).end(JSON.stringify(body)); };
   if (request.method !== "POST") { response.setHeader("Allow", "POST"); reply(405, { error: "Use POST." }); return; }
   const host = request.headers.host;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  if (!host || /[\s,/@?#]/.test(host) || request.headers.origin !== `${process.env.VERCEL || encrypted ? "https" : "http"}://${host}` ||
+  if (!host || /[\s,/@?#]/.test(host) || !servingOrigin(request) || request.headers.origin !== servingOrigin(request) ||
       (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) { reply(403, { error: "Use the partner portal." }); return; }
   if (request.headers["content-type"]?.split(";")[0].trim() !== "application/json") { reply(415, { error: "Send JSON." }); return; }
   let raw: string;

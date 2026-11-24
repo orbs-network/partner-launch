@@ -1,15 +1,4 @@
+// Vite is retained only as a TypeScript module loader for the existing Node tests.
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 import { fileURLToPath, URL } from "node:url";
-import { apiRoutesPlugin } from "./server/api-routes-plugin";
-import { spotSubmitPlugin } from "./server/spot-submit-plugin";
-
-export default defineConfig({
-  plugins: [react(), tailwindcss(), apiRoutesPlugin(), spotSubmitPlugin()],
-  resolve: {
-    dedupe: ["react", "react-dom"],
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
-  },
-  build: { chunkSizeWarningLimit: 1200 },
-});
+export default defineConfig({ optimizeDeps: { noDiscovery: true }, resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } } });

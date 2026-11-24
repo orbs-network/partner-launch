@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Pool } from "pg";
 import { authenticateWallet } from "./wallet-session.js";
@@ -29,9 +30,8 @@ export async function adminRequestsHandler(request: IncomingMessage, response: S
   if (request.method !== "POST") { response.setHeader("Allow", "POST"); reply(405, { error: "Use POST." }); return; }
   if (request.headers["content-type"]?.split(";")[0].trim() !== "application/json") { reply(415, { error: "Send JSON." }); return; }
   const host = request.headers.host;
-  const encrypted = "encrypted" in request.socket && request.socket.encrypted;
-  const origin = `${process.env.VERCEL || encrypted ? "https" : "http"}://${host}`;
-  if (!host || /[\s,/@?#]/.test(host) || request.headers.origin !== origin ||
+  const origin = servingOrigin(request);
+  if (!host || /[\s,/@?#]/.test(host) || !origin || request.headers.origin !== origin ||
     (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) { reply(403, { error: "Use the partner portal." }); return; }
   let body: unknown;
   try { body = await jsonBody(request); } catch { reply(400, { error: "Send a valid request." }); return; }

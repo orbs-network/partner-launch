@@ -10,7 +10,7 @@ The Portal sends onboarding story events to `https://bi.orbs.network/putes/partn
 
 Perps checks the generated or entered Partner ID against the partner registry before advancing from the name step and checks again before sending a new request. Any matching lane, including a disabled lane, counts as an existing ID. An unavailable registry blocks the check with a retry message. This lookup does not reserve an ID or check other pending requests, so availability can change between checks.
 
-This Partner Portal workspace helps creators prepare a branded DEX or integrate dPERPS into an existing app, bot or service. It uses React/Vite, RainbowKit and wagmi, viem, TanStack Query and a locally persisted Zustand draft.
+This Partner Portal workspace helps creators prepare a branded DEX or integrate dPERPS into an existing app, bot or service. It uses Next.js, React, RainbowKit and wagmi, viem, TanStack Query and a locally persisted Zustand draft.
 
 Welcome also offers **Set up Spot**, with the description **Bring advanced spot trading to your app.** The flow is App name → DEX URL (optional) → Fees wallet → Review and policy acceptance. There is no chain-selection step or requested chain scope. App names use the shared 3–80 character validation: letters only, with a single space or hyphen between letter groups (no digits, punctuation, leading/trailing separators or repeated separators), and the fees wallet must be a valid non-zero EVM address. Spot has no deposit, wallet signature or fee-share setting. Its separate optional DEX URL step accepts an absolute HTTP/HTTPS website URL (up to 2,048 characters, without credentials or whitespace), or can be left blank. It is informational and grants no website permissions. Supplied URLs remain in the draft, Review, completion and Pending requests, and are sent in the Telegram notification; blank URLs are omitted from completion/messages. URL edits clear policy acceptance, and invalid nonblank URLs show inline errors only after attempting to continue. Review uses the portal’s existing Terms of Use/Privacy Policy links and current policy version; editing details clears acceptance.
 
@@ -56,7 +56,7 @@ Spot pending requests offer **Cancel request**. The server verifies a cancellati
 
 ## Spot Telegram delivery
 
-Perps submissions now use the same bot and group through `POST /api/perps-submit` (Vercel Node and Vite dev/preview). After the existing canonical deposit-step signature is verified, the client sends only app name, Partner ID, selected network, revenue wallet, extra trading fee and current policy acceptance. The server validates these public details and posts a separate **New Perps setup request** summary. It never receives the signature, message, logo, hash or private export. Telegram acceptance is required before saving the pending summary and completing the setup. A delivery failure keeps the draft and verified proof for retry; a storage-only retry reuses confirmed delivery in the same mounted form. A network timeout may still mean delivery happened, so manual retry may duplicate. Perps has no cancellation option or cancellation endpoint, and existing saved requests are never sent automatically. Telegram delivery is informational: the endpoint does not authenticate the wallet or prove payment, approval or activation. The deposit and activation status remain mocked.
+Perps submissions now use the same bot and group through `POST /api/perps-submit` (Next.js API route). After the existing canonical deposit-step signature is verified, the client sends only app name, Partner ID, selected network, revenue wallet, extra trading fee and current policy acceptance. The server validates these public details and posts a separate **New Perps setup request** summary. It never receives the signature, message, logo, hash or private export. Telegram acceptance is required before saving the pending summary and completing the setup. A delivery failure keeps the draft and verified proof for retry; a storage-only retry reuses confirmed delivery in the same mounted form. A network timeout may still mean delivery happened, so manual retry may duplicate. Perps has no cancellation option or cancellation endpoint, and existing saved requests are never sent automatically. Telegram delivery is informational: the endpoint does not authenticate the wallet or prove payment, approval or activation. The deposit and activation status remain mocked.
 
 
 Create a bot using [@BotFather](https://t.me/BotFather), add it to the destination group/channel and allow it to post. Configure these **server-only** environment variables in the Partner Portal Vercel project (Production, and Preview if needed), then deploy the updated source:
@@ -66,9 +66,9 @@ Create a bot using [@BotFather](https://t.me/BotFather), add it to the destinati
 | `SPOT_TELEGRAM_BOT_TOKEN` | The BotFather bot token. Never prefix with `VITE_` or commit it. |
 | `SPOT_TELEGRAM_CHAT_ID` | The exact numeric destination chat ID, including its minus sign for groups. |
 
-For local development/preview, put the same settings in ignored `.env.local` and restart Vite. Static-only hosting cannot serve this endpoint. No webhook, polling service, Next.js conversion or new npm dependency is required. The bot sends the request heading, original app name, a generated camelCase Partner ID, DEX URL when supplied, and fees wallet. For example, `denis test app` produces `denisTestApp`. The server derives the ID from the validated name for both submission and cancellation notifications, treating spaces/hyphens as word separators, lowercasing words and capitalizing subsequent words while preserving Unicode letters. The generated ID is a suggestion, not a reserved or activated registry entry; no caller-supplied ID is trusted. Policy validation and internal submission timestamps are retained but omitted from the Telegram message. Cancellation uses the **Spot setup cancellation request** heading with the same identifying fields, without a new policy-acceptance requirement. The destination and message templates are server-controlled; request data cannot select another chat or arbitrary message.
+For local development/preview, put the same settings in ignored `.env.local` and restart the Next.js server. Static-only hosting cannot serve these endpoints. The bot sends the request heading, original app name, a generated camelCase Partner ID, DEX URL when supplied, and fees wallet. For example, `denis test app` produces `denisTestApp`. The server derives the ID from the validated name for both submission and cancellation notifications, treating spaces/hyphens as word separators, lowercasing words and capitalizing subsequent words while preserving Unicode letters. The generated ID is a suggestion, not a reserved or activated registry entry; no caller-supplied ID is trusted. Policy validation and internal submission timestamps are retained but omitted from the Telegram message. Cancellation uses the **Spot setup cancellation request** heading with the same identifying fields, without a new policy-acceptance requirement. The destination and message templates are server-controlled; request data cannot select another chat or arbitrary message.
 
-Notification function entry points and their shared validators use explicit `.js` relative imports so Vercel’s native Node ESM runtime can load the compiled files. Vite-only checks do not catch missing Node module extensions; verify the compiled function handlers and live routes as well as the page.
+Next.js API routes reuse the server handlers and validators; the routes run in the Next.js Node server.
 
 All three notification endpoints reject cross-origin browser requests, non-JSON/oversized bodies and invalid names/wallets/optional URLs. Submission additionally requires current policy acceptance; cancellation validates the identifying fields without accepting a new policy. Telegram requests have a 10-second timeout; browser requests have a 15-second timeout. Configuration and upstream failures never produce success or leak Telegram response details. The endpoint limits attempts per client IP per warm function instance (5/minute); configure a Vercel WAF rate-limit rule covering `POST /api/spot-submit`, `POST /api/spot-cancel` and `POST /api/perps-submit` for protection shared across instances. Origin checks and this public form do not authenticate a wallet. Telegram `sendMessage` has no idempotency key: an uncertain network outcome followed by a manual retry may duplicate a message. No automatic delivery retry or exactly-once guarantee is claimed.
 
@@ -85,7 +85,7 @@ npm run dev
 
 All required source is in this checkout. `vendor/README.md` records the extracted analytics modules; no sibling repository or npm workspace is required.
 
-Open the local URL printed by Vite, normally `http://127.0.0.1:5173`. The **Deposit funds** step’s **Sign Deposit & Submit** opens the wallet message-signature prompt for the mocked deposit, then calls a local setup-submission function. It sends no transaction. After signing and the local acknowledgement, `/api/perps-submit` must confirm Telegram acceptance and the pending summary must be saved before advancing to **Setup submitted**.
+Open the local URL printed by Next.js, normally `http://127.0.0.1:3000`. Use `npm run dev -- --port 3001` to choose another port. The **Deposit funds** step’s **Sign Deposit & Submit** opens the wallet message-signature prompt for the mocked deposit, then calls a local setup-submission function. It sends no transaction. After signing and the local acknowledgement, `/api/perps-submit` must confirm Telegram acceptance and the pending summary must be saved before advancing to **Setup submitted**.
 
 ```sh
 npm run typecheck
@@ -94,7 +94,11 @@ npm run build
 npm run preview
 ```
 
-The app has no automated application unit/browser suite. `npm test` runs the existing deployment-runner tests in `tests/deploy.test.mjs`; check application behavior manually.
+`npm test` runs the deployment, identity, database, availability, and server module tests.
+
+## Running the production server
+
+Run `npm run build` followed by `npm start` on a Node.js host. The Next.js server serves the application and its API routes together; database and Telegram credentials remain server-only. When HTTPS terminates at a reverse proxy, set `PORTAL_PUBLIC_ORIGIN` to the exact public origin (for example `https://launch.orbs.network`) and preserve the original Host header. This keeps origin checks and secure cookies correct without trusting forwarded headers. On Vercel, the existing environment variables remain supported; Vercel may package Next.js routes as platform functions.
 
 ## Deployment
 
@@ -110,21 +114,20 @@ npm run test:deploy            # Test the runner without Vercel or network calls
 The target is project `prj_FuUQY7dLPoEwSzrFfXThDwldZhrN` in organization
 `team_t6YZC010wIUd8yFGN6mkglL9`, the same organization as `admin-frontend`.
 After verifying the project and organization, publishing sets Root Directory to
-the repository root (unset/null; the CLI uses `--auto-detect root-directory`) and Framework Preset to Vite if needed, then pulls and verifies
+the repository root (unset/null; the CLI uses `--auto-detect root-directory`) and Framework Preset to Next.js if needed, then pulls and verifies
 them again before building. Other remote settings are left unchanged.
 Build-only does not change remote settings and reports the actual root/preset
 if they need configuration. `vercel.json` specifies the standalone `npm ci` install,
-build command, and `dist` output. Activation status is a local mock function and needs no registry endpoint or rewrite. Authenticated analytics endpoints remain Node functions.
+build command, and Next.js framework preset. Activation status is a local mock function and needs no registry endpoint or rewrite. Authenticated analytics endpoints remain Node functions.
 
 The runner uses your Vercel CLI login, opening login if necessary, and snapshots
 current tracked and non-ignored source edits in a temporary directory. It excludes
 local `.env*`, dependencies, and cached builds. Set production
 `VITE_` values in Vercel; local `.env.local` files are not used by this command.
-`vercel pull` supplies the production environment. No runtime variables or private
-environment files are uploaded with the static app.
+`vercel pull` supplies the production environment. Server-only secrets stay in the deployment environment; local environment files are not staged.
 
 Build validation compares the generated page title with the title in the staged
-source `index.html`, so branding changes do not invalidate correct output. Publishing
+source `src/pages/_app.tsx`, so branding changes do not invalidate correct output. Publishing
 waits for the returned deployment to be READY and checks that its HTML has the same
 source title and references the new build's script assets. It prints the actual deployment URL;
 no custom domain is assumed. Temporary files are removed and `vercel logout` runs
@@ -163,7 +166,7 @@ isolate results. Switching workspaces or leaving the authenticated workspace
 cancels/removes analytics queries, and abandoned requests cannot repopulate the
 new selection with the previous workspace's data.
 
-Both Vite and the Vercel Node functions reuse the same handlers. The shared
+Next.js API routes use the shared server handlers. The shared
 read-only service is `partner-analytics/lib/analytics-service.ts`; financial
 aggregation, metric explanations, formatting and CSV logic remain in the
 existing analytics app. The deployment runner includes these source modules
@@ -287,7 +290,7 @@ The optional **Share your launch** button opens the shared animated dialog with 
 
 `mockActivationStatus(partnerId)` resolves to `unconfirmed` locally for every partner, including `wewef`. Completion and workspace status call this function on load and refresh; no `/registry` or `/api/registry` request, Vercel function or rewrite remains. The status stays **Trading activation pending**, with a rotating status icon, the query-driven refresh skeleton and review explanation. The status icon stops rotating for reduced-motion users; error and confirmed icons stay static. A distinct local-only query key avoids reusing older registry status cache entries.
 
-This placeholder never confirms partner assignment or activates trading. The real partner API must be connected explicitly before authoritative activation is displayed. Real wallet login and analytics authorization remain independent. Vite serves the authenticated analytics endpoints and the public Spot submission endpoint.
+This placeholder never confirms partner assignment or activates trading. The real partner API must be connected explicitly before authoritative activation is displayed. Real wallet login and analytics authorization remain independent. The Next.js server serves the analytics and Spot submission endpoints.
 
 ## Portal scope and API boundaries
 
@@ -315,7 +318,7 @@ The signed login proof remains in session storage and is reverified for the same
 
 ## Environment configuration
 
-Vite reads `.env.local` on startup/build. The WalletConnect project ID comes from `VITE_WALLETCONNECT_PROJECT_ID` without a code fallback. Create the local env file directly with that setting. Public links keep their code defaults and RPC/network definitions remain in code. All `VITE_` values are public browser configuration; restart or rebuild after changes. Set the WalletConnect ID in Vercel for production; the deployment runner excludes local env files.
+Next.js reads `.env.local` on startup/build. The WalletConnect project ID comes from `VITE_WALLETCONNECT_PROJECT_ID` without a code fallback. Create the local env file directly with that setting. Public links keep their code defaults and RPC/network definitions remain in code. All `VITE_` values are public browser configuration; restart or rebuild after changes. Set the WalletConnect ID in Vercel for production; the deployment runner excludes local env files.
 
 | Variable | Purpose |
 | --- | --- |

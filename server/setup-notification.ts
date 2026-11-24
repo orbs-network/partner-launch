@@ -1,3 +1,4 @@
+import { servingOrigin } from "./request-origin.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Pool, PoolClient } from "pg";
 import { isRecord } from "../src/features/onboarding/terms-policy.js";
@@ -60,8 +61,8 @@ export async function setupNotificationHandler(request: IncomingMessage, respons
     reply(405, { error: "Use POST." });
     return;
   }
-  const origin = `${process.env.VERCEL ? "https" : "http"}://${request.headers.host}`;
-  if (request.headers.origin !== origin ||
+  const origin = servingOrigin(request);
+  if (!origin || request.headers.origin !== origin ||
     (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) {
     reply(403, { error: "Submit from the partner portal." });
     return;
