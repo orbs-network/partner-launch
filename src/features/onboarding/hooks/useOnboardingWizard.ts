@@ -10,7 +10,7 @@ import { clearPerpsRoute, perpsStepUrl } from "../perps-route";
 import { getStepError } from "../validation";
 import { validateRevenueWallet } from "../revenue-settings";
 import { getSetupCompletionError } from "../completion-validation";
-import { launchProgress, nextLaunchStep, previousLaunchStep } from "../launch-flow";
+import { launchProgress, launchStepOrder, nextLaunchStep, previousLaunchStep } from "../launch-flow";
 import { rememberCompletedSetup } from "../saved-setups";
 import { selectablePerpsChains } from "@/config/chains";
 import { fetchPartnerRegistryStatus } from "../registry-status";
@@ -50,6 +50,7 @@ export function useOnboardingWizard(externalBusy = false) {
   const returning = returnToReview && draft.step !== TERMS_STEP && draft.step !== FUNDING_STEP;
   const busy = actionBusy || externalBusy || checkingPartner;
   const activeStep = steps[draft.step] ?? steps[0];
+  const activeOrder = launchStepOrder(draft.integrationMode);
   const stepError = submitted
     ? draft.step === NETWORKS_STEP && draft.chainIds.length !== 1
       ? "Choose one network for this setup."
@@ -61,7 +62,7 @@ export function useOnboardingWizard(externalBusy = false) {
       ? "Get started"
       : activeStep.id === "funding"
         ? "Submit setup"
-        : returning ? "Save changes" : activeStep.id === "app-url" && !(draft.appUrl ?? "").trim() ? "Skip for now" : "Next step";
+        : returning ? "Save changes" : activeStep.id === "networks" ? "Continue" : activeStep.id === "app-url" && !(draft.appUrl ?? "").trim() ? "Skip for now" : "Next step";
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStepRef = useRef(draft.step);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
@@ -84,7 +85,7 @@ export function useOnboardingWizard(externalBusy = false) {
   }, [draft.launchPath, draft.step]);
   useEffect(dismissActionError, [draft.revision, dismissActionError]);
   function navigate(step: number) {
-    if (busy || partnerCheckInFlight.current || !stepOrder.includes(step)) return;
+    if (busy || partnerCheckInFlight.current || !activeOrder.includes(step)) return;
     const current = useOnboardingStore.getState();
     if (current.step === PARTNER_STEP && stepOrder.indexOf(step) > stepOrder.indexOf(PARTNER_STEP) &&
       (checkedPartnerRef.current?.id !== current.partnerName || checkedPartnerRef.current.revision !== current.revision)) {
@@ -104,7 +105,7 @@ export function useOnboardingWizard(externalBusy = false) {
   }
   // Browser Back/Forward between steps; completion has no step to return to.
   useStepHistory("perps", showCompletion ? null : draft.step, (target) => {
-    if (busy || showCompletion || !stepOrder.includes(target)) return false;
+    if (busy || showCompletion || !activeOrder.includes(target)) return false;
     const current = useOnboardingStore.getState();
     if (current.step === PARTNER_STEP && stepOrder.indexOf(target) > stepOrder.indexOf(PARTNER_STEP) &&
       (checkedPartnerRef.current?.id !== current.partnerName || checkedPartnerRef.current.revision !== current.revision)) return false;
@@ -118,7 +119,6 @@ export function useOnboardingWizard(externalBusy = false) {
     const current = useOnboardingStore.getState();
     if (busy || current.step !== NETWORKS_STEP || !selectablePerpsChains.some(chain => chain.id === chainId)) return;
     current.setChainIds([chainId]);
-    navigate(reviewTarget() ?? nextLaunchStep(NETWORKS_STEP));
   }
   function choosePath(path: "creator" | null) {
     if (busy) return;
@@ -178,10 +178,10 @@ export function useOnboardingWizard(externalBusy = false) {
       return;
     }
     if (currentDraft.step === PARTNER_STEP) {
-      void checkPartnerAndContinue(currentDraft.partnerName, currentDraft.revision, currentDraft.contact ?? "", reviewTarget() ?? nextLaunchStep(PARTNER_STEP));
+      void checkPartnerAndContinue(currentDraft.partnerName, currentDraft.revision, currentDraft.contact ?? "", reviewTarget() ?? nextLaunchStep(PARTNER_STEP, currentDraft.integrationMode));
     } else if (currentDraft.step === FUNDING_STEP) finish();
     else {
-      navigate(reviewTarget() ?? nextLaunchStep(currentDraft.step));
+      navigate(reviewTarget() ?? nextLaunchStep(currentDraft.step, currentDraft.integrationMode));
     }
   }
   async function checkPartnerAndContinue(id: string, revision: number, contact: string, target: number) {
@@ -260,7 +260,7 @@ export function useOnboardingWizard(externalBusy = false) {
     choosePath,
     selectNetwork,
     // While editing from Review, Back returns there once the details are valid again.
-    back: () => navigate((returning ? reviewTarget() : undefined) ?? previousLaunchStep(draft.step)),
+    back: () => navigate((returning ? reviewTarget() : undefined) ?? previousLaunchStep(draft.step, draft.integrationMode)),
     next,
     onFundingConfirmed: finish,
     editFromReview,

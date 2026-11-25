@@ -1,6 +1,6 @@
 import { ArrowLeft, ArrowRight, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FUNDING_STEP, NETWORKS_STEP, TERMS_STEP } from "../onboarding-steps";
+import { FUNDING_STEP, TERMS_STEP } from "../onboarding-steps";
 
 export function WizardNavigation({
   step,
@@ -34,8 +34,7 @@ export function WizardNavigation({
             Back
           </Button>
         ) : null}
-        {step !== NETWORKS_STEP ? (
-          <Button
+        <Button
             className="flex-1"
             // Skipping a required-later field is allowed but should not look like the recommended path.
             variant={continueLabel === "Skip for now" ? "secondary" : "default"}
@@ -46,8 +45,7 @@ export function WizardNavigation({
           >
             {continueLabel}
             {checkingPartner ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
-          </Button>
-        ) : null}
+        </Button>
         <span role="status" className="sr-only">{checkingPartner ? "Checking Partner ID availability." : ""}</span>
       </div>
     </footer>

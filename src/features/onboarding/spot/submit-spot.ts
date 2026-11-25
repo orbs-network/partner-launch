@@ -11,7 +11,7 @@ export async function submitSpot(draft: SpotDraft, ownerWallet: string, attempt:
     response = await fetch("/api/spot-submit", {
       method: "POST", headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(15_000),
-      body: JSON.stringify({ integrationMode: draft.integrationMode, appName: draft.appName, contact: draft.contact, dexUrl: draft.integrationMode === "ui" ? "" : draft.dexUrl, feesWallet: draft.feesWallet, tradingFeePercent: draft.tradingFeePercent,
+      body: JSON.stringify({ integrationMode: draft.integrationMode, appName: draft.appName, contact: draft.contact, dexUrl: draft.dexUrl, feesWallet: draft.feesWallet, tradingFeePercent: draft.tradingFeePercent,
         policyAccepted: draft.policyAccepted, policyVersion: draft.policyVersion, ownerWallet, ...attempt }),
     });
   } catch {
@@ -27,6 +27,6 @@ export async function submitSpot(draft: SpotDraft, ownerWallet: string, attempt:
     !Number.isFinite(Date.parse(result.submittedAt))) throw new Error("We couldn’t confirm delivery to the team. Please try again.");
   return { kind: "spot", ...(draft.integrationMode ? { integrationMode: draft.integrationMode } : {}), appName: draft.appName.trim(), feesWallet: draft.feesWallet.trim(), tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent)!, ownerWallets: [],
     ...(draft.contact.trim() ? { contact: normalizeContact(draft.contact) } : {}),
-    ...(draft.integrationMode !== "ui" && draft.dexUrl.trim() ? { dexUrl: draft.dexUrl.trim() } : {}),
+    ...(draft.dexUrl.trim() ? { dexUrl: draft.dexUrl.trim() } : {}),
     policy: { version: draft.policyVersion, acceptedAt: result.submittedAt }, transport: "telegram" };
 }

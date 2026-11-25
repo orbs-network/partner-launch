@@ -7,6 +7,7 @@ const icons = {
   welcome: Handshake,
   "integration-choice": PanelsTopLeft,
   "app-url": Globe2,
+  "build-ui": PanelsTopLeft,
   networks: Network,
   partner: Building2,
   websites: Globe2,

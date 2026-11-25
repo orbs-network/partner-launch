@@ -8,18 +8,18 @@ import type { PendingRequest } from "./request-record";
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
 /** Read-only workspace details; status, guidance and actions live around it in SetupDetail. */
-export function RequestCard({ request, registryStatus, action }: { request: PendingRequest; registryStatus: "checking" | "pending" | "changes-pending" | "approved" | "ready" | "error"; action?: ReactNode }) {
+export function RequestCard({ request, registryStatus, action, hidePendingStatus }: { request: PendingRequest; registryStatus: "checking" | "pending" | "changes-pending" | "approved" | "ready" | "error"; action?: ReactNode; hidePendingStatus?: boolean }) {
   const status = registryStatus;
   const StatusIcon = status === "ready" || status === "approved" ? CircleCheck : status === "error" ? CircleAlert : LoaderCircle;
   const statusLabel = status === "changes-pending" ? "Changes pending" : status === "approved" ? "Approved" : status === "ready" ? "Trading enabled" : status === "error" ? "Status unavailable" : status === "checking" ? "Checking status" : "Approval pending";
   const Icon = request.kind === "spot" ? ArrowLeftRight : Rocket;
-  const label = request.kind === "spot" ? "Fees wallet" : "Revenue wallet";
+  const label = "Revenue wallet";
   const rows: { label: string; value: ReactNode }[] = [
     { label: "Partner ID", value: request.partnerId ?? "Not available" },
     { label: "Integration", value: request.integrationMode === "ui" ? "Complete trading app" : request.integrationMode === "api" ? "API integration" : request.integrationMode === "existing" ? "Existing app" : "Not specified" },
     { label: "App URL", value: (request.kind === "spot" ? request.dexUrl : request.appUrl) || "Not added yet" },
     ...(request.kind === "perps" ? [{ label: "Network", value: <span className="flex flex-wrap items-center gap-x-3 gap-y-2">{request.chainIds.map(id => { const chain = chainById(id); return <span key={id} className="inline-flex items-center gap-2">{chain ? <img src={chainLogo(id)} width={22} height={22} alt="" className="size-[22px] shrink-0 rounded-full object-contain" /> : null}<span>{chain?.name ?? `Chain ${id}`}</span></span>; })}</span> }] : []),
-    { label: request.kind === "spot" ? "Trading fee" : "Additional fees", value: request.kind === "spot" ? request.tradingFeeTenthsBps === undefined ? "Not specified" : `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` : request.extraFeePercent === undefined ? "Not specified" : `${request.extraFeePercent}%` },
+    { label: "Platform fee", value: request.kind === "spot" ? request.tradingFeeTenthsBps === undefined ? "Not specified" : `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` : request.extraFeePercent === undefined ? "Not specified" : `${request.extraFeePercent}%` },
   ];
   return (
     <article aria-label={`${request.appName} ${request.kind === "spot" ? "Spot" : "Perps"} request`} className="overflow-hidden rounded-[22px] border border-(--edge) bg-(--control-bg)">
@@ -29,7 +29,7 @@ export function RequestCard({ request, registryStatus, action }: { request: Pend
           <div className="min-w-0"><p className="text-[11px] font-medium uppercase tracking-[0.09em] text-(--muted)">{request.kind === "spot" ? "Spot" : "Perps"}</p><h3 className="mt-0.5 text-[19px] leading-snug font-semibold tracking-[-0.4px] [overflow-wrap:anywhere]">{request.appName}</h3><time dateTime={request.savedAt} className="mt-1 block text-xs tabular-nums text-(--muted)">{dateFormat.format(new Date(request.savedAt))}</time></div>
         </div>
         <div className="flex flex-wrap items-center gap-2 max-[480px]:w-full max-[480px]:justify-between">
-          <span role="status" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-(--primary-soft) px-3 py-2 text-xs font-medium text-(--link)"><StatusIcon size={14} className={`shrink-0${status === "checking" || status === "pending" || status === "changes-pending" ? " animate-spin motion-reduce:animate-none" : ""}`} aria-hidden="true" />{statusLabel}</span>
+          {!(hidePendingStatus && status === "pending") ? <span role="status" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-(--primary-soft) px-3 py-2 text-xs font-medium text-(--link)"><StatusIcon size={14} className={`shrink-0${status === "checking" || status === "pending" || status === "changes-pending" ? " animate-spin motion-reduce:animate-none" : ""}`} aria-hidden="true" />{statusLabel}</span> : null}
           {action}
         </div>
       </div>

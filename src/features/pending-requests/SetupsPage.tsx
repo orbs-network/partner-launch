@@ -1,4 +1,4 @@
-import { ArrowLeft, BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
+import { BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
@@ -17,10 +17,9 @@ import { findWorkspace, workspacePartnerId } from "./workspace-location";
 /**
  * My workspaces dashboard (`/setups?id=…&section=overview|analytics`).
  */
-export function SetupsPage({ onCancellationBusyChange, onCreateSetup, onBack }: {
+export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
   onCancellationBusyChange?: (busy: boolean) => void;
   onCreateSetup: () => void;
-  onBack: () => void;
 }) {
   const { requests, error, statusOf } = useSetupCounts();
   const { loading: requestsLoading, address } = useWalletRequests();
@@ -68,10 +67,9 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup, onBack }: 
   return (
     <main id="main" className="mx-auto mt-8 mb-10 w-[min(900px,calc(100%-40px))] flex-1 max-[767px]:mt-4 max-[720px]:w-[calc(100%-24px)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button type="button" variant="ghost" size="sm" disabled={cancelling} onClick={onBack} className="-ml-3 min-h-11 gap-2 px-3 text-sm text-(--secondary-text)"><ArrowLeft size={16} aria-hidden="true" />Back to setup</Button>
+        <h1 ref={headingRef} tabIndex={-1} className="text-[28px] font-semibold tracking-[-0.8px] focus:outline-none max-[767px]:text-2xl">My workspaces</h1>
         {address && !loading && !error && selected ? <Button type="button" variant="secondary" size="sm" disabled={cancelling} onClick={onCreateSetup} className="min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create new setup</Button> : null}
       </div>
-      <h1 ref={headingRef} tabIndex={-1} className="mt-2 text-[28px] font-semibold tracking-[-0.8px] focus:outline-none max-[767px]:text-2xl">My workspaces</h1>
       {address && !loading && !error && requests.length ? <p className="mt-1 text-sm text-(--muted)">{requests.length === 1 ? "1 setup" : `${requests.length} setups`} for your connected wallet</p> : null}
       {reconnecting ? <div className="mt-6"><ContentSkeleton label="Connecting your wallet" /></div> : !address ? (
         <div className="mt-8 rounded-[24px] border border-(--edge) bg-(--surface) px-6 py-12 text-center">

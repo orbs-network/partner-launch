@@ -8,18 +8,19 @@ import { normalizeOwnerWallets, restoreOwnerWallets } from "../owner-wallets.js"
 
 export const SPOT_DRAFT_KEY = "partner-portal-spot-draft-v1";
 export const spotSteps = [
-  { id: "integration", name: "Integration", title: "How would you like to add Spot?", intro: "Choose the approach that fits your app. We’ll prepare the right instructions for you." },
-  { id: "app", name: "App name", title: "App name", intro: "Choose the name people will see in your Spot app, and how our team can reach you." },
-  { id: "url", name: "DEX URL", title: "DEX URL", intro: "Add your DEX website, if you have one. You can leave this blank." },
-  { id: "wallet", name: "Fees wallet", title: "Fees wallet", intro: "Choose the wallet where you want to receive Spot fees." },
+  { id: "integration", name: "Integration", title: "How would you like to add spot trading?", intro: "Choose a ready-made trading interface or add Spot to your existing DEX." },
+  { id: "app", name: "App name", title: "App name", intro: "Choose the name people will see in your DEX, and how our team can reach you." },
+  { id: "wallet", name: "Platform fee", title: "Set your platform fee", intro: "Choose where to receive your revenue and set the platform fee for Spot trades." },
+  { id: "build", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made Spot trading interface." },
+  { id: "url", name: "DEX URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step if it isn’t ready yet." },
   { id: "review", name: "Review", title: "Review your Spot setup", intro: "Check your details and accept the policy before continuing." },
-  { id: "deposit", name: "Deposit requirement", title: "Deposit requirement", intro: "Review the deposit requirement, then submit your setup to the team." },
+  { id: "deposit", name: "Activation deposit", title: "One-time activation deposit", intro: "Review the deposit requirement, then submit your setup to the team." },
 ] as const;
 export type SpotStep = (typeof spotSteps)[number]["id"];
 
-/** Keep stable step IDs while skipping the website question for a new app. */
+/** Existing integrations skip the ready-made UI build; stable IDs preserve restored drafts. */
 export function spotStepsForMode(mode: SpotDraft["integrationMode"]) {
-  return mode === "ui" ? spotSteps.filter(step => step.id !== "url") : spotSteps;
+  return mode === "existing" ? spotSteps.filter(step => step.id !== "build") : spotSteps;
 }
 export interface SpotDraft {
   step: SpotStep;
@@ -54,7 +55,7 @@ export function spotStepError(step: SpotStep, draft: SpotDraft): string | undefi
   if (step === "app") return validateDexName(draft.appName) ?? validateContact(draft.contact);
   if (step === "url") return validateDexUrl(draft.dexUrl);
   if (step === "wallet" && (!isAddress(draft.feesWallet.trim()) || draft.feesWallet.trim().toLowerCase() === zeroAddress)) return "Enter a valid, non-zero EVM fees wallet address.";
-  if (step === "wallet" && parseSpotFeePercent(draft.tradingFeePercent) === null) return "Enter a trading fee from 0% to 1%, in 0.001% increments.";
+  if (step === "wallet" && parseSpotFeePercent(draft.tradingFeePercent) === null) return "Enter a platform fee from 0% to 1%, in 0.001% increments.";
   if (step === "review" && (!draft.policyAccepted || draft.policyVersion !== TERMS_VERSION)) return "Accept the terms and privacy policy before submitting your Spot setup.";
 }
 export function restoreSpotDraft(value: unknown): SpotDraft {
@@ -71,7 +72,7 @@ export function restoreSpotDraft(value: unknown): SpotDraft {
     policyAccepted: value.policyAccepted === true && value.policyVersion === TERMS_VERSION,
     policyVersion: TERMS_VERSION,
   };
-  if (draft.integrationMode === "ui" && draft.step === "url") draft.step = "wallet";
+  if (draft.integrationMode === "existing" && draft.step === "build") draft.step = "url";
   const steps = spotStepsForMode(draft.integrationMode);
   const index = steps.findIndex((step) => step.id === draft.step);
   const invalid = steps.slice(0, index).find((step) => spotStepError(step.id, draft));
@@ -87,7 +88,7 @@ export function prepareSpotSetup(draft: SpotDraft): Omit<SpotSetupSnapshot, "tra
   return {
     kind: "spot", ...(draft.integrationMode ? { integrationMode: draft.integrationMode } : {}), appName: draft.appName.trim(), feesWallet: draft.feesWallet.trim(), tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent)!, ownerWallets: normalizeOwnerWallets(draft.ownerWallets),
     ...(draft.contact.trim() ? { contact: normalizeContact(draft.contact) } : {}),
-    ...(draft.integrationMode !== "ui" && draft.dexUrl.trim() ? { dexUrl: draft.dexUrl.trim() } : {}),
+    ...(draft.dexUrl.trim() ? { dexUrl: draft.dexUrl.trim() } : {}),
     policy: { version: TERMS_VERSION, acceptedAt: new Date().toISOString() },
   };
 }

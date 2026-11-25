@@ -59,12 +59,12 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
                 <SetupActions onCreateNew={() => setResetOpen(true)} onOpenSetups={onPendingRequests} createNewButtonRef={resetRef} busy={busy} />
               </div>
             ) : (
-              <form className="mt-6" noValidate aria-busy={submitting || checkingAppId || walletConnecting} onSubmit={(event) => { event.preventDefault(); if (needsWallet) openConnectModal?.(); else void next(); }}>
+              <form className={draft.step === "build" ? "mt-4" : "mt-6"} noValidate aria-busy={submitting || checkingAppId || walletConnecting} onSubmit={(event) => { event.preventDefault(); if (needsWallet) openConnectModal?.(); else void next(); }}>
                 <fieldset disabled={busy} className="m-0 min-w-0 border-0 p-0">
                   <SpotFields draft={draft} error={error} appIdUnavailable={appIdUnavailable} update={update} selectIntegration={selectIntegration} acceptPolicy={acceptPolicy} edit={edit} fillWallet={fillWallet} onWalletBusyChange={onWalletBusyChange} />
-                  <div className="mt-7 flex gap-3">
+                  <div className={`${draft.step === "build" ? "mt-4" : "mt-7"} flex gap-3`}>
                     <Button type="button" variant="ghost" className="shrink-0 px-3 text-[13px]" onClick={() => { if (!back()) onExit(); }}><ArrowLeft size={18} aria-hidden="true" />Back</Button>
-                    <Button type="submit" disabled={busy || (needsWallet && (!openConnectModal || walletConnecting))} aria-busy={checkingAppId || submitting} className="min-w-0 flex-1 whitespace-normal px-3 text-[13px]">{submitting ? "Submit setup" : needsWallet ? "Connect wallet to submit" : draft.step === "deposit" ? "Submit setup" : returnToReview ? "Save changes" : "Next step"}{checkingAppId || submitting ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : draft.step !== "deposit" ? <ArrowRight size={18} aria-hidden="true" /> : null}</Button>
+                    <Button type="submit" variant={draft.step === "url" && !draft.dexUrl.trim() && !returnToReview ? "secondary" : "default"} disabled={busy || (needsWallet && (!openConnectModal || walletConnecting))} aria-busy={checkingAppId || submitting} className="min-w-0 flex-1 whitespace-normal px-3 text-[13px]">{submitting ? "Submit setup" : needsWallet ? "Connect wallet to submit" : draft.step === "deposit" ? "Submit setup" : returnToReview ? "Save changes" : draft.step === "url" && !draft.dexUrl.trim() ? "Skip for now" : "Next step"}{checkingAppId || submitting ? <LoaderCircle size={18} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : draft.step !== "deposit" ? <ArrowRight size={18} aria-hidden="true" /> : null}</Button>
                   </div>
                 </fieldset>
                 <p role="status" className="sr-only">{submitting ? "Submitting your Spot setup." : checkingAppId ? "Checking Spot Partner ID availability." : ""}</p>

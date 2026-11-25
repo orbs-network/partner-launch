@@ -55,7 +55,7 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
       <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-3">
           <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <dt className="text-[11px] leading-normal text-(--muted)">{draft.builderFeeTenthsBps === undefined ? "Requested fee share" : "Additional fees"}</dt>
+            <dt className="text-[11px] leading-normal text-(--muted)">{draft.builderFeeTenthsBps === undefined ? "Requested fee share" : "Platform fee"}</dt>
             <dd className="m-0 text-xl leading-tight font-semibold tracking-tight text-(--link) tabular-nums">{feeValue}</dd>
           </div>
           <div className="grid min-w-0 gap-1">

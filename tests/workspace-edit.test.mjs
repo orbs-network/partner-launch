@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createServer } from "vite";
 import { privateKeyToAccount } from "viem/accounts";
 
-test("workspace changes use an address claim, notify the team, and reject stale or invalid requests", async () => {
+test("workspace changes use the authenticated wallet, notify the team, and reject stale or invalid requests", async () => {
   const vite = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "silent" });
   const originalFetch = globalThis.fetch, token = process.env.SPOT_TELEGRAM_BOT_TOKEN, chat = process.env.SPOT_TELEGRAM_CHAT_ID;
   try {
@@ -24,8 +24,9 @@ test("workspace changes use an address claim, notify the team, and reject stale 
     }, release() {} }) };
     const edit = { product: "spot", appName: "Updated App", partnerId: "updatedApp", integrationMode: "existing", url: "https://example.com", wallet: owner.address, fee: 15, contact: "user@example.com" };
     function claim(account, version = 0) { return { address: account.address, requestId: id, version, edit }; }
-    async function call(body) { let status, payload; const response = { setHeader() {}, writeHead(value) { status = value; return this; }, end(value) { payload = JSON.parse(value); } }; await workspaceEditHandler({ method: "POST", headers: { host: "localhost:5173", origin, "content-type": "application/json" }, socket: { remoteAddress: `edit-test-${crypto.randomUUID()}` }, body }, response, database); return { status, payload }; }
+    async function call(body, authenticate = async request => request.body.address) { let status, payload; const response = { setHeader() {}, writeHead(value) { status = value; return this; }, end(value) { payload = JSON.parse(value); } }; await workspaceEditHandler({ method: "POST", headers: { host: "localhost:5173", origin, "content-type": "application/json" }, socket: { remoteAddress: `edit-test-${crypto.randomUUID()}` }, body }, response, database, authenticate); return { status, payload }; }
     const proof = claim(owner);
+    assert.equal((await call(proof, async () => undefined)).status, 401);
     assert.equal((await call({ ...proof, edit: { ...edit, fee: 5000 } })).status, 400);
     assert.equal((await call(claim(other))).status, 409);
     const changed = { ...proof, edit: { ...edit, partnerId: "anotherId" } };
@@ -77,7 +78,7 @@ test("Perps updates preserve approval and historical metadata while replacing wo
     const edit = { product: "perps", appName: "Updated App", partnerId: "partner", integrationMode: "api", url: "", wallet: owner.address, fee: 25, chainId: 56 };
     const proof = { address: owner.address, requestId: id, version: 0, edit };
     let status; const response = { setHeader() {}, writeHead(value) { status = value; return this; }, end() {} };
-    await workspaceEditHandler({ method: "POST", headers: { host: "localhost:5173", origin, "content-type": "application/json" }, socket: { remoteAddress: `perps-${crypto.randomUUID()}` }, body: proof }, response, database);
+    await workspaceEditHandler({ method: "POST", headers: { host: "localhost:5173", origin, "content-type": "application/json" }, socket: { remoteAddress: `perps-${crypto.randomUUID()}` }, body: proof }, response, database, async () => owner.address);
     assert.equal(status, 200); assert.equal(row.status, "approved"); assert.equal(row.details.appName, "Updated App");
     assert.deepEqual(row.details.chainIds, [56]); assert.equal(row.details.builderFeeTenthsBps, 25); assert.equal(row.details.appUrlVersion, 5);
     assert.equal("appUrl" in row.details, false); assert.equal(row.details.retainedProof, "historical");

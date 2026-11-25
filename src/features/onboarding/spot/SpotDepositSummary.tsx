@@ -6,8 +6,7 @@ export function SpotDepositSummary() {
     <section className="overflow-hidden rounded-[22px] border border-(--panel-border) bg-(--control-bg)" aria-labelledby="spot-deposit-title">
       <div className="p-5 max-[720px]:p-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 id="spot-deposit-title" className="text-[13px] font-medium text-(--secondary-text)">Trading deposit</h2>
-            <span className="rounded-full bg-(--soft) px-2.5 py-1 text-xs font-medium text-(--muted)">Not collected yet</span>
+          <h2 id="spot-deposit-title" className="text-[13px] font-medium text-(--secondary-text)">Deposit amount</h2>
         </div>
         <div className="mt-4 flex items-center gap-3">
           <img src="/usdc.svg" alt="" width={44} height={44} className="size-11 shrink-0" />
@@ -18,6 +17,6 @@ export function SpotDepositSummary() {
         </div>
       </div>
     </section>
-    <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">Submitting moves no funds. This one-time deposit is required before trading is activated, and the team reviews your setup first.</p>
+    <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">A one-time deposit is required before activation. Submitting this request does not collect the deposit; the team will review your setup first.</p>
   </>;
 }

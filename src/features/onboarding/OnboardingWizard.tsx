@@ -11,7 +11,7 @@ import { WizardNavigation } from "./components/WizardNavigation";
 import { WizardStep } from "./components/WizardStep";
 import { WizardIntro } from "./components/WizardIntro";
 import { StartOverButton } from "./components/StartOverButton";
-import { FUNDING_STEP, TERMS_STEP, WELCOME_STEP } from "./onboarding-steps";
+import { BUILD_UI_STEP, FUNDING_STEP, TERMS_STEP, WELCOME_STEP } from "./onboarding-steps";
 
 // The completion screen (share image, launch brief) is only needed at the end of setup.
 const loadSetupComplete = () => import("./SetupComplete");
@@ -91,7 +91,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
                 {step !== WELCOME_STEP ? <WizardIntro {...activeStep} title={launchPath === "api" && activeStep.id === "partner" ? "Partner ID" : activeStep.title} intro={launchPath === "api" && activeStep.id === "partner" ? "Enter the Partner ID your integration will use." : activeStep.intro} headingRef={headingRef} /> : null}
                 <form
                   id="onboarding-step"
-                  className="px-8 pt-[27px] pb-6 max-[720px]:px-[21px] max-[720px]:pt-[23px] max-[720px]:pb-[18px] max-[370px]:px-[17px]"
+                  className={`px-8 max-[720px]:px-[21px] max-[370px]:px-[17px] ${step === BUILD_UI_STEP ? "pt-4 pb-3 max-[720px]:pt-3 max-[720px]:pb-2" : "pt-[27px] pb-6 max-[720px]:pt-[23px] max-[720px]:pb-[18px]"}`}
                   key={step}
                   noValidate
                   inert={externalBusy}

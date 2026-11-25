@@ -9,9 +9,12 @@ export function IntegrationChoice({ product, selected, onSelect, error, disabled
   error?: string;
   disabled: boolean;
 }) {
-  const choices = [
-    { value: "ui" as const, title: "A complete trading app", description: "Start with a ready-made trading interface, then make it your own with your branding.", detail: "Best if you need a trading app", Icon: LayoutTemplate },
-    { value: "existing" as const, title: "Add trading to my app", description: `Keep your existing app and let your developer or AI assistant connect ${product} behind the scenes.`, detail: "Best if you already have an app", Icon: Code2 },
+  const choices = product === "Perps" ? [
+    { value: "ui" as const, title: "Use a ready-made UI", description: "Launch with a complete perpetual trading interface and customize it with your brand.", detail: "Best for a fast, branded launch", Icon: LayoutTemplate },
+    { value: "existing" as const, title: "Integrate the trading API", description: "Run algorithmic strategies or connect perpetual trading to your wallet, bot, or community.", detail: "Best for algo traders, wallets, and trading communities", Icon: Code2 },
+  ] : [
+    { value: "ui" as const, title: "Use a ready-made UI", description: "Launch with a complete Spot trading interface and customize it with your brand.", detail: "Best for a fast, branded launch", Icon: LayoutTemplate },
+    { value: "existing" as const, title: "Add Spot to my DEX", description: "Connect Spot trading to your existing DEX with help from your developer or coding agent.", detail: "Best if you already have a DEX", Icon: Code2 },
   ];
   return <fieldset className="m-0 grid min-w-0 gap-3 border-0 p-0" aria-describedby={error ? "integration-choice-error" : undefined}>
     <legend className="sr-only">Choose how to add {product}</legend>

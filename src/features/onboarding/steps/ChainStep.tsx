@@ -7,7 +7,8 @@ export function ChainStep({ error = "", disabled, onSelect }: { error?: string; 
   const selected = useOnboardingStore((state) => state.chainIds);
   return (
     <>
-      <fieldset aria-describedby={error ? "chain-error" : undefined} className="m-0 min-w-0 border-0 p-0">
+      <p id="chain-scope-hint" className="mb-4 text-sm font-medium text-(--secondary-text)">Each Partner ID supports one network.</p>
+      <fieldset aria-describedby={error ? "chain-scope-hint chain-error" : "chain-scope-hint"} className="m-0 min-w-0 border-0 p-0">
         <legend className="sr-only">Choose your network</legend>
         <div className="grid grid-cols-2 gap-2.5 max-[720px]:gap-[9px] max-[370px]:grid-cols-1">
           {selectablePerpsChains.map((chain) => {

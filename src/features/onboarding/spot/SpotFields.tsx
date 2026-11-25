@@ -10,6 +10,7 @@ import type { SpotDraft, SpotStep } from "./spot-setup";
 import { SpotSummary } from "./SpotSummary";
 import { IntegrationChoice } from "../components/IntegrationChoice";
 import { SpotSupportedChains } from "./SpotSupportedChains";
+import { InlineSpotPrompt } from "./InlineSpotPrompt";
 import { SpotDepositSummary } from "./SpotDepositSummary";
 import { SpotWalletField } from "./SpotWalletField";
 
@@ -25,6 +26,7 @@ export function SpotFields({ draft, error, appIdUnavailable, update, selectInteg
   onWalletBusyChange: (busy: boolean) => void;
 }) {
   if (draft.step === "integration") return <IntegrationChoice product="Spot" selected={draft.integrationMode} onSelect={selectIntegration} error={error} disabled={false} />;
+  if (draft.step === "build") return <InlineSpotPrompt compact setup={{ appName: draft.appName, feesWallet: draft.feesWallet, tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent) ?? undefined, integrationMode: "ui" }} />;
   if (draft.step === "deposit") return <SpotDepositSummary />;
   if (draft.step === "review") return (
     <>
@@ -53,7 +55,7 @@ export function SpotFields({ draft, error, appIdUnavailable, update, selectInteg
   const nameError = error && error !== contactError ? error : undefined;
   return (
     <>
-      <div className="mb-2.5 flex items-center gap-1"><Label htmlFor="spot-app" className="text-sm font-medium text-(--secondary-text)">App name</Label><FieldHelp label="App name">Choose your app’s name. We use it to suggest a Partner ID, which must be unique; the team confirms its assignment.</FieldHelp></div>
+      <div className="mb-2.5 flex items-center gap-1"><Label htmlFor="spot-app" className="text-sm font-medium text-(--secondary-text)">App name</Label><FieldHelp label="App name">We’ll use this name to generate your unique Partner ID. You can change the app name later.</FieldHelp></div>
       <Input id="spot-app" name="appName" enterKeyHint="next" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Your Spot app name…" maxLength={80} value={draft.appName} onChange={(event) => update("appName", event.target.value)} aria-invalid={!!nameError} aria-describedby={nameError ? "spot-error" : undefined} />
       <FieldError id="spot-error" message={nameError} />
       <div className="mt-5 mb-2.5 flex items-center gap-1"><Label htmlFor="spot-contact" className="text-sm font-medium text-(--secondary-text)">Contact <span className="font-normal text-(--muted)">(optional)</span></Label><FieldHelp label="Contact">Provide an email address or Telegram contact so the team can follow up about your request. It is shared only with the Orbs team.</FieldHelp></div>

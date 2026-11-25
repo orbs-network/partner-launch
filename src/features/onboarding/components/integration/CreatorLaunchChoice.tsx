@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export function CreatorLaunchChoice({ checked, onCheckedChange, disabled = false, description = "Your assistant will choose missing details, show the design and publish without another design approval." }: {
+export function CreatorLaunchChoice({ checked, onCheckedChange, disabled = false, description = "The copied prompt asks your coding agent to choose missing branding, show you the design, and publish it without another design approval." }: {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   description?: string;

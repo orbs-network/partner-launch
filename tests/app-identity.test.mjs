@@ -39,7 +39,7 @@ test("Spot trading fees validate exact 0–1% values and preserve older drafts",
     assert.equal(restoreSpotDraft({}).tradingFeePercent, "0");
     const draft = { ...emptySpotDraft(), integrationMode: "existing", appName: "Example", feesWallet: "0x0000000000000000000000000000000000000001", policyAccepted: true, tradingFeePercent: "1" };
     assert.equal(prepareSpotSetup(draft).tradingFeeTenthsBps, 1000);
-    assert.throws(() => prepareSpotSetup({ ...draft, tradingFeePercent: "1.001" }), /trading fee/);
+    assert.throws(() => prepareSpotSetup({ ...draft, tradingFeePercent: "1.001" }), /platform fee/);
   } finally { await server.close(); }
 });
 
@@ -71,7 +71,7 @@ test("Spot deposit step follows review and restores only with accepted policy", 
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
   try {
     const { spotSteps, emptySpotDraft, restoreSpotDraft, prepareSpotSetup } = await server.ssrLoadModule("/src/features/onboarding/spot/spot-setup.ts");
-    assert.deepEqual(spotSteps.map(step => step.id), ["integration", "app", "url", "wallet", "review", "deposit"]);
+    assert.deepEqual(spotSteps.map(step => step.id), ["integration", "app", "wallet", "build", "url", "review", "deposit"]);
     const draft = { ...emptySpotDraft(), integrationMode: "existing", step: "deposit", appName: "Example", feesWallet: "0x0000000000000000000000000000000000000001", policyAccepted: true };
     assert.equal(restoreSpotDraft(draft).step, "deposit");
     assert.equal(restoreSpotDraft({ ...draft, policyAccepted: false }).step, "review");
@@ -92,7 +92,7 @@ test("optional Perps app URL survives drafts and does not rewrite signed data", 
     const { preparePerpsRequest } = await server.ssrLoadModule("/src/features/onboarding/perps-request.ts");
     const { TERMS_VERSION } = await server.ssrLoadModule("/src/features/onboarding/terms-policy.ts");
     assert.ok(onboardingStepOrder.indexOf(PARTNER_STEP) < onboardingStepOrder.indexOf(APP_URL_STEP));
-    assert.ok(onboardingStepOrder.indexOf(APP_URL_STEP) < onboardingStepOrder.indexOf(NETWORKS_STEP));
+    assert.ok(onboardingStepOrder.indexOf(NETWORKS_STEP) < onboardingStepOrder.indexOf(APP_URL_STEP));
     const draft = { ...initialDraft, appUrl: "https://example.org" };
     assert.equal(getStepError(APP_URL_STEP, { ...draft, appUrl: "" }), undefined);
     assert.ok(getStepError(APP_URL_STEP, { ...draft, appUrl: "javascript:alert(1)" }));
@@ -141,17 +141,36 @@ test("Spot integration choice preserves drafts and selects the correct agent ins
   } finally { await server.close(); }
 });
 
-test("Spot skips the DEX URL only for the complete app path", async () => {
+test("Spot UI build precedes optional DEX URL and both paths preserve it", async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
   try {
     const { emptySpotDraft, spotStepsForMode, restoreSpotDraft, prepareSpotSetup } = await server.ssrLoadModule("/src/features/onboarding/spot/spot-setup.ts");
-    assert.deepEqual(spotStepsForMode("ui").map(step => step.id), ["integration", "app", "wallet", "review", "deposit"]);
-    assert.deepEqual(spotStepsForMode("existing").map(step => step.id), ["integration", "app", "url", "wallet", "review", "deposit"]);
-    const draft = { ...emptySpotDraft(), integrationMode: "ui", step: "url", appName: "Example App", dexUrl: "invalid previous URL", feesWallet: "0x0000000000000000000000000000000000000001", policyAccepted: true };
+    assert.deepEqual(spotStepsForMode("ui").map(step => step.id), ["integration", "app", "wallet", "build", "url", "review", "deposit"]);
+    assert.deepEqual(spotStepsForMode("existing").map(step => step.id), ["integration", "app", "wallet", "url", "review", "deposit"]);
+    const draft = { ...emptySpotDraft(), integrationMode: "ui", step: "url", appName: "Example App", dexUrl: "https://example.org", feesWallet: "0x0000000000000000000000000000000000000001", policyAccepted: true };
     const restored = restoreSpotDraft(draft);
-    assert.equal(restored.step, "wallet");
-    assert.equal(restored.dexUrl, draft.dexUrl);
-    assert.equal(prepareSpotSetup(draft).dexUrl, undefined);
-    assert.throws(() => prepareSpotSetup({ ...draft, integrationMode: "existing" }), /valid DEX URL/);
+    assert.equal(restored.step, "url"); assert.equal(restored.dexUrl, draft.dexUrl);
+    assert.equal(prepareSpotSetup(draft).dexUrl, draft.dexUrl);
+    assert.equal(prepareSpotSetup({ ...draft, integrationMode: "existing" }).dexUrl, draft.dexUrl);
+    for (const integrationMode of ["ui", "existing"]) assert.throws(() => prepareSpotSetup({ ...draft, integrationMode, dexUrl: "invalid previous URL" }), /valid DEX URL/);
+  } finally { await server.close(); }
+});
+
+test("Perps UI build precedes its URL and review while API skips the build step", async () => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom", logLevel: "silent" });
+  try {
+    const { INTEGRATION_CHOICE_STEP, PARTNER_STEP, NETWORKS_STEP, REVENUE_STEP, BUILD_UI_STEP, APP_URL_STEP, TERMS_STEP, FUNDING_STEP } = await server.ssrLoadModule("/src/features/onboarding/onboarding-steps.ts");
+    const { launchStepOrder, nextLaunchStep, previousLaunchStep } = await server.ssrLoadModule("/src/features/onboarding/launch-flow.ts");
+    const { restoreStep, getStepId } = await server.ssrLoadModule("/src/features/onboarding/state/step-position.ts");
+    const ui = launchStepOrder("ui");
+    assert.deepEqual(ui.slice(1), [INTEGRATION_CHOICE_STEP, PARTNER_STEP, NETWORKS_STEP, REVENUE_STEP, BUILD_UI_STEP, APP_URL_STEP, TERMS_STEP, FUNDING_STEP]);
+    assert.equal(nextLaunchStep(REVENUE_STEP, "ui"), BUILD_UI_STEP);
+    assert.equal(nextLaunchStep(BUILD_UI_STEP, "ui"), APP_URL_STEP);
+    assert.equal(nextLaunchStep(REVENUE_STEP, "api"), APP_URL_STEP);
+    assert.equal(previousLaunchStep(APP_URL_STEP, "api"), REVENUE_STEP);
+    assert.equal(launchStepOrder("api").includes(BUILD_UI_STEP), false);
+    assert.equal(restoreStep({ stepId: "app-url" }), APP_URL_STEP);
+    assert.equal(restoreStep({ stepId: "build-ui" }), BUILD_UI_STEP);
+    assert.equal(getStepId(BUILD_UI_STEP), "build-ui");
   } finally { await server.close(); }
 });

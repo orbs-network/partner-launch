@@ -331,8 +331,8 @@ test("Spot submission retains the chosen integration path", async () => {
     const draft = { ...emptySpotDraft(), integrationMode: "ui", appName: "Example", dexUrl: "https://old.example", feesWallet: wallet, policyAccepted: true };
     const snapshot = await submitSpot(draft, wallet, { requestId: crypto.randomUUID(), accessToken: "a".repeat(64) });
     assert.equal(sent.integrationMode, "ui");
-    assert.equal(sent.dexUrl, "");
-    assert.equal(snapshot.dexUrl, undefined);
+    assert.equal(sent.dexUrl, draft.dexUrl);
+    assert.equal(snapshot.dexUrl, draft.dexUrl);
     assert.equal(snapshot.integrationMode, "ui");
   } finally { globalThis.fetch = originalFetch; await server.close(); }
 });

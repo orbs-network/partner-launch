@@ -3,7 +3,7 @@ import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SpotStep } from "./spot-setup";
 
-export function SpotSummary({ appName, contact, dexUrl, feesWallet, tradingFeeTenthsBps, integrationMode, onEdit }: {
+export function SpotSummary({ appName, contact, dexUrl, feesWallet, tradingFeeTenthsBps, onEdit }: {
   appName: string;
   contact?: string;
   dexUrl?: string;
@@ -14,9 +14,9 @@ export function SpotSummary({ appName, contact, dexUrl, feesWallet, tradingFeeTe
 }) {
   const rows = [
     { id: "app", label: "App name", value: appName },
-    ...(integrationMode !== "ui" && (dexUrl || onEdit) ? [{ id: "url" as const, label: "DEX URL", value: dexUrl || "Not provided" }] : []),
-    { id: "wallet", label: "Fees wallet", value: feesWallet },
-    { id: "wallet", key: "fee", label: "Trading fee", value: `${formatSpotFeePercent(tradingFeeTenthsBps)}%` },
+    ...((dexUrl || onEdit) ? [{ id: "url" as const, label: "DEX URL", value: dexUrl || "Not provided" }] : []),
+    { id: "wallet", label: "Revenue wallet", value: feesWallet },
+    { id: "wallet", key: "fee", label: "Platform fee", value: `${formatSpotFeePercent(tradingFeeTenthsBps)}%` },
     ...(contact || onEdit ? [{ id: "app" as const, key: "contact", label: "Contact", value: contact || "Not provided" }] : []),
   ] as const;
   return (
@@ -25,7 +25,7 @@ export function SpotSummary({ appName, contact, dexUrl, feesWallet, tradingFeeTe
         <div key={"key" in row ? row.key : row.id} className="flex items-start justify-between gap-3 py-3.5">
           <div className="min-w-0">
             <dt className="text-xs text-(--muted)">{row.label}</dt>
-            <dd className={`m-0 mt-1 text-sm leading-[1.7] text-(--text) [overflow-wrap:anywhere] ${row.label === "Fees wallet" ? "font-mono" : ""}`}>{row.value}</dd>
+            <dd className={`m-0 mt-1 text-sm leading-[1.7] text-(--text) [overflow-wrap:anywhere] ${row.label === "Revenue wallet" ? "font-mono" : ""}`}>{row.value}</dd>
           </div>
           {onEdit ? <Button variant="ghost" size="sm" type="button" className="shrink-0 text-xs text-(--link)" onClick={() => onEdit(row.id, "key" in row ? row.key === "fee" ? "spot-fee" : `spot-${row.key}` : undefined)} aria-label={`Edit ${row.label.toLowerCase()}`}><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
         </div>

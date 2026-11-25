@@ -1,3 +1,4 @@
+import { InlineLaunchInstructions } from "./integration/InlineLaunchInstructions";
 import { AppUrlStep } from "../steps/AppUrlStep";
 import { IntegrationChoiceStep } from "../steps/IntegrationChoiceStep";
 import { ChainStep } from "../steps/ChainStep";
@@ -40,6 +41,8 @@ export function WizardStep({
   switch (onboardingSteps[step]?.id) {
     case "welcome":
       return <WelcomeStep onCreator={onCreator} onSpot={onSpot} />;
+    case "build-ui":
+      return <InlineLaunchInstructions compact />;
     case "app-url":
       return <AppUrlStep error={stepError} disabled={busy} />;
     case "integration-choice":

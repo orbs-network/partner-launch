@@ -10,7 +10,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useIntegrationPrompt, type PromptSetup } from "../../hooks/useIntegrationPrompt";
-import { CreatorLaunchChoice } from "./CreatorLaunchChoice";
 
 export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, children }: {
   launchPath?: "creator" | "api" | null;
@@ -23,7 +22,7 @@ export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, ch
   const [open, setOpen] = useState(false);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
   const dialogId = useId();
-  const { prompt, copied, copyPrompt, chooseBranding, setChooseBranding } =
+  const { prompt, copied, copyPrompt } =
     useIntegrationPrompt(draft, launchPath);
   const promptRef = useRef<HTMLTextAreaElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -98,7 +97,6 @@ export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, ch
           {creator ? "Add your branding, review the app and publish it. Trading requires partner activation." : "Copy this prompt for your team or a coding assistant on a computer."}
         </DialogDescription>
         {creator ? <p className="mt-2 text-xs leading-[1.65] text-(--muted)">Copy the launch instructions below and paste them into a coding agent such as Codex or Claude with folder access on your computer. You’ll sign in to your own hosting account.</p> : null}
-        {creator ? <CreatorLaunchChoice checked={chooseBranding} onCheckedChange={setChooseBranding} /> : null}
         {children}
         {creator ? (
           <details className="group mt-3" open={instructionsOpen} onToggle={event => setInstructionsOpen(event.currentTarget.open)}>

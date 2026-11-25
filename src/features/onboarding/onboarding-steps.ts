@@ -10,7 +10,7 @@ export const onboardingSteps = [
     name: "Networks",
     title: "Choose your network",
     intro:
-      "Choose one network for your app and trading deposit. Selecting it continues to the next step.",
+      "Choose the network where your DEX will be deployed and where users will deposit funds.",
   },
   {
     id: "partner",
@@ -27,8 +27,8 @@ export const onboardingSteps = [
   {
     id: "revenue",
     name: "Earnings",
-    title: "Plan your earnings",
-    intro: "Choose where to receive earnings and set your additional fees.",
+    title: "Set your platform fee",
+    intro: "Choose where to receive your revenue and set the platform fee charged on your users’ trades.",
   },
   {
     id: "terms",
@@ -38,12 +38,13 @@ export const onboardingSteps = [
   },
   {
     id: "funding",
-    name: "Deposit requirement",
-    title: "Deposit requirement",
+    name: "Activation deposit",
+    title: "One-time activation deposit",
     intro: "Review the deposit for your network, then submit your setup to the team.",
   },
-  { id: "integration-choice", name: "Integration", title: "How would you like to add Perps?", intro: "Choose the approach that fits your app. We’ll prepare the right instructions for you." },
-  { id: "app-url", name: "App URL", title: "Add your app URL", intro: "Add your app’s website address, or skip this step if your app isn’t ready yet." },
+  { id: "integration-choice", name: "Integration", title: "How would you like to add perpetuals?", intro: "Choose a ready-made trading interface or connect directly through our API." },
+  { id: "app-url", name: "App URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step and add it later in My workspaces." },
+  { id: "build-ui", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made trading interface." },
 ] as const;
 
 export const WELCOME_STEP = 0;
@@ -56,9 +57,10 @@ export const TERMS_STEP = 5;
 export const FUNDING_STEP = 6;
 export const INTEGRATION_CHOICE_STEP = 7;
 export const APP_URL_STEP = 8;
+export const BUILD_UI_STEP = 9;
 /** Navigation order is separate from the stable saved step IDs above. */
 export const onboardingStepOrder: readonly number[] = [
-  WELCOME_STEP, INTEGRATION_CHOICE_STEP, PARTNER_STEP, APP_URL_STEP, NETWORKS_STEP, REVENUE_STEP, TERMS_STEP, FUNDING_STEP,
+  WELCOME_STEP, INTEGRATION_CHOICE_STEP, PARTNER_STEP, NETWORKS_STEP, REVENUE_STEP, BUILD_UI_STEP, APP_URL_STEP, TERMS_STEP, FUNDING_STEP,
 ];
 export type OnboardingStepId = (typeof onboardingSteps)[number]["id"];
 

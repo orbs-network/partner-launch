@@ -21,7 +21,7 @@ export function PartnerStep({ error = "", unavailable = false, disabled = false 
     <div>
       <div className="mb-2.5 flex items-center gap-1">
         <Label htmlFor={api ? "app-id" : "partner-name"} className="text-sm font-medium text-(--secondary-text)">{api ? "Partner ID" : "App name"}</Label>
-        <FieldHelp label={api ? "Partner ID" : "App name"}>{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "Choose your app’s name. We use it to suggest a Partner ID, which must be unique; the team confirms its assignment."}</FieldHelp>
+        <FieldHelp label={api ? "Partner ID" : "App name"}>{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "We’ll use this name to generate your unique Partner ID. You can change the app name later."}</FieldHelp>
       </div>
       <Input
         id={api ? "app-id" : "partner-name"}
