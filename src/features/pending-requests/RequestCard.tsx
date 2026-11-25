@@ -7,7 +7,8 @@ import type { PendingRequest } from "./request-record";
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
 
-export function RequestCard({ request, registryStatus, tradingEnabled = false, action, reviewNotice }: { request: PendingRequest; registryStatus: "checking" | "pending" | "changes-pending" | "approved" | "ready" | "error"; tradingEnabled?: boolean; action?: ReactNode; reviewNotice?: string }) {
+/** Read-only workspace details; status, guidance and actions live around it in SetupDetail. */
+export function RequestCard({ request, registryStatus, action }: { request: PendingRequest; registryStatus: "checking" | "pending" | "changes-pending" | "approved" | "ready" | "error"; action?: ReactNode }) {
   const status = registryStatus;
   const StatusIcon = status === "ready" || status === "approved" ? CircleCheck : status === "error" ? CircleAlert : LoaderCircle;
   const statusLabel = status === "changes-pending" ? "Changes pending" : status === "approved" ? "Approved" : status === "ready" ? "Trading enabled" : status === "error" ? "Status unavailable" : status === "checking" ? "Checking status" : "Approval pending";
@@ -28,15 +29,10 @@ export function RequestCard({ request, registryStatus, tradingEnabled = false, a
           <div className="min-w-0"><p className="text-[11px] font-medium uppercase tracking-[0.09em] text-(--muted)">{request.kind === "spot" ? "Spot" : "Perps"}</p><h3 className="mt-0.5 text-[19px] leading-snug font-semibold tracking-[-0.4px] [overflow-wrap:anywhere]">{request.appName}</h3><time dateTime={request.savedAt} className="mt-1 block text-xs tabular-nums text-(--muted)">{dateFormat.format(new Date(request.savedAt))}</time></div>
         </div>
         <div className="flex flex-wrap items-center gap-2 max-[480px]:w-full max-[480px]:justify-between">
-          {!(reviewNotice && status === "pending") ? <span role="status" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-(--primary-soft) px-3 py-2 text-xs font-medium text-(--link)"><StatusIcon size={14} className={`shrink-0${status === "checking" || status === "pending" || status === "changes-pending" ? " animate-spin motion-reduce:animate-none" : ""}`} aria-hidden="true" />{statusLabel}</span> : null}
+          <span role="status" className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-(--primary-soft) px-3 py-2 text-xs font-medium text-(--link)"><StatusIcon size={14} className={`shrink-0${status === "checking" || status === "pending" || status === "changes-pending" ? " animate-spin motion-reduce:animate-none" : ""}`} aria-hidden="true" />{statusLabel}</span>
           {action}
         </div>
       </div>
-      {reviewNotice ? <div className="mx-6 mt-5 flex items-start gap-3 rounded-xl bg-(--primary-soft) px-4 py-3 text-xs leading-relaxed text-(--secondary-text) max-[480px]:mx-4">{status === "pending" ? <LoaderCircle size={16} className="mt-0.5 shrink-0 animate-spin text-(--link) motion-reduce:animate-none" aria-hidden="true" /> : <CircleAlert size={16} className="mt-0.5 shrink-0 text-(--link)" aria-hidden="true" />}<div>{status === "pending" ? <p role="status" className="mb-1 font-semibold text-(--text)">Approval pending</p> : null}<p>{reviewNotice}</p></div></div> : null}
-      {request.kind === "perps" && status === "ready" ? <p className="px-4 pt-3 text-xs text-(--muted)">The registry shows enabled trading on your requested networks.</p> : null}
-      {status === "approved" ? <p className="px-4 pt-3 text-xs text-(--muted)">{tradingEnabled && request.kind === "perps"
-        ? "Your setup is approved and trading is enabled. You can now start trading in your app!"
-        : "Your setup is approved! You can start trading in your app once trading is enabled."}</p> : null}
       <div className="px-6 py-5 max-[480px]:px-4">
         <h4 className="mb-4 text-sm font-semibold text-(--text)">Workspace details</h4>
         <dl className="grid grid-cols-2 gap-x-5 gap-y-5 max-[360px]:grid-cols-1 sm:gap-x-8 lg:grid-cols-3">

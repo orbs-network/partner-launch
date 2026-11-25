@@ -129,7 +129,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
               <span className="flex items-center gap-1.5 text-[13px] leading-normal text-(--muted) max-[720px]:max-w-[230px] max-[720px]:leading-[1.5] max-[370px]:max-w-[180px]">
                 <Check size={14} className="text-(--icon-accent)" aria-hidden="true" />
                 {storageAvailable
-                  ? "Your progress is saved automatically"
+                  ? <><span className="max-[720px]:hidden">Your progress is saved automatically</span><span className="min-[721px]:hidden">Progress saved</span></>
                   : "Progress kept in this tab"}
               </span>
               <StartOverButton

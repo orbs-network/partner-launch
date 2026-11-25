@@ -73,7 +73,7 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
           </div>
         </Card>
         {!saved ? <div className="mt-3 flex shrink-0 items-center justify-between gap-3 px-2 text-[13px] text-(--muted)" data-setup-footer="">
-          <span className="flex items-center gap-1.5 leading-normal max-[370px]:max-w-[180px]"><Check size={14} className="shrink-0 text-(--icon-accent)" aria-hidden="true" />{storageAvailable ? "Your progress is saved automatically" : "Progress kept in this tab"}</span>
+          <span className="flex items-center gap-1.5 leading-normal max-[370px]:max-w-[180px]"><Check size={14} className="shrink-0 text-(--icon-accent)" aria-hidden="true" />{storageAvailable ? <><span className="max-[720px]:hidden">Your progress is saved automatically</span><span className="min-[721px]:hidden">Progress saved</span></> : "Progress kept in this tab"}</span>
           <StartOverButton ref={resetRef} disabled={busy} onClick={() => setResetOpen(true)} />
         </div> : null}
       </main>

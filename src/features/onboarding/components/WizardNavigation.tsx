@@ -37,6 +37,8 @@ export function WizardNavigation({
         {step !== NETWORKS_STEP ? (
           <Button
             className="flex-1"
+            // Skipping a required-later field is allowed but should not look like the recommended path.
+            variant={continueLabel === "Skip for now" ? "secondary" : "default"}
             form="onboarding-step"
             type="submit"
             disabled={!canContinue}

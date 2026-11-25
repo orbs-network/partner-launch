@@ -1,4 +1,4 @@
-import { BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
+import { ArrowLeft, BarChart3, Inbox, LayoutDashboard, Plus, Wallet } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { useAccount } from "wagmi";
@@ -17,9 +17,10 @@ import { findWorkspace, workspacePartnerId } from "./workspace-location";
 /**
  * My workspaces dashboard (`/setups?id=…&section=overview|analytics`).
  */
-export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
+export function SetupsPage({ onCancellationBusyChange, onCreateSetup, onBack }: {
   onCancellationBusyChange?: (busy: boolean) => void;
   onCreateSetup: () => void;
+  onBack: () => void;
 }) {
   const { requests, error, statusOf } = useSetupCounts();
   const { loading: requestsLoading, address } = useWalletRequests();
@@ -66,12 +67,19 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
   }
   return (
     <main id="main" className="mx-auto mt-8 mb-10 w-[min(900px,calc(100%-40px))] flex-1 max-[767px]:mt-4 max-[720px]:w-[calc(100%-24px)]">
-      <h1 ref={headingRef} tabIndex={-1} className="sr-only">My workspaces</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Button type="button" variant="ghost" size="sm" disabled={cancelling} onClick={onBack} className="-ml-3 min-h-11 gap-2 px-3 text-sm text-(--secondary-text)"><ArrowLeft size={16} aria-hidden="true" />Back to setup</Button>
+        {address && !loading && !error && selected ? <Button type="button" variant="secondary" size="sm" disabled={cancelling} onClick={onCreateSetup} className="min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create new setup</Button> : null}
+      </div>
+      <h1 ref={headingRef} tabIndex={-1} className="mt-2 text-[28px] font-semibold tracking-[-0.8px] focus:outline-none max-[767px]:text-2xl">My workspaces</h1>
+      {address && !loading && !error && requests.length ? <p className="mt-1 text-sm text-(--muted)">{requests.length === 1 ? "1 setup" : `${requests.length} setups`} for your connected wallet</p> : null}
       {reconnecting ? <div className="mt-6"><ContentSkeleton label="Connecting your wallet" /></div> : !address ? (
         <div className="mt-8 rounded-[24px] border border-(--edge) bg-(--surface) px-6 py-12 text-center">
           <Wallet size={28} className="mx-auto text-(--muted)" aria-hidden="true" />
-          <p className="mt-3 text-sm text-(--muted)">Connect your wallet to see your workspaces.</p>
+          <h2 className="mt-3 text-lg font-semibold text-(--text)">Connect the wallet you set up with</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm text-(--muted)">Your workspaces are linked to the wallet that submitted each setup.</p>
           <Button type="button" className="mt-5" disabled={!openConnectModal} onClick={openConnectModal}>Connect wallet</Button>
+          <p className="mt-4 text-sm text-(--muted)">No setup yet? <button type="button" onClick={onCreateSetup} className="min-h-11 border-0 bg-transparent p-0 font-medium text-(--link) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)">Start one</button></p>
         </div>
       ) : <>
         {error ? <p role="alert" className="mt-5 rounded-xl border border-(--warning-border) bg-(--warning-bg) p-3 text-sm text-(--warning-text)">{error}</p> : null}
@@ -95,14 +103,14 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
                     </Button>
                   ))}
                 </div>
-                <div className="w-full max-w-sm">
+                {requests.length > 1 ? <div className="w-full max-w-sm">
                   <Select value={selected.id} onValueChange={select} disabled={cancelling}>
                     <SelectTrigger id="setup-select" aria-label="Select setup" className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent align="start">
                       {requests.map(request => <SelectItem key={request.id} value={request.id}>{request.appName} · {request.kind === "spot" ? "Spot" : "Perps"}{statusOf(request) === "pending" ? " · Pending" : ""}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
+                </div> : null}
               </div>
               <section aria-label={`${selected.appName} details`} className="min-w-0">
                 {section === "analytics"

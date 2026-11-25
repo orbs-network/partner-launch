@@ -20,7 +20,7 @@ export function SpotAnalytics({ request }: { request: SpotRequest }) {
     staleTime: 30_000, refetchInterval: 60_000,
     retry: (attempt, error) => !(error instanceof SpotAnalyticsError && error.status < 500) && attempt < 1,
   });
-  if (!request.partnerId) return <Message text="This setup does not have a partner ID for Spot analytics." />;
+  if (!request.partnerId) return <Message title="Analytics starts after approval" text="Order activity appears here once the team approves your setup and your Spot configuration is live." />;
   if (query.isPending) return <ContentSkeleton label="Loading Spot analytics" />;
   if (query.isError || !query.data) return <Message text={query.error instanceof SpotAnalyticsError ? query.error.message : "Spot analytics is temporarily unavailable. Try again."} retry={() => void query.refetch()} days={days} onDaysChange={setDays} />;
   const { orders } = query.data;
@@ -54,6 +54,6 @@ function RangeSelector({ days, onChange }: { days: number; onChange: (value: num
   </>;
 }
 
-function Message({ text, retry, days, onDaysChange }: { text: string; retry?: () => void; days?: number; onDaysChange?: (days: number) => void }) {
-  return <section aria-label="Spot analytics" className="rounded-[22px] border border-(--edge) bg-(--surface) p-8 text-center"><BarChart3 size={25} className="mx-auto text-(--link)" aria-hidden="true" /><h2 className="mt-4 text-lg font-semibold">Spot analytics unavailable</h2><p role="status" className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-(--muted)">{text}</p><div className="mt-4 flex flex-wrap items-center justify-center gap-2">{days && onDaysChange ? <RangeSelector days={days} onChange={onDaysChange} /> : null}{retry ? <Button type="button" variant="secondary" onClick={retry}>Try again</Button> : null}</div></section>;
+function Message({ title = "Spot analytics unavailable", text, retry, days, onDaysChange }: { title?: string; text: string; retry?: () => void; days?: number; onDaysChange?: (days: number) => void }) {
+  return <section aria-label="Spot analytics" className="rounded-[22px] border border-(--edge) bg-(--surface) p-8 text-center"><BarChart3 size={25} className="mx-auto text-(--link)" aria-hidden="true" /><h2 className="mt-4 text-lg font-semibold">{title}</h2><p role="status" className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-(--muted)">{text}</p><div className="mt-4 flex flex-wrap items-center justify-center gap-2">{days && onDaysChange ? <RangeSelector days={days} onChange={onDaysChange} /> : null}{retry ? <Button type="button" variant="secondary" onClick={retry}>Try again</Button> : null}</div></section>;
 }

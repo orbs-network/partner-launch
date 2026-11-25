@@ -11,6 +11,7 @@ export function DepositSummary({ chainId, collateral, loading, error, onRetry }:
         <div className="p-5 max-[720px]:p-4">
           <div className="flex items-center justify-between gap-3">
             <h2 id="required-deposit-title" className="text-[13px] font-medium text-(--secondary-text)">Trading deposit</h2>
+            <span className="rounded-full bg-(--soft) px-2.5 py-1 text-xs font-medium text-(--muted)">Not collected yet</span>
           </div>
           <div className="mt-4 flex items-center gap-3">
             {collateral?.symbol === "USDC" ? <img src="/usdc.svg" alt="" width={44} height={44} className="size-11 shrink-0" /> : collateral ? <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-emerald-600 text-lg font-bold text-white">₮</span> : loading ? <Skeleton className="size-11 shrink-0 rounded-full" /> : <span aria-hidden="true" className="grid size-11 shrink-0 place-items-center rounded-full bg-(--soft) text-lg text-(--muted)">?</span>}
@@ -29,7 +30,7 @@ export function DepositSummary({ chainId, collateral, loading, error, onRetry }:
         </dl>
       </section>
       {error ? <p role="alert" className="mt-3 text-[13px] text-(--danger)">We couldn’t load the deposit token for this network. <button type="button" onClick={onRetry} className="min-h-11 underline">Try again</button></p> : null}
-      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">A one-time deposit is required for setup. The team will review your setup before activating trading.</p>
+      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">Submitting moves no funds. This one-time deposit is required before trading is activated, and the team reviews your setup first.</p>
     </>
   );
 }

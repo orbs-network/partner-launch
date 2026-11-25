@@ -15,7 +15,9 @@ import { rememberCompletedSetup } from "../saved-setups";
 import { selectablePerpsChains } from "@/config/chains";
 import { fetchPartnerRegistryStatus } from "../registry-status";
 import { useMountedRef } from "@/hooks/useMountedRef";
+import { withUrlScheme } from "@/lib/dex-url";
 import {
+  APP_URL_STEP,
   INTEGRATION_CHOICE_STEP,
   FUNDING_STEP,
   NETWORKS_STEP,
@@ -149,8 +151,14 @@ export function useOnboardingWizard(externalBusy = false) {
     dismissActionError();
     window.scrollTo({ top: 0, behavior: "instant" });
   }
+  function normalizeAppUrl() {
+    const current = useOnboardingStore.getState();
+    const url = current.appUrl ?? "";
+    if (withUrlScheme(url) !== url) current.setAppUrl(withUrlScheme(url));
+  }
   function next() {
     if (busy || partnerCheckInFlight.current) return;
+    if (useOnboardingStore.getState().step === APP_URL_STEP) normalizeAppUrl();
     const currentDraft = useOnboardingStore.getState();
     const invalid = currentDraft.step === NETWORKS_STEP && currentDraft.chainIds.length !== 1
       ? "Choose one network for this setup." : getStepError(currentDraft.step, currentDraft);

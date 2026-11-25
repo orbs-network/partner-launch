@@ -1,5 +1,11 @@
 export const MAX_DEX_URL_LENGTH = 2048;
 
+/** Add https:// to a bare domain such as "my-app.com"; leaves anything else for validation to explain. */
+export function withUrlScheme(value: string): string {
+  const url = value.trim();
+  return url && !/^[a-z][a-z\d+.-]*:/i.test(url) && /^[^\s/]+\.[^\s/]+(?:\/\S*)?$/.test(url) ? `https://${url}` : value;
+}
+
 /** Optional display/contact URL; it grants no website or trading permissions. */
 export function validateDexUrl(value: string): string | undefined {
   const url = value.trim();

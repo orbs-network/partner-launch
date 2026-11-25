@@ -41,8 +41,18 @@ function PortalApp() {
   const setupsView = usePathLocation() === "/setups";
   const openSetups = useCallback(() => {
     if (window.location.pathname === "/setups") return;
-    window.history.pushState(null, "", "/setups");
+    window.history.pushState({ portalFromSetup: true }, "", "/setups");
     window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+  // Return to the exact setup entry when the page was opened from it; otherwise resume an unfinished draft or Welcome.
+  const backToSetup = useCallback(() => {
+    if (window.history.state?.portalFromSetup) { window.history.back(); return; }
+    const perps = useOnboardingStore.getState();
+    const product = safeStorage.getItem(SPOT_DRAFT_KEY) ? "spot" : perps.step !== WELCOME_STEP && !perps.completed ? "perps" : null;
+    if (!product) { window.dispatchEvent(new Event("portal-home", { cancelable: true })); return; }
+    setShowHome(false);
+    window.history.pushState({ portalHome: true }, "", `/?setup=${product}`);
+    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
   }, []);
   const auth = useDemoLogin(() => { if (window.location.pathname !== "/setups") setView("manage"); });
   const createSetup = () => {
@@ -98,7 +108,7 @@ function PortalApp() {
   const { requestLogin: requestConnection } = useLoginConnection({ operationInFlightRef: requestInFlightRef, onLogin: onRequestsConnected, onError: onRequestsConnectError });
   const openRequests = () => { if (requestInFlightRef.current) return; requestInFlightRef.current = true; requestConnection(); };
   const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} disabled={requestCancellationBusy || auth.busy || auth.walletConnecting} />;
-  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
+  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} onBack={backToSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
 }
 
 function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseProduct, onPendingRequests, headerTrigger, setupsPage }: {
