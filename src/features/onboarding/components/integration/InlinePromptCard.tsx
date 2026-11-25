@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { ChevronDown, Copy, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PromptAgentLinks } from "./PromptAgentLinks";
 
 /** Shared completion card, with a selectable fallback if clipboard access fails. */
 export function InlinePromptCard({ eyebrow, title, description, helper, children, prompt, onCopy, instructionsLabel = "Full launch instructions", disabled = false, compact = false }: {
@@ -35,5 +36,6 @@ export function InlinePromptCard({ eyebrow, title, description, helper, children
       <textarea className="mt-2 block h-[clamp(160px,30dvh,260px)] w-full resize-y rounded-[14px] border border-(--panel-border) bg-(--surface) p-[15px] text-[13px] leading-[1.75] wrap-anywhere text-(--secondary-text) focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-(--focus-ring) max-[720px]:text-base" aria-label="Integration prompt" value={prompt} readOnly spellCheck={false} rows={9} />
     </details>
     <Button type="button" variant={compact ? "secondary" : "default"} size={compact ? "sm" : "default"} className={compact ? "mt-2 min-h-11 rounded-xl px-4 text-sm" : "mt-3 w-full"} disabled={disabled} onClick={() => void copyInstructions()}><Copy size={17} aria-hidden="true" />Copy integration prompt</Button>
+    <PromptAgentLinks prompt={prompt} disabled={disabled} />
   </section>;
 }

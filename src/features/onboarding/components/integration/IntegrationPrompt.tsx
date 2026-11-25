@@ -10,6 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useIntegrationPrompt, type PromptSetup } from "../../hooks/useIntegrationPrompt";
+import { PromptAgentLinks } from "./PromptAgentLinks";
 
 export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, children }: {
   launchPath?: "creator" | "api" | null;
@@ -135,6 +136,7 @@ export function IntegrationPrompt({ launchPath, draft, triggerLabel, trigger, ch
           )}
           {copied ? creator ? "Instructions copied" : "Prompt copied" : creator ? "Copy launch instructions" : "Copy integration prompt"}
         </Button>
+        <PromptAgentLinks prompt={prompt} />
       </DialogContent>
     </Dialog>
   );

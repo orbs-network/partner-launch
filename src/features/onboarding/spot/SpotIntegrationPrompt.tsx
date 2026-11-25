@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { usePromptClipboard } from "../hooks/usePromptClipboard";
 import { createSpotIntegrationPrompt, type SpotIntegrationDetails } from "./spot-integration-prompt";
+import { PromptAgentLinks } from "../components/integration/PromptAgentLinks";
 
 export function SpotIntegrationPrompt({ setup, disabled = false, compact = false }: { setup: SpotIntegrationDetails; disabled?: boolean; compact?: boolean }) {
   const prompt = createSpotIntegrationPrompt(setup);
@@ -37,6 +38,7 @@ export function SpotIntegrationPrompt({ setup, disabled = false, compact = false
           {copied ? <Check size={17} aria-hidden="true" /> : <Copy size={17} aria-hidden="true" />}
           {copied ? "Prompt copied" : "Copy integration prompt"}
         </Button>
+        <PromptAgentLinks prompt={prompt} disabled={disabled} />
       </DialogContent>
     </Dialog>
   );
