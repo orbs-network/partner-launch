@@ -118,6 +118,7 @@ test("admin requests need a signed proof once, then use the session cookie", asy
       if (sql.startsWith("INSERT INTO portal_sessions")) {
         sessions.set(values[0], { wallet: values[1], kind: values[2], expires: values[3].getTime() }); return { rows: [], rowCount: 1 };
       }
+      if (sql.startsWith("SELECT details, product, status")) return { rows: [{ details: {}, product: "spot", status: "pending" }], rowCount: 1 };
       return sql.startsWith("SELECT") ? { rows: [], rowCount: 0 } : { rows: [{ id: "test" }], rowCount: 1 };
     } };
     async function call(body, { origin = "http://localhost:5173", cookie } = {}) {
@@ -134,7 +135,7 @@ test("admin requests need a signed proof once, then use the session cookie", asy
     const signedIn = await call({ address: account.address, action: "list", proof });
     assert.equal(signedIn.status, 200);
     assert.match(signedIn.cookie, /^portal_admin_session=[a-f\d]{64}$/);
-    assert.equal((await call({ address: account.address, action: "approve", requestId: crypto.randomUUID() }, { cookie: signedIn.cookie })).status, 200);
+    assert.equal((await call({ address: account.address, action: "approve", requestId: crypto.randomUUID(), version: 0 }, { cookie: signedIn.cookie })).status, 200);
     // A proof is accepted once; a replay without the cookie is refused.
     assert.equal((await call({ address: account.address, action: "list", proof })).status, 401);
     // Removing the wallet from the allowlist ends its session.

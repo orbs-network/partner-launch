@@ -18,7 +18,7 @@ export function AdminPage() {
   return <AppLayout hideDisconnectedWallet homeDisabled={busy || signingIn}><main id="main" className="mx-auto w-[min(900px,calc(100%-40px))] flex-1 py-10 max-[720px]:w-[calc(100%-24px)] max-[720px]:py-6">
     <a href="/" onClick={navigateWithinApp} className="inline-flex min-h-11 items-center gap-2 text-sm text-(--link) hover:underline"><ArrowLeft size={16} aria-hidden="true" /> Back to setup</a>
     <h1 className="mt-4 text-3xl font-semibold tracking-tight">Review setup requests</h1>
-    <p className="mt-2 text-sm text-(--muted)">Connect an authorized wallet and sign in to review requests. Signing does not move funds. Trading activation is checked separately.</p>
+    <p className="mt-2 text-sm text-(--muted)">Connect an authorized wallet and sign in to review requests. Signing does not move funds. Approval updates the portal record; trading configuration must be updated separately.</p>
     {error ? <div role="alert" className="mt-4 rounded-xl border border-(--warning-border) bg-(--warning-bg) p-3 text-sm text-(--warning-text)">{error} <Button type="button" variant="ghost" size="sm" onClick={retry} className="min-h-11">Try again</Button></div> : null}
     {!connected ? <Button type="button" className="mt-6" disabled={!openConnectModal} onClick={openConnectModal}>Connect admin wallet</Button>
       : needsSignIn ? <Button type="button" className="mt-6" disabled={signingIn} onClick={() => void signIn()}>{signingIn ? "Check your wallet…" : "Sign in as admin"}</Button>
@@ -34,7 +34,7 @@ export function AdminPage() {
         <span role="status" className="sr-only">{refreshing ? "Refreshing requests." : ""}</span>
       </div>
       <section className="mt-5 grid gap-4" aria-label={`${view} requests`}>
-        {visible.length ? visible.map(row => <AdminRequestCard key={row.request.id} request={row.request} approvedAt={row.approvedAt} ownerWallet={row.ownerWallet} contact={row.contact} partnerId={row.partnerId} busy={busy} approving={approvingId === row.request.id} onApprove={view === "pending" ? () => approve(row.request.id) : undefined} />)
+        {visible.length ? visible.map(row => <AdminRequestCard key={row.request.id} request={row.request} previous={row.previous} approvedAt={row.approvedAt} ownerWallet={row.ownerWallet} contact={row.contact} partnerId={row.partnerId} busy={busy} approving={approvingId === row.request.id} onApprove={view === "pending" ? () => approve(row.request.id) : undefined} />)
           : <div className="rounded-2xl border border-(--edge) bg-(--surface) px-5 py-12 text-center"><ClipboardList size={28} className="mx-auto text-(--muted)" aria-hidden="true" /><p className="mt-3 text-sm text-(--muted)">No {view} requests yet.</p></div>}
       </section>
     </> : null}

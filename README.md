@@ -22,13 +22,13 @@ Only the final Spot Review step and the saved summary link to the official [Spot
 
 After saving, Spot shows **Approval pending** in the same ActivationStatusCard used by Perps, with its pending spinner, reduced-motion override and accessible description/status announcement. It replaces the old inline pending sentence. The Spot card checks for a matching suggested Partner ID in the public configuration; this is not an approval receipt or proof of ownership. Delivery is not approval or activation. The supporting copy states that partner approval can take up to 48 hours, alongside the existing integration-while-waiting guidance. Delivered Spot records repeat that window on a separate line in the Pending requests description; local unsent records and Perps do not. This user-provided estimate adds no countdown or automatic approval.
 
-Spot completion offers a copyable integration prompt and access to Your setups. The owner signs in with their wallet to view submitted requests. Create new starts a blank Spot setup without changing an independent Perps draft.
+Spot completion offers a copyable integration prompt and access to Your workspaces. The owner signs in with their wallet to view submitted requests. Create new starts a blank Spot setup without changing an independent Perps draft.
 
 Confirming **Start over** in an unfinished Spot setup clears that Spot draft and returns to the main Set up perps/Set up Spot choices, removing `?setup=spot`. The independent Perps details and submitted requests are preserved; only its navigation returns to Welcome. Keep my progress/Escape preserve the current step and return focus. Spot completion’s Create new still starts a blank Spot setup. Perps uses `?setup=perps` while the wizard is active; the saved draft and current step remain in local storage. Back to Welcome, Start over, and successful submission remove the route marker without putting setup details in the URL. A direct Perps link opens the saved unfinished step or a new App name step.
 
 Spot submits through the same-origin `POST /api/spot-submit` server handler. Submission requires a connected owner wallet and current policy acceptance, stores the request in PostgreSQL and notifies the team in Telegram. Completion follows successful storage and delivery. The owner address is unverified at submission. Drafts remain browser-local until submitted. Delivery does not itself establish approval, activation or payout authority.
 
-**My setups** is available at `/setups` and shows a dashboard of pending and approved Spot and Perps requests for the connected submitting wallet without a signature. Its analytics section currently shows empty placeholders, not trading data. Wallet connection does not authenticate the caller to the server: anyone who knows an address can request that wallet's displayed setup summaries. Previously saved additional app owner wallets remain request details and do not associate those wallets with the request; the setup form no longer collects them. Spot cancellation requires a separate, request-bound wallet signature; administration and workspace access retain their own authentication. Approval does not establish trading activation. Previously saved browser-local summaries remain untouched and are not automatically assigned to a wallet.
+**My workspaces** is available at `/setups` and shows a dashboard of pending and approved Spot and Perps requests for the connected submitting wallet without a signature. Its analytics section displays Spot order history or Perps data for the selected setup. Perps analytics uses the connected address without requesting a signature. Wallet connection does not authenticate the caller to the server: anyone who knows an address can request that wallet's displayed setup summaries. Previously saved additional app owner wallets remain request details and do not associate those wallets with the request; the setup form no longer collects them. Spot cancellation requires a separate, request-bound wallet signature; administration and workspace access retain their own authentication. Workspace edits use the connected wallet address without a signature, update the portal record directly, and notify the team in Telegram. Address ownership is not verified: anyone who knows a submitting address can impersonate it and edit that wallet’s requests. Existing approval status is unchanged. Partner IDs cannot be changed through workspace edits. Approval changes the portal record; trading configuration must be updated separately. Approval does not establish trading activation. Previously saved browser-local summaries remain untouched and are not automatically assigned to a wallet.
 
 Active Perps steps and Perps completion show **Set up perps** above their headings, matching Spot’s **Set up Spot** label. Both use the shared SetupLabel with a decorative product icon, consistent type/color/spacing and no additional label on Welcome.
 
@@ -147,24 +147,11 @@ multi-network workspaces show an unavailable state; they never fall back to
 another partner's figures. **Global on Arbitrum One (42161)** remains the preview
 assumption only when the wallet has no saved workspace. There are no independent
 partner or network filters. The owned workspace selection, period (`24h`, `7d`,
-`30d`, `90d`, `1y`) and view are preserved in the URL; direct links still require
-wallet sign-in. Live snapshots do not depend on the period selector. Cumulative
+`30d`, `90d`, `1y`) and view are preserved in the URL; workspace links still require wallet sign-in; My workspaces analytics requires only wallet connection. Live snapshots do not depend on the period selector. Cumulative
 fees are user trading commissions, not partner earnings or available payouts.
 A local saved request selects the requested scope but grants no analytics access.
 
-The connected wallet needs a current live partner-admin grant for the selected
-registered partner. Both `POST /api/analytics-access` and
-`POST /api/analytics-stats` verify the original portal login signature and require
-its website to match the request Origin and serving host. Identity comes from
-the verified proof, never an address supplied in a header. The server validates
-the requested workspace against the live partner registry and requires one exact
-enabled network; malformed, unknown or multiple-network scope is rejected.
-Each stats request then rechecks the backend grant for that same lane before any
-analytics cache read. Requests and responses use `no-store`; login proofs stay
-out of URLs. Wallet/session/workspace/revision/partner/network/period query keys
-isolate results. Switching workspaces or leaving the authenticated workspace
-cancels/removes analytics queries, and abandoned requests cannot repopulate the
-new selection with the previous workspace's data.
+Perps analytics checks the submitted wallet address for a current live partner-admin grant on the selected registered partner and network. My workspaces supplies the connected address without a signature; an address is only a claim, so anyone who knows an authorized address can request that partner's analytics. Treat these figures as accessible, not private. The separate signed workspace continues to supply and verify its existing login proof. Both routes require a same-origin request, resolve the requested partner and single enabled network against the live registry, and recheck the backend grant before reading analytics data. Requests and responses use `no-store`; wallet, workspace, network and period query keys isolate displayed results.
 
 Next.js API routes use the shared server handlers. The shared
 read-only service is `partner-analytics/lib/analytics-service.ts`; financial
@@ -306,7 +293,7 @@ The setup export retains public identity/branding/wallet/terms/proof data. New c
 
 ## Wallet workspace and sessions
 
-**Log in** or **My workspace** opens management after wallet login. The workspace catalog still uses completed snapshots from the current page; the database-backed Your setups list is separate. A database approval does not by itself grant workspace analytics access.
+**Log in** or **My workspace** opens management after wallet login. The workspace catalog still uses completed snapshots from the current page; the database-backed Your workspaces list is separate. A database approval does not by itself grant workspace analytics access.
 
 Editable network settings are keyed by wallet and stable logical workspace identity, independently of editable fields or the snapshot revision. With no scoped settings saved, the selected snapshot supplies an in-memory baseline; only an explicit **Save changes** writes a separate settings record. Stored scoped edits take precedence over that baseline. The old wallet-wide sample settings are never copied or migrated into selected workspaces, and switching does not mutate signed snapshots or the active onboarding draft. Unsaved edits are guarded when changing the dropdown, navigating between Workspace/Analytics or using browser history; cancelling keeps the current selection and input. Clean views can select a newer current-page snapshot, while dirty input is preserved until saved or discarded.
 

@@ -1,15 +1,31 @@
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, CircleAlert, CircleCheck, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SPOT_DOCS_URL } from "@/config/links";
+import { cn } from "@/lib/utils";
 import type { useSetupStatus } from "./useSetupStatus";
-import { PerpsAppUrlEditor } from "./PerpsAppUrlEditor";
+import { useSpotConfigStatus } from "./useSpotConfigStatus";
+import { WorkspaceEditDialog } from "./WorkspaceEditDialog";
 import { RequestCard } from "./RequestCard";
+import { SetupTimeline } from "./SetupTimeline";
 import { CancelSpotRequest } from "./CancelSpotRequest";
 import { SpotIntegrationPrompt } from "../onboarding/spot/SpotIntegrationPrompt";
 import { IntegrationPrompt } from "../onboarding/components/integration/IntegrationPrompt";
 import type { PendingRequest } from "./request-record";
 
-/** Overview of one setup, its status and available actions. */
+type Note = { tone: "info" | "success" | "warning"; text: string };
+
+/** One status message for the selected setup, most actionable first. */
+function statusNote(request: PendingRequest, status: "pending" | "approved", live: boolean): Note | null {
+  if (request.pendingEdit) return { tone: "warning", text: "Your earlier changes weren’t saved. Open Edit workspace to submit them again." };
+  const missingUrl = request.kind === "perps" && !request.appUrl ? " Add your app URL with Edit workspace — your app needs it to work." : "";
+  if (live) return { tone: "success", text: request.kind === "perps" ? `Approved and trading is enabled. You can start trading in your app.${missingUrl}` : "Approved and your Spot configuration is live." };
+  if (status === "approved") return { tone: "success", text: `Your setup is approved. You can start trading in your app once trading is enabled.${missingUrl}` };
+  const reviewed = request.kind === "perps" || request.notification === "telegram";
+  if (reviewed) return { tone: "info", text: `The Orbs team is reviewing your setup. Approval can take up to 48 hours.${missingUrl}` };
+  return missingUrl ? { tone: "warning", text: missingUrl.trim() } : null;
+}
+
+/** Overview of one setup: progress, its status, actions, then the read-only details. */
 export function SetupDetail({ request, status, live, cancelling, onCancelBusyChange, onCancelled }: {
   request: PendingRequest;
   status: "pending" | "approved";
@@ -18,19 +34,29 @@ export function SetupDetail({ request, status, live, cancelling, onCancelBusyCha
   onCancelBusyChange: (busy: boolean) => void;
   onCancelled: (remaining: number) => void;
 }) {
+  const spot = useSpotConfigStatus(request.kind === "spot" ? request : undefined);
+  const isLive = request.kind === "perps" ? live.live : spot.ready;
+  const note = statusNote(request, status, isLive);
+  const NoteIcon = note?.tone === "success" ? CircleCheck : note?.tone === "warning" ? CircleAlert : Info;
+  const edit = <WorkspaceEditDialog key={request.id} request={request} disabled={cancelling} onBusyChange={onCancelBusyChange} />;
   return <>
-    {status === "pending" && (request.kind === "perps" || request.notification === "telegram")
-      ? <p className="mb-3 text-[13px] text-(--muted)">Partner approval can take up to 48 hours.</p> : null}
-    <RequestCard request={request} tradingEnabled={live.tradingEnabled} registryStatus={live.registryStatus} />
-    {request.kind === "perps" ? <PerpsAppUrlEditor key={request.id} request={request} disabled={cancelling} onBusyChange={onCancelBusyChange} /> : null}
-    {request.kind === "perps" ? <div className="mt-3 flex flex-wrap gap-2">
-      {request.integrationMode !== "api" ? <IntegrationPrompt launchPath="creator" draft={{ partnerName: request.partnerId, displayName: request.appName, chainIds: request.chainIds, launchPath: "creator" }} trigger={<Button type="button" size="sm" disabled={cancelling} className="h-11 rounded-xl px-4 text-sm">Launch your DEX</Button>} /> : null}
-      {request.integrationMode !== "ui" ? <IntegrationPrompt launchPath="api" draft={{ partnerName: request.partnerId, displayName: request.appName, chainIds: request.chainIds, launchPath: "api" }} trigger={<Button type="button" variant="secondary" size="sm" disabled={cancelling} className="h-11 rounded-xl px-4 text-sm">API integration prompt</Button>} /> : null}
-    </div> : null}
-    {request.kind === "spot" ? <footer className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Spot request actions">
-      <SpotIntegrationPrompt setup={request} disabled={cancelling} compact />
-      <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 rounded-md text-xs font-medium text-(--link) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a>
-      {status === "pending" ? <CancelSpotRequest key={request.id} request={request} onBusyChange={onCancelBusyChange} onCancelled={onCancelled} /> : null}
+    <SetupTimeline request={request} approved={status === "approved"} live={isLive} />
+    {note ? <p role="status" className={cn("mb-4 flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm leading-relaxed",
+      note.tone === "warning" ? "bg-(--warning-bg) text-(--warning-text)" : "bg-(--primary-soft) text-(--secondary-text)")}>
+      <NoteIcon size={17} className={cn("mt-0.5 shrink-0", note.tone !== "warning" && "text-(--link)")} aria-hidden="true" />{note.text}</p> : null}
+    <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Workspace actions">
+      {request.kind === "perps" ? <>
+        {request.integrationMode !== "api" ? <IntegrationPrompt launchPath="creator" draft={{ partnerName: request.partnerId, displayName: request.appName, chainIds: request.chainIds, launchPath: "creator" }} trigger={<Button type="button" size="sm" disabled={cancelling} className="h-11 rounded-xl px-4 text-sm">Launch your DEX</Button>} /> : null}
+        {request.integrationMode !== "ui" ? <IntegrationPrompt launchPath="api" draft={{ partnerName: request.partnerId, displayName: request.appName, chainIds: request.chainIds, launchPath: "api" }} trigger={<Button type="button" variant={request.integrationMode === "api" ? "default" : "secondary"} size="sm" disabled={cancelling} className="h-11 rounded-xl px-4 text-sm">API integration prompt</Button>} /> : null}
+      </> : <>
+        <SpotIntegrationPrompt setup={request} disabled={cancelling} compact />
+        <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 text-sm font-medium text-(--link) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a>
+      </>}
+      <span className="ml-auto max-[480px]:ml-0">{edit}</span>
+    </div>
+    <RequestCard request={request} registryStatus={live.registryStatus} />
+    {request.kind === "spot" && request.status === "pending" ? <footer className="mt-4 flex justify-end" aria-label="Spot request actions">
+      <CancelSpotRequest key={request.id} request={request} onBusyChange={onCancelBusyChange} onCancelled={onCancelled} />
     </footer> : null}
   </>;
 }

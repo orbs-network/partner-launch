@@ -14,7 +14,7 @@ export function WalletApprovalNotifications() {
     const wallet = address.toLowerCase();
     for (const request of requests) {
       if (request.status !== "approved") continue;
-      const key = `${DISMISSED_PREFIX}${wallet}:${request.id}`;
+      const key = `${DISMISSED_PREFIX}${wallet}:${request.id}${request.approvalRevision ? `:${request.approvalRevision}` : ""}`;
       if (shown.current.has(key) || dismissedInMemory.current.has(key)) continue;
       try { if (localStorage.getItem(key) === "1") continue; } catch { /* In-memory dismissal remains available. */ }
       shown.current.add(key);

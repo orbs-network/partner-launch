@@ -40,9 +40,9 @@ export async function perpsAppUrlHandler(request: IncomingMessage, response: Ser
   try {
     if (!await verifyMessage({ address: details.address, signature: proof.signature as Hex, message: appUrlMessage(details) })) { reply(401, { error: "Wallet signature could not be verified." }); return; }
     const result = await (database ?? requestDatabase()).query(`UPDATE portal_setup_requests
-      SET details = jsonb_set(jsonb_set(details, '{appUrl}', to_jsonb($3::text), true), '{appUrlVersion}', to_jsonb($4::integer + 1), true)
+      SET details = jsonb_set(jsonb_set(jsonb_set(details, '{appUrl}', to_jsonb($3::text), true), '{appUrlVersion}', to_jsonb($4::integer + 1), true), '{workspaceVersion}', to_jsonb(COALESCE((details->>'workspaceVersion')::integer, 0) + 1), true)
       WHERE id = $1 AND product = 'perps' AND lower(owner_wallet) = lower($2) AND delivered_at IS NOT NULL AND status IN ('pending', 'approved')
-        AND COALESCE((details->>'appUrlVersion')::integer, 0) = $4 RETURNING id`, [details.requestId, details.address, details.appUrl, details.version]);
+        AND details->'pendingEdit' IS NULL AND COALESCE((details->>'appUrlVersion')::integer, 0) = $4 RETURNING id`, [details.requestId, details.address, details.appUrl, details.version]);
     if (!result.rowCount) { reply(409, { error: "This setup changed or is unavailable. Refresh and try again." }); return; }
     reply(200, { saved: true });
   } catch { reply(503, { error: "Couldn’t save the app URL. Try again." }); }

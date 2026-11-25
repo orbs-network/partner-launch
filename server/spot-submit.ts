@@ -9,7 +9,6 @@ import { normalizeOwnerWallets, validateOwnerWallets } from "../src/features/onb
 import { verifySpotCancelProof } from "./spot-cancel-proof.js";
 import { requestDatabase } from "./request-database.js";
 import { cancelOwnedSpotRequest, lockOwnedSpotRequest } from "./spot-owner-authorization.js";
-import { fetchSpotConfigDexKeys } from "./spot-config-status.js";
 
 import { setupNotificationHandler } from "./setup-notification.js";
 
@@ -57,12 +56,6 @@ export function spotSubmitHandler(request: IncomingMessage, response: ServerResp
   return setupNotificationHandler(request, response, {
     unavailable: "Spot submission is not available yet. Your details are kept here; please try again later.",
     prepare: body => prepareSpotNotification(body, false),
-    async beforeDelivery(body) {
-      if (!isRecord(body) || typeof body.appName !== "string") throw new Error("Invalid app name");
-      const partnerId = generateSpotAppId(body.appName).toLowerCase();
-      if ((await fetchSpotConfigDexKeys()).some(key => key.toLowerCase() === partnerId))
-        return { status: 409, code: "spot_app_id_taken", error: "An app with this name already exists. Choose another app name." };
-    },
   });
 }
 

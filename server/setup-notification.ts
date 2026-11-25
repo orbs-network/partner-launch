@@ -29,7 +29,7 @@ async function readBody(request: IncomingMessage): Promise<unknown> {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-function allowAttempt(request: IncomingMessage): boolean {
+export function allowAttempt(request: IncomingMessage): boolean {
   const now = Date.now();
   for (const [key, entry] of attempts) if (entry.until <= now) attempts.delete(key);
   const forwarded = request.headers["x-vercel-forwarded-for"];
@@ -49,7 +49,6 @@ export async function setupNotificationHandler(request: IncomingMessage, respons
   requireOwner?: boolean;
   authorize?: (body: unknown, request: IncomingMessage, response: ServerResponse) => Promise<void>;
   afterDelivery?: () => Promise<void>;
-  beforeDelivery?: (body: unknown) => Promise<{ status: number; error: string; code?: string } | undefined>;
   finalize?: () => Promise<void>;
   database?: Pool;
 }): Promise<void> {
@@ -126,17 +125,6 @@ export async function setupNotificationHandler(request: IncomingMessage, respons
         return;
       }
       reply(503, { error: "Request storage is unavailable. Your details are kept here; please try again." });
-      return;
-    }
-  }
-  if (options.beforeDelivery) {
-    let failure: { status: number; error: string; code?: string } | undefined;
-    try { failure = await options.beforeDelivery(body); }
-    catch { failure = { status: 503, error: "We couldn’t check availability. Please try again." }; }
-    if (failure) {
-      if (transaction) { await transaction.query("ROLLBACK").catch(() => {}); transaction.release(); }
-      await options.finalize?.();
-      reply(failure.status, { error: failure.error, ...(failure.code ? { code: failure.code } : {}) });
       return;
     }
   }

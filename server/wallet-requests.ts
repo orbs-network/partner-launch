@@ -28,5 +28,5 @@ export async function walletRequestsHandler(request: IncomingMessage, response: 
   if (!data || typeof data !== "object" || Array.isArray(data) || !("address" in data) ||
       typeof data.address !== "string" || !isAddress(data.address)) { reply(400, { error: "Enter a valid wallet address." }); return; }
   try { reply(200, { requests: await listWalletRequests(database ?? requestDatabase(), data.address) }); }
-  catch { reply(503, { error: "Your setups are temporarily unavailable." }); }
+  catch { reply(503, { error: "Your workspaces are temporarily unavailable." }); }
 }

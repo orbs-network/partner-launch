@@ -27,26 +27,23 @@ test("registry availability includes disabled lanes and normalizes mixed-case lo
   } finally { globalThis.fetch = originalFetch; await server.close(); }
 });
 
-test("submission is blocked before Telegram delivery when availability fails", async () => {
+test("Spot and Perps availability use only the database and stay separate by product", async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
-  const originalFetch = globalThis.fetch, priorToken = process.env.SPOT_TELEGRAM_BOT_TOKEN, priorChat = process.env.SPOT_TELEGRAM_CHAT_ID;
+  const originalFetch = globalThis.fetch;
   try {
-    process.env.SPOT_TELEGRAM_BOT_TOKEN = "123:test_token"; process.env.SPOT_TELEGRAM_CHAT_ID = "123";
-    let sent = false;
-    globalThis.fetch = async () => { sent = true; throw new Error("should not send"); };
-    const { setupNotificationHandler } = await server.ssrLoadModule("/server/setup-notification.ts");
-    let status;
-    const response = { setHeader() {}, writeHead(code) { status = code; return this; }, end() {} };
-    await setupNotificationHandler({ method: "POST", headers: { host: "localhost:5173", origin: "http://localhost:5173", "content-type": "application/json" }, socket: { remoteAddress: "availability-test" }, body: {} }, response, {
-      unavailable: "Unavailable", prepare: () => ({ text: "Test", submittedAt: new Date().toISOString() }),
-      beforeDelivery: async () => ({ status: 409, error: "Already exists." }),
-    });
-    assert.equal(status, 409);
-    assert.equal(sent, false);
-  } finally {
-    globalThis.fetch = originalFetch;
-    if (priorToken === undefined) delete process.env.SPOT_TELEGRAM_BOT_TOKEN; else process.env.SPOT_TELEGRAM_BOT_TOKEN = priorToken;
-    if (priorChat === undefined) delete process.env.SPOT_TELEGRAM_CHAT_ID; else process.env.SPOT_TELEGRAM_CHAT_ID = priorChat;
-    await server.close();
-  }
+    const { partnerRegistryStatusHandler } = await server.ssrLoadModule("/server/partner-registry-status.ts");
+    const { spotAppIdStatusHandler } = await server.ssrLoadModule("/server/spot-app-id-status.ts");
+    globalThis.fetch = async () => { throw new Error("availability must not call external services"); };
+    const database = { query: async (_sql, [product, id]) => ({ rowCount: product === "spot" && id.toLowerCase() === "sampledex" ? 1 : 0 }) };
+    const response = () => ({ setHeader() {}, writeHead(status) { this.status = status; return this; }, end(value) { this.body = JSON.parse(value); } });
+    const spot = response();
+    await spotAppIdStatusHandler({ method: "GET", url: "/api/spot-app-id-status?name=Sample%20Dex" }, spot, database);
+    assert.equal(spot.status, 200); assert.equal(spot.body.exists, true);
+    const perps = response();
+    await partnerRegistryStatusHandler({ method: "GET", url: "/api/partner-registry-status?partner=sampledex&availability=1" }, perps, database);
+    assert.equal(perps.status, 200); assert.equal(perps.body.exists, false);
+    const unavailable = response();
+    await partnerRegistryStatusHandler({ method: "GET", url: "/api/partner-registry-status?partner=sampledex&availability=1" }, unavailable, { query: async () => { throw Error("offline"); } });
+    assert.equal(unavailable.status, 503);
+  } finally { globalThis.fetch = originalFetch; await server.close(); }
 });

@@ -4,7 +4,6 @@ import { formatBuilderFeePercent } from "../src/features/onboarding/builder-fee.
 import { chainById } from "../src/config/supported-chains.js";
 import { setupNotificationHandler } from "./setup-notification.js";
 import { isRecord } from "../src/features/onboarding/terms-policy.js";
-import { registryPartnerStatus } from "./partner-registry-status.js";
 
 /** Contact goes only to the team's Telegram message; it is never stored. */
 function withoutContact<T extends { contact?: string }>(setup: T): Omit<T, "contact"> {
@@ -16,11 +15,6 @@ function withoutContact<T extends { contact?: string }>(setup: T): Omit<T, "cont
 export function perpsSubmitHandler(request: IncomingMessage, response: ServerResponse): Promise<void> {
   return setupNotificationHandler(request, response, {
     unavailable: "Perps submission is not available yet. Your details are kept here; please try again later.",
-    async beforeDelivery(body) {
-      const setup = preparePerpsRequest(body);
-      const status = await registryPartnerStatus(setup.partnerId);
-      if (status.exists) return { status: 409, error: "An app with this name already exists. Choose another app name." };
-    },
     prepare(body) {
       const setup = preparePerpsRequest(body);
       if (!isRecord(body) || typeof body.requestId !== "string" || typeof body.accessToken !== "string") throw new Error("Check your submission and try again.");

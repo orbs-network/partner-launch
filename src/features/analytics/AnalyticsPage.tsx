@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { analyticsChain, analyticsPartner } from "@/config/analytics";
 import { chainById } from "@/config/chains";
 import type { WorkspaceContext } from "@/types/workspace";
-import type { LoginSession } from "../login";
+import type { AnalyticsIdentity } from "./api";
 import { downloadPartnerAnalyticsCsv } from "../../../vendor/partner-analytics/src/utils/analytics-csv";
 import { AnalyticsRequestError } from "./api";
 import { useAnalyticsLocation } from "./location";
@@ -17,8 +17,8 @@ import { AnalyticsLive } from "./components/AnalyticsLive";
 
 const AnalyticsCharts = lazy(() => import("./components/AnalyticsCharts").then((module) => ({ default: module.AnalyticsCharts })));
 
-/** embedded: a section inside the My setups dashboard (no page landmark, focus or scroll changes). */
-export function AnalyticsPage({ session, workspace, embedded = false }: { session: LoginSession; workspace?: WorkspaceContext; embedded?: boolean }) {
+/** embedded: a section inside the My workspaces dashboard (no page landmark, focus or scroll changes). */
+export function AnalyticsPage({ session, workspace, embedded = false }: { session: AnalyticsIdentity; workspace?: WorkspaceContext; embedded?: boolean }) {
   const heading = useRef<HTMLHeadingElement>(null);
   const location = useAnalyticsLocation(embedded);
   const { range, view } = location;
@@ -60,7 +60,7 @@ export function AnalyticsPage({ session, workspace, embedded = false }: { sessio
           <ShieldCheck size={25} className="text-(--link)" aria-hidden="true" />
           <h2 className="text-lg font-medium">{denied ? "Analytics access is not available" : unavailable ? "Analytics is not available for this workspace" : "Analytics is temporarily unavailable"}</h2>
           <p className="max-w-2xl text-sm leading-relaxed text-(--muted)">{denied
-            ? `This wallet does not have analytics access for ${name}, or your sign-in could not be verified. Sign in with an authorized wallet. New setups need team activation first.`
+            ? `This wallet does not have analytics access for ${name}. Connect an authorized wallet. New setups need team activation first.`
             : unavailable ? error.message : "We couldn’t load this workspace’s analytics. Try again in a moment."}</p>
           <Button variant="secondary" size="sm" disabled={busy} onClick={() => { if (access.isError) void access.refetch(); else void stats.refetch(); }}>Try again</Button>
         </section>

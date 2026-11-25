@@ -1,5 +1,7 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { isIP } from "node:net";
+import { isAddress } from "viem";
+import { servingOrigin } from "./request-origin.js";
 import { loadPartnerAnalytics } from "../vendor/partner-analytics/lib/analytics-service.js";
 import {
   hasPartnerAdminAccess,
@@ -79,9 +81,17 @@ async function analyticsHandler(route: AnalyticsRoute, request: IncomingMessage,
     return;
   }
   const item = body as Record<string, unknown>;
-  const session = await authenticateAnalyticsSession(item.session, request);
-  if (!session) {
-    errorResponse(response, 401, "Sign in to the partner portal to view analytics.");
+  const session = item.session === undefined ? undefined : await authenticateAnalyticsSession(item.session, request);
+  const origin = servingOrigin(request);
+  const address = session?.address ?? (item.session === undefined && typeof item.address === "string" && isAddress(item.address) ? item.address : undefined);
+  if (!origin || request.headers.origin !== origin ||
+      (request.headers["sec-fetch-site"] && request.headers["sec-fetch-site"] !== "same-origin")) {
+    errorResponse(response, 403, "Use the partner portal to view analytics.");
+    return;
+  }
+  // A connected address is a client claim; the backend grant check does not prove ownership.
+  if (!address) {
+    errorResponse(response, 401, "Connect a wallet to view analytics.");
     return;
   }
   if (item.range !== undefined && (typeof item.range !== "string" || item.range.length > 16)) {
@@ -93,16 +103,16 @@ async function analyticsHandler(route: AnalyticsRoute, request: IncomingMessage,
     const { partner, chainId } = await resolveAnalyticsScope(item.workspace);
     let upstream: Response;
     if (route === "access") {
-      if (!await hasPartnerAdminAccess(partner, session.address, headers)) {
-        errorResponse(response, 403, `${session.address} is not a partner admin`);
+      if (!await hasPartnerAdminAccess(partner, address, headers)) {
+        errorResponse(response, 403, `${address} is not a partner admin`);
         return;
       }
-      upstream = Response.json(partnerPayload(partner, session.address));
+      upstream = Response.json(partnerPayload(partner, address));
     } else {
-      const url = new URL("/api/stats", session.origin);
+      const url = new URL("/api/stats", origin);
       if (typeof item.range === "string") url.searchParams.set("range", item.range);
       url.searchParams.set("chainId", chainId);
-      upstream = await loadPartnerAnalytics(new Request(url, { headers }), partner, session.address);
+      upstream = await loadPartnerAnalytics(new Request(url, { headers }), partner, address);
     }
     response.writeHead(upstream.status).end(await upstream.text());
   } catch (error) {

@@ -8,14 +8,14 @@ import { adminSignInMessage, type AdminProof } from "./admin-proof";
 import { toast } from "sonner";
 import { useMountedRef } from "@/hooks/useMountedRef";
 
-interface ReviewRow { request: PendingRequest; approvedAt?: string; ownerWallet?: string; contact?: string; partnerId?: string }
+interface ReviewRow { request: PendingRequest; previous?: PendingRequest; approvedAt?: string; ownerWallet?: string; contact?: string; partnerId?: string }
 
 /** The server has no admin session for this wallet; one signature starts an 8-hour session. */
 export class AdminSignInRequired extends Error {}
 
-async function adminCall(address: string, action: "list" | "approve", requestId?: string, proof?: AdminProof) {
+async function adminCall(address: string, action: "list" | "approve", requestId?: string, proof?: AdminProof, version?: number) {
   const response = await fetch("/api/admin-requests", { method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address, action, requestId, ...(proof ? { proof } : {}) }) });
+    body: JSON.stringify({ address, action, requestId, ...(proof ? { proof } : {}), ...(version !== undefined ? { version } : {}) }) });
   const body: unknown = await response.json().catch(() => null);
   if (response.status === 401) throw new AdminSignInRequired("Sign in with an authorized admin wallet.");
   if (!response.ok) throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "Requests are unavailable.");
@@ -26,10 +26,11 @@ function parseRows(value: unknown): ReviewRow[] {
   return value.requests.flatMap((row: Record<string, unknown>) => {
     if (!row.details || typeof row.details !== "object") return [];
     const details = row.details as Record<string, unknown>;
-    const request = readRequest({ ...details, id: row.id, kind: row.product, status: row.status,
-      ownerWallets: [...new Set([...(typeof row.owner_wallet === "string" ? [row.owner_wallet.toLowerCase()] : []),
-        ...(Array.isArray(details.ownerWallets) ? details.ownerWallets.filter((v): v is string => typeof v === "string").map(v => v.toLowerCase()) : [])])],
-      savedAt: row.created_at, notification: "telegram", ...(typeof details.builderFeeTenthsBps === "number" ? { extraFeePercent: formatBuilderFeePercent(details.builderFeeTenthsBps) } : {}) });
+    const owners = [...new Set([...(typeof row.owner_wallet === "string" ? [row.owner_wallet.toLowerCase()] : []),
+      ...(Array.isArray(details.ownerWallets) ? details.ownerWallets.filter((v): v is string => typeof v === "string").map(v => v.toLowerCase()) : [])])];
+    const build = (fields: Record<string, unknown>, status: unknown) => readRequest({ ...fields, id: row.id, kind: row.product, status, ownerWallets: owners,
+      savedAt: row.created_at, notification: "telegram", ...(typeof fields.builderFeeTenthsBps === "number" ? { extraFeePercent: formatBuilderFeePercent(fields.builderFeeTenthsBps) } : {}) });
+    const request = build(details, row.status);
     return request ? [{ request, ...(typeof row.approved_at === "string" ? { approvedAt: row.approved_at } : {}),
       ...(typeof row.partner_id === "string" ? { partnerId: row.partner_id } : {}),
       ...(typeof row.owner_wallet === "string" ? { ownerWallet: row.owner_wallet } : {}),
@@ -75,7 +76,9 @@ export function useAdminRequests() {
       const current = getAccount(config);
       if (!address || !current.isConnected || current.address?.toLowerCase() !== address.toLowerCase())
         throw new Error("Your wallet changed. Check the request and try again.");
-      await adminCall(address, "approve", id);
+      const row = query.data?.find(item => item.request.id === id);
+      if (!row) throw new Error("This request changed. Refresh and try again.");
+      await adminCall(address, "approve", id, undefined, row.request.workspaceVersion ?? 0);
     },
     onSuccess: async (_data, _id, attempt) => {
       if (mounted.current && attempt) toast.success("Request approved", { id: attempt.toastId, duration: 4000, dismissible: true, closeButton: true });

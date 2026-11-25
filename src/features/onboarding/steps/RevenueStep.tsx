@@ -81,7 +81,7 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
         <div className="flex justify-between text-[11px] text-(--muted)" aria-hidden="true"><span>0%</span><span>0.1%</span></div>
         <FieldError id="builder-fee-error" message={feeError} />
         {feeNeedsReset && <Button type="button" variant="ghost" className="mt-2" disabled={controlsDisabled} onClick={restoreDefaultFee}>Use default fee</Button>}
-        <p id="builder-fee-hint" className="sr-only">Added on top of the protocol fee after activation.</p>
+        <p id="builder-fee-hint" className="mt-2 text-xs leading-relaxed text-(--muted)">{validateBuilderFee(fee) || !fee ? "Added on top of the protocol fee after activation." : `That’s $${(fee / 10).toFixed(2)} for every $10,000 traded, on top of the protocol fee, after activation.`}</p>
       </section>
     </div>
   );

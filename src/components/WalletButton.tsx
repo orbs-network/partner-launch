@@ -5,7 +5,7 @@ import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
 
 /**
- * "Connect wallet" is how visitors reach Your setups, so it always shows once the wallet state is known.
+ * "Connect wallet" is how visitors reach Your workspaces, so it always shows once the wallet state is known.
  * With hideWhileConnecting, a returning wallet's reconnect does not flash "Connect wallet" first.
  */
 export function WalletButton({ hideWhileConnecting = false }: { hideWhileConnecting?: boolean }) {

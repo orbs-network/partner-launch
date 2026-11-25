@@ -41,8 +41,18 @@ function PortalApp() {
   const setupsView = usePathLocation() === "/setups";
   const openSetups = useCallback(() => {
     if (window.location.pathname === "/setups") return;
-    window.history.pushState(null, "", "/setups");
+    window.history.pushState({ portalFromSetup: true }, "", "/setups");
     window.dispatchEvent(new PopStateEvent("popstate"));
+  }, []);
+  // Return to the exact setup entry when the page was opened from it; otherwise resume an unfinished draft or Welcome.
+  const backToSetup = useCallback(() => {
+    if (window.history.state?.portalFromSetup) { window.history.back(); return; }
+    const perps = useOnboardingStore.getState();
+    const product = safeStorage.getItem(SPOT_DRAFT_KEY) ? "spot" : perps.step !== WELCOME_STEP && !perps.completed ? "perps" : null;
+    if (!product) { window.dispatchEvent(new Event("portal-home", { cancelable: true })); return; }
+    setShowHome(false);
+    window.history.pushState({ portalHome: true }, "", `/?setup=${product}`);
+    window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
   }, []);
   const auth = useDemoLogin(() => { if (window.location.pathname !== "/setups") setView("manage"); });
   const createSetup = () => {
@@ -97,8 +107,8 @@ function PortalApp() {
   const onRequestsConnectError = useCallback((message: string) => { toast.error(message); }, []);
   const { requestLogin: requestConnection } = useLoginConnection({ operationInFlightRef: requestInFlightRef, onLogin: onRequestsConnected, onError: onRequestsConnectError });
   const openRequests = () => { if (requestInFlightRef.current) return; requestInFlightRef.current = true; requestConnection(); };
-  const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} />;
-  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
+  const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} disabled={requestCancellationBusy || auth.busy || auth.walletConnecting} />;
+  return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} onBack={backToSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
 }
 
 function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseProduct, onPendingRequests, headerTrigger, setupsPage }: {
@@ -130,8 +140,8 @@ function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseP
   const partnerId = auth.isLoggedIn && workspacePartner?.sessionKey === sessionKey ? workspacePartner?.partnerId : null;
   const walletBusy = auth.busy || auth.walletConnecting;
   const logout = () => { auth.logout(); setWorkspacePartner(null); setView("setup"); };
-  // The header shows the account control only once signed in (or while signing in / in the workspace).
-  const showAccount = auth.isLoggedIn || auth.signing || auth.restoring || view === "manage";
+  // Keep the sign-out control in the existing workspace and feedback during sign-in.
+  const showAccount = auth.signing || auth.restoring || view === "manage";
   const header = (disabled = false) => (
     <>{headerTrigger}{showAccount ? <LoginButton auth={accountAuth} managing={view === "manage"} disabled={disabled} onLogout={logout} partnerId={partnerId} /> : null}</>
   );

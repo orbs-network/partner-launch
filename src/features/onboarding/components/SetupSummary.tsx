@@ -4,11 +4,11 @@ import { cn } from "@/lib/utils";
 import { chainById, chainLogo } from "../../../config/chains";
 import { formatBuilderFeePercent } from "../builder-fee";
 import { formatCreatorSharePercent } from "../creator-revenue";
-import { APP_URL_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
+import { APP_URL_STEP, INTEGRATION_CHOICE_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
 import type { OnboardingDraft } from "../state/types";
 import { RevenueWalletLink } from "./RevenueWalletLink";
 
-export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps"> & { contact?: string; appUrl?: string };
+export type SetupSummaryData = Pick<OnboardingDraft, "displayName" | "partnerName" | "launchPath" | "chainIds" | "revenueWallet" | "requestedCreatorShareBps" | "builderFeeTenthsBps"> & { contact?: string; appUrl?: string; integrationMode?: OnboardingDraft["integrationMode"] };
 
 const rowClass = "flex items-start justify-between gap-3 border-t border-(--edge) py-3.5";
 const labelClass = "mb-1.5 block text-[11px] leading-normal text-(--muted)";
@@ -32,30 +32,25 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
       <div className="flex items-center justify-between gap-3 py-4">
         <div className="min-w-0 flex-1">
           <span className={labelClass}>{api ? "Partner ID" : "App name"}</span>
-          <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2">
-            <strong className="min-w-0 text-xl leading-snug font-semibold tracking-[-0.5px] wrap-anywhere text-(--text) max-[480px]:text-lg">{api ? draft.partnerName : draft.displayName || draft.partnerName}</strong>
-            <ul className="m-0 flex min-w-0 max-w-full list-none flex-wrap gap-1.5 p-0" aria-label="Selected networks">
-              {draft.chainIds.map((id) => {
-                const badge = <>
-                  <img className="size-[18px] shrink-0 rounded-full object-contain" src={chainLogo(id)} width={18} height={18} alt="" />
-                  <span className="min-w-0 whitespace-normal wrap-anywhere">{chainById(id)?.name}</span>
-                </>;
-                return (
-                  <li key={id} className="min-w-0 max-w-full">
-                    {onEdit ? (
-                      <Button variant="secondary" type="button" className={networkClass} disabled={disabled} onClick={() => onEdit(NETWORKS_STEP)} aria-label={`Change network: ${chainById(id)?.name}`}>
-                        {badge}<Pencil size={11} aria-hidden="true" />
-                      </Button>
-                    ) : <span className={networkClass}>{badge}</span>}
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+          <strong className="block min-w-0 text-xl leading-snug font-semibold tracking-[-0.5px] wrap-anywhere text-(--text) max-[480px]:text-lg">{api ? draft.partnerName : draft.displayName || draft.partnerName}</strong>
         </div>
         {onEdit ? <Button variant="ghost" type="button" className={editClass} disabled={disabled} onClick={() => onEdit(PARTNER_STEP)} aria-label={api ? "Edit partner ID" : "Edit app name"}>
           <Pencil size={13} aria-hidden="true" /> Edit
         </Button> : null}
+      </div>
+      {draft.integrationMode ? <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">How you’re adding Perps</dt><dd className="m-0 text-sm text-(--secondary-text)">{draft.integrationMode === "api" ? "Add trading to my app" : "A complete trading app"}</dd></dl>
+        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(INTEGRATION_CHOICE_STEP)} aria-label="Edit how you’re adding Perps"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
+      </div> : null}
+      <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1.5"><dt className="text-[11px] text-(--muted)">Network</dt>
+          <dd className="m-0"><ul className="m-0 flex min-w-0 max-w-full list-none flex-wrap gap-1.5 p-0" aria-label="Selected networks">
+            {draft.chainIds.map((id) => <li key={id} className="min-w-0 max-w-full"><span className={networkClass}>
+              <img className="size-[18px] shrink-0 rounded-full object-contain" src={chainLogo(id)} width={18} height={18} alt="" />
+              <span className="min-w-0 whitespace-normal wrap-anywhere">{chainById(id)?.name}</span>
+            </span></li>)}
+          </ul></dd></dl>
+        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(NETWORKS_STEP)} aria-label="Edit network"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
       </div>
       <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-3">

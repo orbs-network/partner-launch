@@ -13,7 +13,7 @@ export async function fetchEnabledChainIds(partnerId: string, signal?: AbortSign
 
 export async function fetchPartnerRegistryStatus(partnerId: string, signal?: AbortSignal, checkAvailability = false): Promise<{ exists: boolean; enabledChainIds: number[] }> {
   const response = await fetch(`/api/partner-registry-status?${new URLSearchParams({ partner: partnerId, ...(checkAvailability ? { availability: "1" } : {}) })}`, { signal, cache: "no-store" });
-  if (!response.ok) throw new Error("Registry status unavailable");
+  if (!response.ok) throw new Error(checkAvailability ? "Partner ID availability unavailable" : "Registry status unavailable");
   const data: unknown = await response.json();
   if (!data || typeof data !== "object" || !("partnerId" in data) || data.partnerId !== partnerId ||
       !("exists" in data) || typeof data.exists !== "boolean" || !("enabledChainIds" in data) || !Array.isArray(data.enabledChainIds) ||

@@ -35,7 +35,7 @@ export function WizardProgress({
           ))}
         </ol>
       </nav>
-      <span className="rounded-[20px] bg-(--soft) px-2.5 py-1.5 text-[13px] whitespace-nowrap text-(--muted) tabular-nums">
+      <span className="rounded-[20px] bg-(--soft) px-2.5 py-1.5 text-[13px] whitespace-nowrap text-(--muted) tabular-nums max-[479px]:sr-only">
         {step + 1} of {steps.length}
       </span>
     </div>
