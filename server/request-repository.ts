@@ -65,7 +65,7 @@ export async function listWalletRequests(database: Pool, address: string) {
     const details = row.details;
     return {
       id: row.id, kind: row.product, status: row.status, appName: details.appName,
-      savedAt: new Date(row.created_at).toISOString(), ownerWallets: [...new Set([...(row.owner_wallet ? [row.owner_wallet] : []),
+      savedAt: new Date(row.created_at).toISOString(), ...(typeof details.workspaceVersion === "number" ? { workspaceVersion: details.workspaceVersion } : {}), ...(typeof details.approvalRevision === "number" ? { approvalRevision: details.approvalRevision } : {}), ...(details.pendingEdit ? { pendingEdit: details.pendingEdit } : {}), ownerWallets: [...new Set([...(row.owner_wallet ? [row.owner_wallet] : []),
         ...(Array.isArray(details.ownerWallets) ? details.ownerWallets.filter((value): value is string => typeof value === "string") : [])].map(value => value.toLowerCase()))],
       ...(row.product === "spot" ? { feesWallet: details.feesWallet, ...(details.integrationMode === "ui" || details.integrationMode === "existing" ? { integrationMode: details.integrationMode } : {}), ...(typeof details.tradingFeeTenthsBps === "number" ? { tradingFeeTenthsBps: details.tradingFeeTenthsBps } : {}), ...(row.partner_id ? { partnerId: row.partner_id } : {}), ...(details.dexUrl ? { dexUrl: details.dexUrl } : {}) } : {
         partnerId: details.partnerId, chainIds: details.chainIds, revenueWallet: details.revenueWallet,
@@ -103,11 +103,17 @@ export async function listReviewRequests(database: Pool) {
   return result.rows;
 }
 
-/** Conditional update prevents approval of a cancelled, undelivered or changed-status request. */
-export async function approveSetupRequest(database: Pool, id: string, admin: string): Promise<boolean> {
+/** Approve the current delivered request only if it has not changed since review. */
+export async function approveSetupRequest(database: Pool, id: string, admin: string, expectedVersion?: number): Promise<boolean> {
+  const selected = await database.query<{ details: Record<string, unknown>; status: string }>(
+    "SELECT details, product, status, partner_id FROM portal_setup_requests WHERE id = $1 AND delivered_at IS NOT NULL", [id]);
+  const row = selected.rows[0];
+  if (!row) return false;
+  const version = Number(row.details.workspaceVersion ?? 0);
+  if (!Number.isSafeInteger(version) || (expectedVersion !== undefined && expectedVersion !== version)) return false;
   const result = await database.query(
-    "UPDATE portal_setup_requests SET status = 'approved', approved_at = now(), approved_by = $2 WHERE id = $1 AND status = 'pending' AND delivered_at IS NOT NULL RETURNING id",
-    [id, admin.toLowerCase()],
+    "UPDATE portal_setup_requests SET status = 'approved', approved_at = now(), approved_by = $2 WHERE id = $1 AND status = 'pending' AND delivered_at IS NOT NULL AND COALESCE(details->>'workspaceVersion', '0') = $3 RETURNING id",
+    [id, admin.toLowerCase(), String(version)],
   );
   return !!result.rowCount;
 }

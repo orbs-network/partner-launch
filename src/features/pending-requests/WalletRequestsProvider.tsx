@@ -14,8 +14,8 @@ export function WalletRequestsProvider({ children }: { children: ReactNode }) {
     queryFn: async () => {
       const response = await fetch("/api/wallet-requests", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ address }) });
       const body: unknown = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "Your setups are temporarily unavailable.");
-      if (!body || typeof body !== "object" || !("requests" in body) || !Array.isArray(body.requests)) throw new Error("Your setups could not be read.");
+      if (!response.ok) throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "Your workspaces are temporarily unavailable.");
+      if (!body || typeof body !== "object" || !("requests" in body) || !Array.isArray(body.requests)) throw new Error("Your workspaces could not be read.");
       return body.requests.map((value: unknown) => {
         if (!value || typeof value !== "object") return null;
         const item = value as Record<string, unknown>;

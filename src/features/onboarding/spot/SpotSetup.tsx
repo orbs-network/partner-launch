@@ -45,7 +45,7 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
           <div className={`px-8 pb-8 max-[720px]:px-[21px] max-[370px]:px-[17px] ${saved ? "pt-6" : "pt-3 max-[720px]:pt-2.5"}`}>
             <SetupLabel product="spot" />
             <h1 ref={headingRef} tabIndex={-1} className="text-[31px] leading-[1.25] font-semibold tracking-[-1px] focus:outline-none max-[720px]:text-[28px]">{saved ? "Spot setup submitted" : step.title}</h1>
-            {saved ? <div className="mt-5"><SpotApprovalStatus setup={saved} /></div> : <p className="mt-3 text-[15px] leading-[1.7] text-(--muted) max-[720px]:text-sm">{step.intro}</p>}
+            {saved ? <div className="mt-5"><SpotApprovalStatus /></div> : <p className="mt-3 text-[15px] leading-[1.7] text-(--muted) max-[720px]:text-sm">{step.intro}</p>}
             {!saved && draft.step === "review" ? <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a> : null}
             {saved ? (
               <div>
@@ -53,7 +53,7 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
                 <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a>
                 <ExpandableSection title="Setup details" disabled={busy}>
                   <div className="mt-3"><SpotSummary {...saved} /></div>
-                  <p className="mt-3 text-xs leading-[1.7] text-(--muted)">Sent to the team for review. Connect your owner wallet to see it under Your setups.</p>
+                  <p className="mt-3 text-xs leading-[1.7] text-(--muted)">Sent to the team for review. Connect your owner wallet to see it under Your workspaces.</p>
                 </ExpandableSection>
                 <SpotSupportedChains />
                 <SetupActions onCreateNew={() => setResetOpen(true)} onOpenSetups={onPendingRequests} createNewButtonRef={resetRef} busy={busy} />

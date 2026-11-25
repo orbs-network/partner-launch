@@ -1,5 +1,6 @@
 import { isSpotFee } from "../onboarding/spot/spot-fee";
 import { isAddress, zeroAddress } from "viem";
+import { normalizeWorkspaceEdit, type WorkspaceEdit } from "./workspace-edit";
 import { validateDexUrl } from "../../lib/dex-url";
 
 interface RequestBase {
@@ -8,6 +9,9 @@ interface RequestBase {
   appName: string;
   status: "pending" | "ready" | "approved";
   ownerWallets?: string[];
+  workspaceVersion?: number;
+  approvalRevision?: number;
+  pendingEdit?: WorkspaceEdit;
 }
 export interface SpotRequest extends RequestBase {
   kind: "spot";
@@ -42,8 +46,15 @@ export function readRequest(value: unknown): PendingRequest | null {
     !Number.isFinite(Date.parse(row.savedAt)) || (row.status !== "pending" && row.status !== "ready" && row.status !== "approved") ||
     (row.status === "ready" && (row.kind !== "perps" || row.notification !== "telegram"))) return null;
   if (row.ownerWallets !== undefined && (!Array.isArray(row.ownerWallets) || row.ownerWallets.length > 11 || !row.ownerWallets.every(wallet))) return null;
+  let pendingEdit: WorkspaceEdit | undefined;
+  try { if (row.pendingEdit !== undefined && row.pendingEdit !== null) pendingEdit = normalizeWorkspaceEdit(row.pendingEdit); }
+  catch { return null; }
+  if (pendingEdit && pendingEdit.product !== row.kind) return null;
+  if (row.workspaceVersion !== undefined && (!Number.isSafeInteger(row.workspaceVersion) || (row.workspaceVersion as number) < 0)) return null;
+  if (row.approvalRevision !== undefined && (!Number.isSafeInteger(row.approvalRevision) || (row.approvalRevision as number) < 0)) return null;
   const base: RequestBase = { id: row.id, appName: row.appName, savedAt: row.savedAt, status: row.status,
-    ...(Array.isArray(row.ownerWallets) ? { ownerWallets: row.ownerWallets as string[] } : {}) };
+    ...(Array.isArray(row.ownerWallets) ? { ownerWallets: row.ownerWallets as string[] } : {}),
+    ...(typeof row.workspaceVersion === "number" ? { workspaceVersion: row.workspaceVersion } : {}), ...(typeof row.approvalRevision === "number" ? { approvalRevision: row.approvalRevision } : {}), ...(pendingEdit ? { pendingEdit } : {}) };
   if (row.kind === "spot" && wallet(row.feesWallet) &&
     (row.integrationMode === undefined || row.integrationMode === "ui" || row.integrationMode === "existing") &&
     (row.partnerId === undefined || text(row.partnerId, 80)) &&

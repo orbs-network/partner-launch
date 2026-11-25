@@ -50,12 +50,14 @@ export async function adminRequestsHandler(request: IncomingMessage, response: S
   if (data.action === "approve" && (typeof data.requestId !== "string" || !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(data.requestId))) {
     reply(400, { error: "Invalid request." }); return;
   }
+  if (data.action === "approve" && (!Number.isSafeInteger(data.version) || Number(data.version) < 0)) { reply(400, { error: "Refresh the request and try again." }); return; }
   try {
     if (data.action === "list") { reply(200, { requests: await listReviewRequests(db) }); return; }
-    const approved = await approveSetupRequest(db, data.requestId as string, admin);
+    const approved = await approveSetupRequest(db, data.requestId as string, admin, data.version as number);
     if (!approved) { reply(409, { error: "This request is no longer pending." }); return; }
     reply(200, { approved: true });
-  } catch {
+  } catch (cause) {
+    if (cause && typeof cause === "object" && "code" in cause && cause.code === "23505") { reply(409, { error: "This Partner ID is already in use. Ask the owner to choose another ID." }); return; }
     reply(503, { error: "Request storage is unavailable. Please try again." });
   }
 }

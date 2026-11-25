@@ -4,7 +4,7 @@ import { parseAnalyticsRange } from "../../../vendor/partner-analytics/src/analy
 export const analyticsViews = ["overview", "live", "charts"] as const;
 export type AnalyticsView = typeof analyticsViews[number];
 
-/** With keepParams, filter changes keep the surrounding page's parameters (e.g. the My setups dashboard). */
+/** With keepParams, filter changes keep the surrounding page's parameters (e.g. the My workspaces dashboard). */
 export function useAnalyticsLocation(keepParams = false) {
   const search = useSearchLocation();
   const params = new URLSearchParams(search);

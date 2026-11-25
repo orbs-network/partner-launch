@@ -2,9 +2,9 @@ import type { useAnalyticsLocation } from "../location";
 import { analyticsViews } from "../location";
 import { RANGE_LABELS, TIME_RANGES } from "../../../../vendor/partner-analytics/lib/analytics-range";
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { navigateWithinApp } from "@/hooks/useSearchLocation";
 
-const selectClass = "min-h-11 w-full min-w-0 rounded-xl border border-(--edge) bg-(--control-bg) px-3 text-sm text-(--text) focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)";
 const viewLabels = { overview: "Overview", live: "Live", charts: "Charts" };
 
 export function AnalyticsFilters({ location }: { location: ReturnType<typeof useAnalyticsLocation> }) {
@@ -19,12 +19,13 @@ export function AnalyticsFilters({ location }: { location: ReturnType<typeof use
           )}>{viewLabels[option]}</a>
         ))}
       </nav>
-      <label className="mb-3 grid w-52 min-w-0 gap-2 text-xs text-(--muted) max-[640px]:mb-0 max-[640px]:w-full">
-        {view === "live" ? "Time range (period views)" : "Time range"}
-        <select className={selectClass} name="analytics-range" value={range} disabled={view === "live"} onChange={(event) => change({ range: event.target.value })}>
-          {TIME_RANGES.map((option) => <option key={option} value={option}>{RANGE_LABELS[option]}</option>)}
-        </select>
-      </label>
+      <div className="mb-3 grid w-52 min-w-0 gap-2 text-xs text-(--muted) max-[640px]:mb-0 max-[640px]:w-full">
+        <label htmlFor="analytics-range">{view === "live" ? "Time range (period views)" : "Time range"}</label>
+        <Select name="analytics-range" value={range} disabled={view === "live"} onValueChange={(value) => change({ range: value })}>
+          <SelectTrigger id="analytics-range" className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>{TIME_RANGES.map((option) => <SelectItem key={option} value={option}>{RANGE_LABELS[option]}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
     </section>
   );
 }

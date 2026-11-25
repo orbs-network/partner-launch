@@ -14,7 +14,7 @@
     "test:deploy": "node --test tests/deploy.test.mjs",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit --pretty false",
-    "test": "npm run test:deploy && node --test --test-concurrency=1 tests/app-identity.test.mjs tests/admin-mock.test.mjs tests/request-database.test.mjs tests/partner-availability.test.mjs tests/server-module-loading.test.mjs",
+    "test": "npm run test:deploy && node --test --test-concurrency=1 tests/app-identity.test.mjs tests/admin-mock.test.mjs tests/request-database.test.mjs tests/partner-availability.test.mjs tests/server-module-loading.test.mjs tests/spot-analytics.test.mjs tests/analytics-connected-wallet.test.mjs tests/workspace-location.test.mjs tests/workspace-edit.test.mjs",
     "start": "next start"
   },
   "dependencies": {

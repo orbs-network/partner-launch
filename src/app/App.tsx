@@ -97,7 +97,7 @@ function PortalApp() {
   const onRequestsConnectError = useCallback((message: string) => { toast.error(message); }, []);
   const { requestLogin: requestConnection } = useLoginConnection({ operationInFlightRef: requestInFlightRef, onLogin: onRequestsConnected, onError: onRequestsConnectError });
   const openRequests = () => { if (requestInFlightRef.current) return; requestInFlightRef.current = true; requestConnection(); };
-  const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} />;
+  const headerTrigger = <HeaderPendingRequestsButton active={setupsView} onOpen={openRequests} disabled={requestCancellationBusy || auth.busy || auth.walletConnecting} />;
   return <WalletRequestsProvider><WalletApprovalNotifications /><RegistryReadyNotifications paused={requestCancellationBusy} /><PortalContent auth={auth} view={view} setView={setView} setupInstance={setupInstance} showHome={showHome && !setupsView} onChooseProduct={chooseProduct} onPendingRequests={openRequests} headerTrigger={headerTrigger} setupsPage={setupsView ? <SetupsPage onCancellationBusyChange={setRequestCancellationBusy} onCreateSetup={createSetup} /> : null} /><Toaster /></WalletRequestsProvider>;
 }
 
@@ -130,8 +130,8 @@ function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseP
   const partnerId = auth.isLoggedIn && workspacePartner?.sessionKey === sessionKey ? workspacePartner?.partnerId : null;
   const walletBusy = auth.busy || auth.walletConnecting;
   const logout = () => { auth.logout(); setWorkspacePartner(null); setView("setup"); };
-  // The header shows the account control only once signed in (or while signing in / in the workspace).
-  const showAccount = auth.isLoggedIn || auth.signing || auth.restoring || view === "manage";
+  // Keep the sign-out control in the existing workspace and feedback during sign-in.
+  const showAccount = auth.signing || auth.restoring || view === "manage";
   const header = (disabled = false) => (
     <>{headerTrigger}{showAccount ? <LoginButton auth={accountAuth} managing={view === "manage"} disabled={disabled} onLogout={logout} partnerId={partnerId} /> : null}</>
   );

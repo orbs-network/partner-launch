@@ -39,6 +39,13 @@
   @media (forced-colors: active) {
     * { scrollbar-color: auto; scrollbar-width: auto; }
   }
+  /* Keep dialog and drawer content scrollable without a visible scrollbar. */
+  :is([data-slot="dialog-content"], [data-slot="drawer-content"], [data-slot="dialog-content"] *, [data-slot="drawer-content"] *) {
+    scrollbar-width: none;
+  }
+  :is([data-slot="dialog-content"], [data-slot="drawer-content"], [data-slot="dialog-content"] *, [data-slot="drawer-content"] *)::-webkit-scrollbar {
+    display: none;
+  }
   @media (max-width: 720px) {
     :root {
       --app-header-height: 74px;

@@ -46,24 +46,12 @@ function RegistryReadyNotification({ request, paused }: { request: PerpsRequest;
 
 function SpotReadyNotification({ request, paused }: { request: SpotRequest; paused: boolean }) {
   const { ready, isError, isFetching, data } = useSpotConfigStatus(request);
-  const notified = useRef(false);
-  const toastId = `spot-ready:${request.id}`;
+  const reported = useRef(false);
   useEffect(() => {
     if (paused || !data || isError || isFetching) return;
-    if (!ready) {
-      if (notified.current) toast.dismiss(toastId);
-      notified.current = false;
-      return;
-    }
-    if (notified.current) return;
-    notified.current = true;
-    void reportSpotMatch(request);
-    toast.info("Spot configuration found", {
-      id: toastId,
-      description: "A matching Partner ID was found. If you provided contact details, the team can follow up there to confirm it belongs to your setup.",
-      duration: Infinity, closeButton: true, dismissible: true,
-    });
-  }, [ready, isError, isFetching, data, request, toastId, paused]);
+    if (!ready) { reported.current = false; return; }
+    if (!reported.current) { reported.current = true; void reportSpotMatch(request); }
+  }, [ready, isError, isFetching, data, request, paused]);
   return null;
 }
 

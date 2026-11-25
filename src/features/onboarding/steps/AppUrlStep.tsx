@@ -14,7 +14,7 @@ export function AppUrlStep({ error, disabled }: { error: string; disabled: boole
     <FieldError id="app-url-error" message={error} />
     <div id="app-url-help" className="mt-4 flex items-start gap-3 rounded-2xl border border-(--edge) bg-(--primary-soft) p-4 text-(--text)">
       <CircleAlert size={19} className="mt-0.5 shrink-0 text-(--link)" aria-hidden="true" />
-      <div className="min-w-0"><p className="text-sm font-semibold">Required before your app can work</p><p className="mt-1 text-[13px] leading-[1.65] text-(--secondary-text)">If you skip this step, add your app URL in My setups after creating your app.</p></div>
+      <div className="min-w-0"><p className="text-sm font-semibold">Required before your app can work</p><p className="mt-1 text-[13px] leading-[1.65] text-(--secondary-text)">If you skip this step, add your app URL in My workspaces after creating your app.</p></div>
     </div>
   </>;
 }

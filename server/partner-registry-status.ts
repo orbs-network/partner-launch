@@ -1,9 +1,10 @@
 import type { IncomingMessage, ServerResponse } from "node:http";
+import type { Pool } from "pg";
 import { registryLanes } from "./partner-registry.js";
 import { partnerIdExists } from "./request-repository.js";
 import { requestDatabase } from "./request-database.js";
 
-/** Existence includes disabled lanes; availability checks do not reserve the ID. */
+/** Registry status includes disabled lanes; it does not reserve the ID. */
 export async function registryPartnerStatus(partnerId: string) {
   const lanes = await registryLanes(partnerId.toLowerCase());
   const enabledChainIds: number[] = [];
@@ -21,7 +22,7 @@ export async function registryPartnerStatus(partnerId: string) {
   return { partnerId, exists, enabledChainIds: [...new Set(enabledChainIds)] };
 }
 
-export async function partnerRegistryStatusHandler(request: IncomingMessage, response: ServerResponse) {
+export async function partnerRegistryStatusHandler(request: IncomingMessage, response: ServerResponse, database?: Pool) {
   response.setHeader("Content-Type", "application/json; charset=utf-8");
   response.setHeader("Cache-Control", "no-store");
   if (request.method !== "GET") {
@@ -37,10 +38,12 @@ export async function partnerRegistryStatusHandler(request: IncomingMessage, res
     return;
   }
   try {
-    const result = await registryPartnerStatus(partnerId);
-    if (url.searchParams.get("availability") === "1") result.exists ||= await partnerIdExists(requestDatabase(), partnerId, "perps");
+    const result = url.searchParams.get("availability") === "1"
+      ? { partnerId, exists: await partnerIdExists(database ?? requestDatabase(), partnerId, "perps"), enabledChainIds: [] }
+      : await registryPartnerStatus(partnerId);
     response.writeHead(200).end(JSON.stringify(result));
   } catch {
-    response.writeHead(502).end(JSON.stringify({ error: "Partner registry is temporarily unavailable." }));
+    const availability = url.searchParams.get("availability") === "1";
+    response.writeHead(availability ? 503 : 502).end(JSON.stringify({ error: availability ? "Partner ID availability is temporarily unavailable." : "Partner registry is temporarily unavailable." }));
   }
 }
