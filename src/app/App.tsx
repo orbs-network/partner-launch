@@ -152,7 +152,7 @@ function PortalContent({ auth, view, setView, setupInstance, showHome, onChooseP
         <main id="main" className="mx-auto my-16 grid w-[min(480px,calc(100%-32px))] gap-[22px] rounded-[25px] border border-(--edge) bg-(--surface) p-8">
           <span className="inline-flex items-center gap-1 rounded-[7px] bg-(--tint-bg) px-1.5 py-1 text-[10px] whitespace-nowrap text-(--link)">dPERPS workspace</span>
           <h1 className="text-[28px] tracking-[-0.8px]">Open your creator workspace</h1>
-          <p className="leading-[1.7] text-(--muted)">Sign in with your wallet to open your partner workspace and manage your app.</p>
+          <p className="leading-[1.7] text-(--muted)">Sign in with your wallet to open your partner workspace and manage your DEX.</p>
           <Button type="button" onClick={openWorkspace} disabled={walletBusy}>
             Log in with wallet
           </Button>

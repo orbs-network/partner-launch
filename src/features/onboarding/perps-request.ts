@@ -21,7 +21,7 @@ export function preparePerpsRequest(body: unknown) {
     throw new Error("Check your Perps details and accept the current policy.");
   const nameError = body.launchPath === "creator" ? validateDexName(body.appName)
     : !body.appName.trim() || body.appName.length > 80 || [...body.appName].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
-      ? "Check your app name." : undefined;
+      ? "Check your DEX name." : undefined;
   const ownerError = validateRevenueWallet(body.ownerWallet) ? "Enter a valid, non-zero owner wallet address." : undefined;
   const error = (typeof body.appUrl === "string" ? validateDexUrl(body.appUrl) : undefined) ?? nameError ?? validatePartnerName(body.partnerId) ?? ownerError ?? validateRevenueWallet(body.revenueWallet)
     ?? validateBuilderFee(body.builderFeeTenthsBps) ?? (typeof body.contact === "string" ? validateContact(body.contact) : undefined)

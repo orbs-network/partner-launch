@@ -9,23 +9,25 @@ import { normalizeOwnerWallets, restoreOwnerWallets } from "../owner-wallets.js"
 export const SPOT_DRAFT_KEY = "partner-portal-spot-draft-v1";
 export const spotSteps = [
   { id: "integration", name: "Integration", title: "How would you like to add spot trading?", intro: "Choose a ready-made trading interface or add Spot to your existing DEX." },
-  { id: "app", name: "App name", title: "App name", intro: "Choose the name people will see in your DEX, and how our team can reach you." },
+  { id: "app", name: "DEX name", title: "DEX name", intro: "Choose the name people will see in your DEX, and how our team can reach you." },
   { id: "wallet", name: "Platform fee", title: "Set your platform fee", intro: "Choose where to receive your revenue and set the platform fee for Spot trades." },
   { id: "build", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made Spot trading interface." },
   { id: "url", name: "DEX URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step if it isn’t ready yet." },
   { id: "review", name: "Review", title: "Review your Spot setup", intro: "Check your details and accept the policy before continuing." },
-  { id: "deposit", name: "Activation deposit", title: "One-time activation deposit", intro: "Review the deposit requirement, then submit your setup to the team." },
+  { id: "deposit", name: "Activation deposit", title: "One-time activation deposit", intro: "Deposit 100 USDC to activate your DEX." },
 ] as const;
 export type SpotStep = (typeof spotSteps)[number]["id"];
 
 /** Existing integrations skip the ready-made UI build; stable IDs preserve restored drafts. */
-export function spotStepsForMode(mode: SpotDraft["integrationMode"]) {
-  return mode === "existing" ? spotSteps.filter(step => step.id !== "build") : spotSteps;
+export function spotStepsForMode(mode: SpotDraft["integrationMode"], recoverUrl = false) {
+  return mode === "existing" ? spotSteps.filter(step => step.id !== "url" || recoverUrl).map(step => step.id === "build"
+    ? { ...step, name: "Integration prompt", title: "Your Spot integration prompt", intro: "Use this prompt to add Spot trading to your existing DEX." } : step) : spotSteps;
 }
 export interface SpotDraft {
   step: SpotStep;
   integrationMode: "ui" | "existing" | null;
   appName: string;
+  localTestPartnerId?: string;
   /** Optional email or Telegram username for the team; never stored in Pending requests. */
   contact: string;
   dexUrl: string;
@@ -37,6 +39,7 @@ export interface SpotDraft {
 }
 export interface SpotSetupSnapshot {
   kind: "spot";
+  partnerId?: string;
   integrationMode?: "ui" | "existing";
   appName: string;
   contact?: string;
@@ -64,6 +67,7 @@ export function restoreSpotDraft(value: unknown): SpotDraft {
     step: spotSteps.find((step) => step.id === value.step)?.id ?? "app",
     integrationMode: value.integrationMode === "ui" || value.integrationMode === "existing" ? value.integrationMode : value.step === "integration" ? null : "existing",
     appName: typeof value.appName === "string" ? value.appName.slice(0, 80) : "",
+    ...(typeof value.localTestPartnerId === "string" && /^test[a-f0-9]{16}$/.test(value.localTestPartnerId) ? { localTestPartnerId: value.localTestPartnerId } : {}),
     contact: typeof value.contact === "string" ? value.contact.slice(0, MAX_CONTACT_LENGTH + 1) : "",
     dexUrl: typeof value.dexUrl === "string" ? value.dexUrl.slice(0, MAX_DEX_URL_LENGTH + 1) : "",
     feesWallet: typeof value.feesWallet === "string" ? value.feesWallet.slice(0, 100) : "",
@@ -72,8 +76,8 @@ export function restoreSpotDraft(value: unknown): SpotDraft {
     policyAccepted: value.policyAccepted === true && value.policyVersion === TERMS_VERSION,
     policyVersion: TERMS_VERSION,
   };
-  if (draft.integrationMode === "existing" && draft.step === "build") draft.step = "url";
-  const steps = spotStepsForMode(draft.integrationMode);
+  if (draft.integrationMode === "existing" && (draft.step === "url" && !validateDexUrl(draft.dexUrl))) draft.step = "review";
+  const steps = spotStepsForMode(draft.integrationMode, !!validateDexUrl(draft.dexUrl));
   const index = steps.findIndex((step) => step.id === draft.step);
   const invalid = steps.slice(0, index).find((step) => spotStepError(step.id, draft));
   if (invalid) { draft.step = invalid.id; draft.policyAccepted = false; }
@@ -81,6 +85,8 @@ export function restoreSpotDraft(value: unknown): SpotDraft {
 }
 /** Validated details alone do not prove delivery, wallet ownership or activation. */
 export function prepareSpotSetup(draft: SpotDraft): Omit<SpotSetupSnapshot, "transport"> {
+  const urlError = validateDexUrl(draft.dexUrl);
+  if (urlError) throw new Error(urlError);
   for (const step of spotStepsForMode(draft.integrationMode)) {
     const error = spotStepError(step.id, draft);
     if (error) throw new Error(error);

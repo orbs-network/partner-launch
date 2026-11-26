@@ -1,8 +1,9 @@
 import { normalizeOrigin } from "../../../lib/website-origin";
 import { MAX_CONTACT_LENGTH } from "../../../lib/contact";
 import { restoreOwnerWallets } from "../owner-wallets";
-import { FUNDING_STEP, onboardingStepOrder, TERMS_STEP } from "../onboarding-steps";
+import { APP_URL_STEP, FUNDING_STEP, TERMS_STEP } from "../onboarding-steps";
 import { FUNDING_AMOUNT, FUNDING_CHAIN_ID } from "../../../config/funding";
+import { launchStepOrder, needsUrlRecovery } from "../launch-flow";
 import { getStepId, restoreStep, type OnboardingStepId } from "./step-position";
 import {
   getStepError,
@@ -191,13 +192,15 @@ export function sanitizeDraft(value: unknown): SavedDraft {
   if (isSetupSubmission(value.setupSubmission, draft)) draft.setupSubmission = value.setupSubmission;
   const depositStepConfirmations = sanitizeDepositStepConfirmations(value.depositStepConfirmations);
   if (depositStepConfirmations) draft.depositStepConfirmations = depositStepConfirmations;
-  for (const step of onboardingStepOrder.slice(0, onboardingStepOrder.indexOf(draft.step))) {
+  if (draft.integrationMode === "api" && (draft.step === APP_URL_STEP && !getStepError(APP_URL_STEP, draft))) draft.step = TERMS_STEP;
+  const order = launchStepOrder(draft.integrationMode, needsUrlRecovery(draft));
+  for (const step of order.slice(0, order.indexOf(draft.step))) {
     if (getStepError(step, draft)) {
       draft.step = step;
       break;
     }
   }
-  if (onboardingStepOrder.slice(0, onboardingStepOrder.indexOf(TERMS_STEP)).some((step) => getStepError(step, draft))) {
+  if (order.slice(0, order.indexOf(TERMS_STEP)).some((step) => getStepError(step, draft))) {
     draft.termsAcceptedVersion = null;
     draft.termsSignatures = {};
   }
@@ -205,9 +208,9 @@ export function sanitizeDraft(value: unknown): SavedDraft {
   draft.completed =
     value.completed === true &&
     !(value.setupSubmission && !draft.setupSubmission) &&
-    !onboardingStepOrder.some((step) => getStepError(step, draft));
+    !order.some((step) => getStepError(step, draft));
   if (value.completed === true && !draft.completed) {
-    const invalidStep = onboardingStepOrder.find((step) => !!getStepError(step, draft));
+    const invalidStep = order.find((step) => !!getStepError(step, draft));
     draft.step = invalidStep ?? TERMS_STEP;
   }
   const pending = getPendingDeposit(draft);

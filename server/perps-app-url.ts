@@ -26,14 +26,14 @@ export async function perpsAppUrlHandler(request: IncomingMessage, response: Ser
     if (Buffer.byteLength(raw) > 8192) throw new Error();
     value = JSON.parse(raw);
   } catch { reply(400, { error: "Send a valid request." }); return; }
-  if (!value || typeof value !== "object" || Array.isArray(value)) { reply(400, { error: "Check the app URL and try again." }); return; }
+  if (!value || typeof value !== "object" || Array.isArray(value)) { reply(400, { error: "Check the DEX URL and try again." }); return; }
   const proof = value as Record<string, unknown>;
   if (typeof proof.address !== "string" || !isAddress(proof.address) || proof.origin !== origin ||
       typeof proof.requestId !== "string" || !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(proof.requestId) ||
       typeof proof.nonce !== "string" || !/^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i.test(proof.nonce) ||
       typeof proof.issuedAt !== "string" || typeof proof.appUrl !== "string" || proof.appUrl !== proof.appUrl.trim() || !proof.appUrl || validateDexUrl(proof.appUrl) ||
       typeof proof.version !== "number" || !Number.isSafeInteger(proof.version) || proof.version < 0 || proof.version >= 2147483647 ||
-      typeof proof.signature !== "string" || !/^0x(?:[\da-f]{2})+$/i.test(proof.signature)) { reply(400, { error: "Check the app URL and try again." }); return; }
+      typeof proof.signature !== "string" || !/^0x(?:[\da-f]{2})+$/i.test(proof.signature)) { reply(400, { error: "Check the DEX URL and try again." }); return; }
   const time = Date.parse(proof.issuedAt);
   if (!Number.isFinite(time) || new Date(time).toISOString() !== proof.issuedAt || time > Date.now() + 30_000 || Date.now() - time > 5 * 60_000) { reply(401, { error: "Your signature expired. Try again." }); return; }
   const details = { address: proof.address as Address, origin, issuedAt: proof.issuedAt, nonce: proof.nonce, requestId: proof.requestId, appUrl: proof.appUrl, version: proof.version };
@@ -45,5 +45,5 @@ export async function perpsAppUrlHandler(request: IncomingMessage, response: Ser
         AND details->'pendingEdit' IS NULL AND COALESCE((details->>'appUrlVersion')::integer, 0) = $4 RETURNING id`, [details.requestId, details.address, details.appUrl, details.version]);
     if (!result.rowCount) { reply(409, { error: "This setup changed or is unavailable. Refresh and try again." }); return; }
     reply(200, { saved: true });
-  } catch { reply(503, { error: "Couldn’t save the app URL. Try again." }); }
+  } catch { reply(503, { error: "Couldn’t save the DEX URL. Try again." }); }
 }

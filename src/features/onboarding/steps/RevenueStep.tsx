@@ -1,3 +1,4 @@
+import { PERPS_PLATFORM_FEE_HELP } from "../platform-fee-help";
 import { FieldError } from "@/components/ui/field-error";
 import { Button } from "@/components/ui/button";
 import { useState, type CSSProperties } from "react";
@@ -39,7 +40,7 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
     <div className="grid gap-6">
       <section aria-labelledby="revenue-wallet-label">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-1"><Label id="revenue-wallet-label" htmlFor="revenue-wallet" className="text-sm font-semibold text-(--text)">Revenue wallet</Label><FieldHelp label="Revenue wallet">The wallet where your platform fees will be paid. The team confirms it during activation.</FieldHelp></div>
+          <div className="flex items-center gap-1"><Label id="revenue-wallet-label" htmlFor="revenue-wallet" className="text-sm font-semibold text-(--text)">Revenue wallet</Label><FieldHelp label="Revenue wallet">The wallet where your platform fees will be paid.</FieldHelp></div>
           <UseMyWalletButton value={revenueWallet} busy={wallet.busy} disabled={controlsDisabled} onClick={wallet.useMyWallet} />
         </div>
         <div className="relative">
@@ -69,7 +70,7 @@ export function RevenueStep({ error = "", disabled = false, onBusyChange }: { er
       <section className="rounded-3xl border border-(--edge) bg-(--control-bg) p-5 max-[480px]:p-4" aria-labelledby="builder-fee-label">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <div className="flex items-center gap-1"><Label id="builder-fee-label" htmlFor="builder-fee-percent" className="text-sm font-medium">Platform fee</Label><FieldHelp label="Platform fee">Set a fee from 0% to 0.1%, in 0.001% increments. It is charged on the notional value of each filled buy or sell trade after activation.</FieldHelp></div>
+            <div className="flex items-center gap-1"><Label id="builder-fee-label" htmlFor="builder-fee-percent" className="text-sm font-medium">Platform fee</Label><FieldHelp label="Platform fee">{PERPS_PLATFORM_FEE_HELP}</FieldHelp></div>
           </div>
           <div className="relative w-[124px] shrink-0">
             <Input id="builder-fee-percent" name="builderFeePercent" inputMode="decimal" type="text" autoComplete="off" aria-label="Platform fee percentage" value={feeInput} maxLength={8} disabled={controlsDisabled} aria-invalid={!!feeError} aria-describedby={feeError ? "builder-fee-hint builder-fee-error" : "builder-fee-hint"} className="h-14 bg-(--surface) pl-3 pr-8 text-right text-[22px] font-semibold tracking-tight tabular-nums" onChange={event => { setFeeInput(event.target.value); setFee(parseBuilderFeePercent(event.target.value)); }} onBlur={() => { if (!validateBuilderFee(fee)) setFeeInput(formatBuilderFeePercent(fee)); }} />

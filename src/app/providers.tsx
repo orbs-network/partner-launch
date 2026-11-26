@@ -18,7 +18,7 @@ const walletThemeOptions = {
 };
 // The wallet sheet keeps the narrower system font: Montserrat makes wallet names overlap on phones.
 const walletLightTheme = lightTheme(walletThemeOptions);
-const walletDarkTheme = darkTheme({ ...walletThemeOptions, accentColor: "#5364eb" });
+const walletDarkTheme = darkTheme({ ...walletThemeOptions, accentColor: "#5364eb", accentColorForeground: "#ffffff" });
 
 function WalletThemeProvider({ children }: { children: ReactNode }) {
   const { resolvedTheme } = useTheme();

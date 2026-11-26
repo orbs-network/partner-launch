@@ -113,8 +113,7 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
               <section aria-label={`${selected.appName} details`} className="min-w-0">
                 {section === "analytics"
                   ? <SetupAnalytics key={selected.id} request={selected} address={address} />
-                  : <SetupDetail key={selected.id} request={selected} status={selectedReviewStatus} live={selectedStatus} cancelling={cancelling} onCancelBusyChange={onCancelBusyChange}
-                    onCancelled={() => { select(null); requestAnimationFrame(() => headingRef.current?.focus({ preventScroll: true })); }} />}
+                  : <SetupDetail key={selected.id} request={selected} status={selectedReviewStatus} live={selectedStatus} cancelling={cancelling} onCancelBusyChange={onCancelBusyChange} />}
               </section>
             </div>
           )}

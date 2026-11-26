@@ -17,6 +17,6 @@ export function SpotDepositSummary() {
         </div>
       </div>
     </section>
-    <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">A one-time deposit is required before activation. Submitting this request does not collect the deposit; the team will review your setup first.</p>
+    <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">This is not a setup fee. The 100 USDC will be deposited into your trading account and available as trading balance after activation.</p>
   </>;
 }

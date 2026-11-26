@@ -65,7 +65,7 @@ export function ConfirmDialog({
         <DialogTitle>{creatingNew ? "Create another setup?" : "Start over?"}</DialogTitle>
         <DialogDescription>
           {description ?? (creatingNew
-            ? "Start a fresh setup for another app or integration."
+            ? "Start a fresh setup for another DEX or integration."
             : "You’ll start with a fresh setup. This clears the details saved in this browser. Earlier payments and signed terms stay unchanged.")}
         </DialogDescription>
         <DialogFooter className="mt-[25px] [&_button]:min-h-[46px] [&_button]:px-4 [&_button]:text-[13px] max-[480px]:[&_button]:min-w-0 max-[480px]:[&_button]:flex-1 max-[480px]:[&_button]:px-3 max-[480px]:[&_button]:whitespace-normal">

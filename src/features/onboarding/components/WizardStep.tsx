@@ -1,3 +1,5 @@
+import { useOnboardingStore } from "../store";
+import { InlineApiInstructions } from "./integration/InlineApiInstructions";
 import { InlineLaunchInstructions } from "./integration/InlineLaunchInstructions";
 import { AppUrlStep } from "../steps/AppUrlStep";
 import { IntegrationChoiceStep } from "../steps/IntegrationChoiceStep";
@@ -38,11 +40,12 @@ export function WizardStep({
   onCreator: () => void;
   onSpot: () => void;
 }) {
+  const integrationMode = useOnboardingStore(state => state.integrationMode);
   switch (onboardingSteps[step]?.id) {
     case "welcome":
       return <WelcomeStep onCreator={onCreator} onSpot={onSpot} />;
     case "build-ui":
-      return <InlineLaunchInstructions compact />;
+      return integrationMode === "api" ? <InlineApiInstructions /> : <InlineLaunchInstructions compact />;
     case "app-url":
       return <AppUrlStep error={stepError} disabled={busy} />;
     case "integration-choice":

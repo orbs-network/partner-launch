@@ -12,7 +12,13 @@ import { cancelOwnedSpotRequest, lockOwnedSpotRequest } from "./spot-owner-autho
 
 import { setupNotificationHandler } from "./setup-notification.js";
 
-function prepareSpotNotification(body: unknown, cancelling: boolean) {
+/** A test ID override is accepted only for a verified local development request. */
+export function resolveSpotPartnerId(appName: string, override: unknown, allowLocalTestId: boolean): string {
+  if (override !== undefined && (!allowLocalTestId || appName.toLowerCase() !== "test" || typeof override !== "string" || !/^test[a-f0-9]{16}$/.test(override))) throw new Error("Invalid local test Partner ID.");
+  return typeof override === "string" ? override : generateSpotAppId(appName);
+}
+
+function prepareSpotNotification(body: unknown, cancelling: boolean, allowLocalTestId = false) {
   if (!isRecord(body) || typeof body.appName !== "string" || typeof body.feesWallet !== "string" ||
     (body.integrationMode !== undefined && body.integrationMode !== "ui" && body.integrationMode !== "existing") ||
     (body.tradingFeePercent !== undefined && typeof body.tradingFeePercent !== "string") || (body.dexUrl !== undefined && typeof body.dexUrl !== "string") || (body.contact !== undefined && typeof body.contact !== "string") ||
@@ -42,12 +48,14 @@ function prepareSpotNotification(body: unknown, cancelling: boolean) {
   } catch (cause) {
     throw new Error(cause instanceof Error ? cause.message : "Check your Spot details.");
   }
-  return { submittedAt, text: [cancelling ? "Spot setup cancellation request" : "New Spot setup request", `App name: ${setup.appName}`,
-    `Partner ID: ${generateSpotAppId(setup.appName)}`,
+  if (cancelling && body.partnerId !== undefined && (typeof body.partnerId !== "string" || !/^[\p{L}\p{M}\p{N}]{3,80}$/u.test(body.partnerId))) throw new Error("Invalid Spot Partner ID.");
+  const partnerId = cancelling && typeof body.partnerId === "string" ? body.partnerId : resolveSpotPartnerId(setup.appName, body.localTestPartnerId, allowLocalTestId && !cancelling);
+  return { submittedAt, text: [cancelling ? "Spot setup cancellation request" : "New Spot setup request", `DEX name: ${setup.appName}`,
+    `Partner ID: ${partnerId}`,
     ...(setup.dexUrl ? [`DEX URL: ${setup.dexUrl}`] : []), `Fees wallet: ${setup.feesWallet}`,
-    ...(!cancelling ? [`Integration: ${setup.integrationMode === "ui" ? "Complete trading app" : "Existing app"}`, `Trading fee: ${formatSpotFeePercent(setup.tradingFeeTenthsBps!)}%`, `Owner wallet (unverified): ${body.ownerWallet}`, ...ownerWallets.map(wallet => `Additional owner wallet (unverified): ${wallet}`), `Contact: ${setup.contact ?? "Not provided"}`] : [])].join("\n"),
+    ...(!cancelling ? [`Integration: ${setup.integrationMode === "ui" ? "Complete trading DEX" : "Existing DEX"}`, `Trading fee: ${formatSpotFeePercent(setup.tradingFeeTenthsBps!)}%`, `Owner wallet (unverified): ${body.ownerWallet}`, ...ownerWallets.map(wallet => `Additional owner wallet (unverified): ${wallet}`), `Contact: ${setup.contact ?? "Not provided"}`] : [])].join("\n"),
     ...(!cancelling ? { record: { id: body.requestId as string, accessToken: body.accessToken as string, product: "spot" as const,
-      ownerWallet: body.ownerWallet as string, ownerWallets, partnerId: generateSpotAppId(setup.appName), details: { appName: setup.appName, feesWallet: setup.feesWallet, tradingFeeTenthsBps: setup.tradingFeeTenthsBps, integrationMode: setup.integrationMode, ownerWallets,
+      ownerWallet: body.ownerWallet as string, ownerWallets, partnerId, details: { appName: setup.appName, feesWallet: setup.feesWallet, tradingFeeTenthsBps: setup.tradingFeeTenthsBps, integrationMode: setup.integrationMode, ownerWallets,
         // Contact goes only to the team's Telegram message; it is never stored.
         ...(setup.dexUrl ? { dexUrl: setup.dexUrl } : {}) } } } : {}) };
 }
@@ -55,7 +63,7 @@ function prepareSpotNotification(body: unknown, cancelling: boolean) {
 export function spotSubmitHandler(request: IncomingMessage, response: ServerResponse): Promise<void> {
   return setupNotificationHandler(request, response, {
     unavailable: "Spot submission is not available yet. Your details are kept here; please try again later.",
-    prepare: body => prepareSpotNotification(body, false),
+    prepare: body => prepareSpotNotification(body, false, process.env.NODE_ENV === "development" && !process.env.VERCEL && ["127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(request.socket.remoteAddress ?? "") && ["localhost", "127.0.0.1", "[::1]"].includes(new URL(`http://${request.headers.host ?? ""}`).hostname)),
   });
 }
 
@@ -73,7 +81,7 @@ export function spotCancelHandler(request: IncomingMessage, response: ServerResp
       transaction = await requestDatabase().connect();
       await transaction.query("BEGIN");
       const details = await lockOwnedSpotRequest(transaction, body.requestId, owner);
-      if (!details || details.appName !== body.appName || details.feesWallet !== body.feesWallet || (details.dexUrl ?? "") !== (body.dexUrl ?? "")) throw new Error("request changed");
+      if (!details || details.appName !== body.appName || details.feesWallet !== body.feesWallet || (details.dexUrl ?? "") !== (body.dexUrl ?? "") || (body.partnerId !== undefined && body.partnerId !== (details.partnerId ?? generateSpotAppId(body.appName as string)))) throw new Error("request changed");
       authorized = { id: body.requestId, owner };
     },
     async afterDelivery() {

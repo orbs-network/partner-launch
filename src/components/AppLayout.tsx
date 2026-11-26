@@ -15,7 +15,7 @@ export interface AppLayoutProps {
 export function AppLayout({ children, headerActions, notice, hideDisconnectedWallet, homeDisabled = false }: AppLayoutProps) {
   return (
     <div className="flex min-h-dvh flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] bg-[radial-gradient(ellipse_850px_500px_at_50%_0,var(--friendly-halo),transparent_75%)]">
-      <a className="fixed -top-[70px] left-5 z-[99] rounded-[14px] bg-primary px-[18px] py-[13px] text-white focus:top-3" href="#main">Skip to main content</a>
+      <a className="fixed -top-[70px] left-5 z-[99] rounded-[14px] bg-primary px-[18px] py-[13px] text-primary-foreground focus:top-3" href="#main">Skip to main content</a>
       <header data-has-login={!!headerActions} className="group/header sticky top-0 z-30 flex h-[calc(var(--app-header-height)+env(safe-area-inset-top))] shrink-0 items-center justify-between gap-5 border-b border-(--edge) bg-(--bg) pt-[env(safe-area-inset-top)] px-9 min-[1500px]:px-12 max-[720px]:gap-2.5 max-[720px]:px-[19px] max-[370px]:gap-2 max-[370px]:px-[13px] max-[370px]:data-[has-login=true]:gap-[7px] max-[370px]:data-[has-login=true]:px-3">
         <a href="/" onClick={event => {
           if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;

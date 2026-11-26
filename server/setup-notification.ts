@@ -121,7 +121,7 @@ export async function setupNotificationHandler(request: IncomingMessage, respons
     } catch (cause) {
       if (transaction) { await transaction.query("ROLLBACK").catch(() => {}); transaction.release(); }
       if (cause && typeof cause === "object" && "code" in cause && cause.code === "23505" && "constraint" in cause && cause.constraint === "portal_partner_id_unique") {
-        reply(409, { code: notification.record.product === "spot" ? "spot_app_id_taken" : "partner_id_taken", error: "An app with this name already exists. Choose another app name." });
+        reply(409, { code: notification.record.product === "spot" ? "spot_app_id_taken" : "partner_id_taken", error: "A DEX with this name already exists. Choose another DEX name." });
         return;
       }
       reply(503, { error: "Request storage is unavailable. Your details are kept here; please try again." });

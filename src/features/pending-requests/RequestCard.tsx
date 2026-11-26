@@ -1,6 +1,9 @@
+import { PERPS_PLATFORM_FEE_HELP, SPOT_PLATFORM_FEE_HELP } from "../onboarding/platform-fee-help";
 import type { ReactNode } from "react";
+import { SpotChainList } from "../onboarding/spot/SpotChainList";
 import { formatSpotFeePercent } from "../onboarding/spot/spot-fee";
 import { ArrowLeftRight, CircleAlert, CircleCheck, LoaderCircle, Rocket } from "lucide-react";
+import { FieldHelp } from "@/components/FieldHelp";
 import { chainById, chainLogo } from "@/config/chains";
 import { WalletExplorerLink } from "./WalletExplorerLink";
 import type { PendingRequest } from "./request-record";
@@ -14,12 +17,11 @@ export function RequestCard({ request, registryStatus, action, hidePendingStatus
   const statusLabel = status === "changes-pending" ? "Changes pending" : status === "approved" ? "Approved" : status === "ready" ? "Trading enabled" : status === "error" ? "Status unavailable" : status === "checking" ? "Checking status" : "Approval pending";
   const Icon = request.kind === "spot" ? ArrowLeftRight : Rocket;
   const label = "Revenue wallet";
-  const rows: { label: string; value: ReactNode }[] = [
-    { label: "Partner ID", value: request.partnerId ?? "Not available" },
-    { label: "Integration", value: request.integrationMode === "ui" ? "Complete trading app" : request.integrationMode === "api" ? "API integration" : request.integrationMode === "existing" ? "Existing app" : "Not specified" },
-    { label: "App URL", value: (request.kind === "spot" ? request.dexUrl : request.appUrl) || "Not added yet" },
+  const rows: { label: string; value: ReactNode; help?: string }[] = [
+    { label: "Partner ID", value: request.partnerId ?? "Not available", help: "The identifier used for your DEX configuration." },
+    { label: "DEX URL", value: (request.kind === "spot" ? request.dexUrl : request.appUrl) || "Not added yet" },
     ...(request.kind === "perps" ? [{ label: "Network", value: <span className="flex flex-wrap items-center gap-x-3 gap-y-2">{request.chainIds.map(id => { const chain = chainById(id); return <span key={id} className="inline-flex items-center gap-2">{chain ? <img src={chainLogo(id)} width={22} height={22} alt="" className="size-[22px] shrink-0 rounded-full object-contain" /> : null}<span>{chain?.name ?? `Chain ${id}`}</span></span>; })}</span> }] : []),
-    { label: "Platform fee", value: request.kind === "spot" ? request.tradingFeeTenthsBps === undefined ? "Not specified" : `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` : request.extraFeePercent === undefined ? "Not specified" : `${request.extraFeePercent}%` },
+    { label: "Platform fee", help: request.kind === "perps" ? PERPS_PLATFORM_FEE_HELP : SPOT_PLATFORM_FEE_HELP, value: request.kind === "spot" ? request.tradingFeeTenthsBps === undefined ? "Not specified" : `${formatSpotFeePercent(request.tradingFeeTenthsBps)}%` : request.extraFeePercent === undefined ? "Not specified" : `${request.extraFeePercent}%` },
   ];
   return (
     <article aria-label={`${request.appName} ${request.kind === "spot" ? "Spot" : "Perps"} request`} className="overflow-hidden rounded-[22px] border border-(--edge) bg-(--control-bg)">
@@ -33,13 +35,17 @@ export function RequestCard({ request, registryStatus, action, hidePendingStatus
           {action}
         </div>
       </div>
-      <div className="px-6 py-5 max-[480px]:px-4">
+      <div className="px-6 pt-5 pb-2 max-[480px]:px-4">
         <h4 className="mb-4 text-sm font-semibold text-(--text)">Workspace details</h4>
-        <dl className="grid grid-cols-2 gap-x-5 gap-y-5 max-[360px]:grid-cols-1 sm:gap-x-8 lg:grid-cols-3">
-          {rows.map(row => <div key={row.label} className="min-w-0"><dt className="text-xs text-(--muted)">{row.label}</dt><dd className="m-0 mt-1.5 select-text text-sm font-medium leading-relaxed [overflow-wrap:anywhere]" translate="no">{row.value}</dd></div>)}
+        <dl className="m-0 grid grid-cols-2 gap-x-5 gap-y-5 max-[360px]:grid-cols-1 sm:gap-x-8 lg:grid-cols-3">
+          {rows.map(row => <div key={row.label} className="min-w-0"><dt className="flex items-center gap-1 text-xs text-(--muted)">{row.label}{row.help ? <FieldHelp label={row.label}>{row.help}</FieldHelp> : null}</dt><dd className="m-0 mt-1.5 select-text text-sm font-medium leading-relaxed [overflow-wrap:anywhere]" translate="no">{row.value}</dd></div>)}
         </dl>
-        <dl className="mt-5 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-(--edge) pt-4 sm:grid-cols-2">
-          {request.ownerWallets?.length ? <div className="min-w-0"><dt className="text-xs text-(--muted)">App owner wallets</dt>{request.ownerWallets.map(address => <dd key={address} className="m-0 min-w-0"><WalletExplorerLink label="App owner wallet" address={address} chainIds={request.kind === "perps" ? request.chainIds : undefined} /></dd>)}</div> : null}
+        {request.kind === "spot" ? <section className="mt-5 border-t border-(--edge) pt-4" aria-label="Supported Spot chains">
+          <h5 className="m-0 mb-1 text-xs font-medium text-(--muted)">Supported Spot chains</h5>
+          <SpotChainList />
+        </section> : null}
+        <dl className="m-0 mt-5 grid grid-cols-1 gap-x-8 gap-y-3 border-t border-(--edge) pt-4 sm:grid-cols-2">
+          {request.ownerWallets?.length ? <div className="min-w-0"><dt className="text-xs text-(--muted)">DEX owner wallets</dt>{request.ownerWallets.map(address => <dd key={address} className="m-0 min-w-0"><WalletExplorerLink label="DEX owner wallet" address={address} chainIds={request.kind === "perps" ? request.chainIds : undefined} /></dd>)}</div> : null}
           <div className="min-w-0"><dt className="text-xs text-(--muted)">{label}</dt><dd className="m-0 min-w-0"><WalletExplorerLink label={label} address={request.kind === "spot" ? request.feesWallet : request.revenueWallet} chainIds={request.kind === "perps" ? request.chainIds : undefined} /></dd></div>
         </dl>
       </div>

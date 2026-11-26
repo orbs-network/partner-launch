@@ -84,7 +84,7 @@ export function getStepError(
     case BUILD_UI_STEP:
       break;
     case APP_URL_STEP:
-      return validateDexUrl(draft.appUrl ?? "")?.replaceAll("DEX URL", "app URL");
+      return validateDexUrl(draft.appUrl ?? "");
     case NETWORKS_STEP:
       if (
         !draft.chainIds.length ||
@@ -101,9 +101,9 @@ export function getStepError(
       if (nameError) return nameError;
       const idError = validatePartnerName(draft.partnerName);
       if (idError && draft.partnerName.length < 3)
-        return "Use a longer app name with letters or numbers.";
+        return "Use a longer DEX name with letters or numbers.";
       if (idError && reservedPartnerNames.has(draft.partnerName))
-        return "This name is reserved. Choose another app name.";
+        return "This name is reserved. Choose another DEX name.";
       return idError ?? validateContact(draft.contact ?? "");
     }
     case WEBSITES_STEP: // Reserved historical position; no current input or validation.

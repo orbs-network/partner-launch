@@ -22,10 +22,10 @@ export function WelcomeStep({ onCreator, onSpot }: {
           aria-describedby="creator-path-description"
           onClick={onCreator}
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/15"><Rocket size={21} aria-hidden="true" /></span>
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-current/10"><Rocket size={21} aria-hidden="true" /></span>
           <span className="min-w-0 flex-1">
             <span className="block text-[15px] leading-[1.5] font-semibold max-[370px]:text-sm">Launch perpetuals</span>
-            <span id="creator-path-description" className="mt-1 block text-sm leading-[1.5] font-normal text-white/80">Launch a branded perpetual DEX or integrate perpetual trading through our API.</span>
+            <span id="creator-path-description" className="mt-1 block text-sm leading-[1.5] font-normal text-primary-foreground/80">Launch a branded perpetual DEX or integrate perpetual trading through our API.</span>
           </span>
           <ArrowRight size={18} aria-hidden="true" />
         </Button>

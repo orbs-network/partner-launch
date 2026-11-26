@@ -46,11 +46,11 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
             <SetupLabel product="spot" />
             <h1 ref={headingRef} tabIndex={-1} className="text-[31px] leading-[1.25] font-semibold tracking-[-1px] focus:outline-none max-[720px]:text-[28px]">{saved ? "Spot setup submitted" : step.title}</h1>
             {saved ? <div className="mt-5"><SpotApprovalStatus /></div> : <p className="mt-3 text-[15px] leading-[1.7] text-(--muted) max-[720px]:text-sm">{step.intro}</p>}
-            {!saved && draft.step === "review" ? <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a> : null}
+            {!saved && (draft.integrationMode !== "existing" && draft.step === "review") ? <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a> : null}
             {saved ? (
               <div>
                 <InlineSpotPrompt setup={saved} disabled={busy} />
-                <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a>
+                {saved.integrationMode !== "existing" ? <a href={SPOT_DOCS_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-sm text-[13px] text-(--link) hover:text-(--link-hover) hover:underline hover:underline-offset-4">Spot integration docs<ArrowUpRight size={14} aria-hidden="true" /></a> : null}
                 <ExpandableSection title="Setup details" disabled={busy}>
                   <div className="mt-3"><SpotSummary {...saved} /></div>
                   <p className="mt-3 text-xs leading-[1.7] text-(--muted)">Sent to the team for review. Connect your owner wallet to see it under Your workspaces.</p>
@@ -77,7 +77,7 @@ export function SpotSetup({ onExit, onStartOver, onPendingRequests, renderHeader
           <StartOverButton ref={resetRef} disabled={busy} onClick={() => setResetOpen(true)} />
         </div> : null}
       </main>
-      <ConfirmDialog intent={saved ? "create-new" : "reset"} description={saved ? "Start a fresh Spot setup for another app." : "Clear your unfinished Spot details and return to the setup choices?"} returnFocusRef={resetRef} open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { if (!busy && reset()) { setResetOpen(false); if (!saved) onStartOver(); } }} />
+      <ConfirmDialog intent={saved ? "create-new" : "reset"} description={saved ? "Start a fresh Spot setup for another DEX." : "Clear your unfinished Spot details and return to the setup choices?"} returnFocusRef={resetRef} open={resetOpen} onClose={() => setResetOpen(false)} onConfirm={() => { if (!busy && reset()) { setResetOpen(false); if (!saved) onStartOver(); } }} />
     </OnboardingLayout>
   );
 }

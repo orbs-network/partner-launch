@@ -21,13 +21,13 @@ export function generateAccountId(name: string): string {
 }
 
 export function validateDexName(name: string): string | undefined {
-  if (!name.trim()) return "Enter a name for your app.";
-  if (name.trim().length < 3) return "Use at least 3 characters for your app name.";
-  if (name.length > 80) return "Keep your app name to 80 characters or fewer.";
+  if (!name.trim()) return "Enter a name for your DEX.";
+  if (name.trim().length < 3) return "Use at least 3 characters for your DEX name.";
+  if (name.length > 80) return "Keep your DEX name to 80 characters or fewer.";
   if (name !== name.trim() || !/^[\p{L}\p{N}][\p{L}\p{M}\p{N} ._&'’-]*$/u.test(name))
-    return "Start with a letter or number; use letters, numbers, spaces, or . _ & ' - in your app name.";
+    return "Start with a letter or number; use letters, numbers, spaces, or . _ & ' - in your DEX name.";
   if (!generateAccountId(name))
-    return "Include at least one letter from A to Z or number in your app name.";
+    return "Include at least one letter from A to Z or number in your DEX name.";
 }
 
 export function validateBrandColor(color: string): string | undefined {

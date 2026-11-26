@@ -1,3 +1,4 @@
+import { isLocalTestPartner } from "../local-test-partner";
 import { parseSpotFeePercent } from "./spot-fee";
 import { normalizeContact } from "@/lib/contact";
 import { isRecord } from "../terms-policy";
@@ -12,7 +13,7 @@ export async function submitSpot(draft: SpotDraft, ownerWallet: string, attempt:
       method: "POST", headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(15_000),
       body: JSON.stringify({ integrationMode: draft.integrationMode, appName: draft.appName, contact: draft.contact, dexUrl: draft.dexUrl, feesWallet: draft.feesWallet, tradingFeePercent: draft.tradingFeePercent,
-        policyAccepted: draft.policyAccepted, policyVersion: draft.policyVersion, ownerWallet, ...attempt }),
+        ...(isLocalTestPartner(draft.appName) && draft.localTestPartnerId ? { localTestPartnerId: draft.localTestPartnerId } : {}), policyAccepted: draft.policyAccepted, policyVersion: draft.policyVersion, ownerWallet, ...attempt }),
     });
   } catch {
     throw new Error("We couldn’t confirm delivery to the team. Check your connection and try again. A retry may send another message.");
@@ -25,7 +26,7 @@ export async function submitSpot(draft: SpotDraft, ownerWallet: string, attempt:
   }
   if (!isRecord(result) || result.delivered !== true || typeof result.submittedAt !== "string" ||
     !Number.isFinite(Date.parse(result.submittedAt))) throw new Error("We couldn’t confirm delivery to the team. Please try again.");
-  return { kind: "spot", ...(draft.integrationMode ? { integrationMode: draft.integrationMode } : {}), appName: draft.appName.trim(), feesWallet: draft.feesWallet.trim(), tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent)!, ownerWallets: [],
+  return { kind: "spot", ...(isLocalTestPartner(draft.appName) && draft.localTestPartnerId ? { partnerId: draft.localTestPartnerId } : {}), ...(draft.integrationMode ? { integrationMode: draft.integrationMode } : {}), appName: draft.appName.trim(), feesWallet: draft.feesWallet.trim(), tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent)!, ownerWallets: [],
     ...(draft.contact.trim() ? { contact: normalizeContact(draft.contact) } : {}),
     ...(draft.dexUrl.trim() ? { dexUrl: draft.dexUrl.trim() } : {}),
     policy: { version: draft.policyVersion, acceptedAt: result.submittedAt }, transport: "telegram" };

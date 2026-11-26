@@ -15,7 +15,7 @@
   --color-popover: var(--surface);
   --color-popover-foreground: var(--text);
   --color-primary: var(--primary);
-  --color-primary-foreground: #fff;
+  --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--soft);
   --color-secondary-foreground: var(--text);
   --color-muted: var(--soft);
@@ -26,7 +26,7 @@
   --color-destructive-foreground: #fff;
   --color-border: var(--edge);
   --color-input: var(--edge);
-  --color-ring: #7786ff;
+  --color-ring: var(--focus-ring);
   --radius-sm: 0.75rem;
   --radius-md: 1rem;
   --radius-lg: 1.5rem;

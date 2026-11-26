@@ -20,7 +20,7 @@ export function SavedSetupDetails({ setup }: { setup: SavedSetup }) {
           </DialogContent>
         </Dialog>}
       </div>
-      <p className="mt-2 text-xs leading-relaxed text-(--muted)">Build your app now. Trading requires partner activation.</p>
+      <p className="mt-2 text-xs leading-relaxed text-(--muted)">Build your DEX now. Trading requires partner activation.</p>
     </section>
   );
 }

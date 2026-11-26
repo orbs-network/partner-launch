@@ -14,9 +14,9 @@ export const onboardingSteps = [
   },
   {
     id: "partner",
-    name: "App name",
-    title: "App name",
-    intro: "Choose the name people will see in your app, and how our team can reach you.",
+    name: "DEX name",
+    title: "DEX name",
+    intro: "Choose the name people will see in your DEX, and how our team can reach you.",
   },
   {
     id: "websites",
@@ -40,10 +40,10 @@ export const onboardingSteps = [
     id: "funding",
     name: "Activation deposit",
     title: "One-time activation deposit",
-    intro: "Review the deposit for your network, then submit your setup to the team.",
+    intro: "Deposit 100 USDC to activate your DEX.",
   },
   { id: "integration-choice", name: "Integration", title: "How would you like to add perpetuals?", intro: "Choose a ready-made trading interface or connect directly through our API." },
-  { id: "app-url", name: "App URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step and add it later in My workspaces." },
+  { id: "app-url", name: "DEX URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step and add it later in My workspaces." },
   { id: "build-ui", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made trading interface." },
 ] as const;
 

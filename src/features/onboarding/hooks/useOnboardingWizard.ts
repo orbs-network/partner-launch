@@ -10,14 +10,16 @@ import { clearPerpsRoute, perpsStepUrl } from "../perps-route";
 import { getStepError } from "../validation";
 import { validateRevenueWallet } from "../revenue-settings";
 import { getSetupCompletionError } from "../completion-validation";
-import { launchProgress, launchStepOrder, nextLaunchStep, previousLaunchStep } from "../launch-flow";
+import { launchProgress, launchStepOrder, needsUrlRecovery, nextLaunchStep, previousLaunchStep } from "../launch-flow";
 import { rememberCompletedSetup } from "../saved-setups";
 import { selectablePerpsChains } from "@/config/chains";
+import { generateLocalTestPartnerId, isLocalTestPartner } from "../local-test-partner";
 import { fetchPartnerRegistryStatus } from "../registry-status";
 import { useMountedRef } from "@/hooks/useMountedRef";
 import { withUrlScheme } from "@/lib/dex-url";
 import {
   APP_URL_STEP,
+  BUILD_UI_STEP,
   INTEGRATION_CHOICE_STEP,
   FUNDING_STEP,
   NETWORKS_STEP,
@@ -49,13 +51,16 @@ export function useOnboardingWizard(externalBusy = false) {
   const editFocusRef = useRef<string | null>(null);
   const returning = returnToReview && draft.step !== TERMS_STEP && draft.step !== FUNDING_STEP;
   const busy = actionBusy || externalBusy || checkingPartner;
-  const activeStep = steps[draft.step] ?? steps[0];
-  const activeOrder = launchStepOrder(draft.integrationMode);
+  const baseStep = steps[draft.step] ?? steps[0];
+  const activeStep = draft.step === BUILD_UI_STEP && draft.integrationMode === "api"
+    ? { ...baseStep, name: "API prompt", title: "Your API integration prompt", intro: "Use this prompt to integrate perpetual trading into your DEX or server." }
+    : baseStep;
+  const activeOrder = launchStepOrder(draft.integrationMode, needsUrlRecovery(draft));
   const stepError = submitted
     ? draft.step === NETWORKS_STEP && draft.chainIds.length !== 1
       ? "Choose one network for this setup."
       : getStepError(draft.step, draft) ?? (draft.step === PARTNER_STEP && partnerCheck?.id === draft.partnerName && partnerCheck.kind === "taken"
-        ? draft.launchPath === "api" ? "This Partner ID already exists. Choose another one." : "An app with this name already exists. Choose another app name." : "")
+        ? draft.launchPath === "api" ? "This Partner ID already exists. Choose another one." : "A DEX with this name already exists. Choose another DEX name." : "")
     : "";
   const continueLabel =
     activeStep.id === "welcome"
@@ -127,7 +132,7 @@ export function useOnboardingWizard(externalBusy = false) {
   }
   function finish() {
     const currentDraft = useOnboardingStore.getState();
-    const invalidStep = stepOrder.find(step => step !== FUNDING_STEP && getStepError(step, currentDraft));
+    const invalidStep = launchStepOrder(currentDraft.integrationMode, needsUrlRecovery(currentDraft)).find(step => step !== FUNDING_STEP && getStepError(step, currentDraft));
     if (invalidStep !== undefined) {
       currentDraft.setStep(invalidStep);
       setSubmitted(true);
@@ -178,13 +183,22 @@ export function useOnboardingWizard(externalBusy = false) {
       return;
     }
     if (currentDraft.step === PARTNER_STEP) {
-      void checkPartnerAndContinue(currentDraft.partnerName, currentDraft.revision, currentDraft.contact ?? "", reviewTarget() ?? nextLaunchStep(PARTNER_STEP, currentDraft.integrationMode));
+      void checkPartnerAndContinue(currentDraft.partnerName, currentDraft.revision, currentDraft.contact ?? "", reviewTarget() ?? nextLaunchStep(PARTNER_STEP, currentDraft.integrationMode, needsUrlRecovery(currentDraft)));
     } else if (currentDraft.step === FUNDING_STEP) finish();
     else {
-      navigate(reviewTarget() ?? nextLaunchStep(currentDraft.step, currentDraft.integrationMode));
+      navigate(reviewTarget() ?? nextLaunchStep(currentDraft.step, currentDraft.integrationMode, needsUrlRecovery(currentDraft)));
     }
   }
   async function checkPartnerAndContinue(id: string, revision: number, contact: string, target: number) {
+    if (isLocalTestPartner(id) || (isLocalTestPartner("test") && /^test-[a-f0-9]{16}$/.test(id))) {
+      const current = useOnboardingStore.getState();
+      if (isLocalTestPartner(id)) current.setPartnerName(generateLocalTestPartnerId("perps"));
+      const updated = useOnboardingStore.getState();
+      checkedPartnerRef.current = { id: updated.partnerName, revision: updated.revision };
+      setPartnerCheck(null);
+      navigate(target);
+      return;
+    }
     partnerCheckInFlight.current = true;
     setCheckingPartner(true);
     setPartnerCheck(null);
@@ -214,7 +228,8 @@ export function useOnboardingWizard(externalBusy = false) {
   function reviewTarget() {
     if (!returnToReview) return undefined;
     const current = useOnboardingStore.getState();
-    const beforeReview = stepOrder.slice(1, stepOrder.indexOf(TERMS_STEP));
+    const order = launchStepOrder(current.integrationMode, needsUrlRecovery(current));
+    const beforeReview = order.slice(1, order.indexOf(TERMS_STEP));
     if (current.chainIds.length !== 1 || beforeReview.some((step) => getStepError(step, current))) return undefined;
     return TERMS_STEP;
   }
@@ -260,7 +275,7 @@ export function useOnboardingWizard(externalBusy = false) {
     choosePath,
     selectNetwork,
     // While editing from Review, Back returns there once the details are valid again.
-    back: () => navigate((returning ? reviewTarget() : undefined) ?? previousLaunchStep(draft.step, draft.integrationMode)),
+    back: () => navigate((returning ? reviewTarget() : undefined) ?? previousLaunchStep(draft.step, draft.integrationMode, needsUrlRecovery(draft))),
     next,
     onFundingConfirmed: finish,
     editFromReview,

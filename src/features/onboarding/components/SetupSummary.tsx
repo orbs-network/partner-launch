@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { chainById, chainLogo } from "../../../config/chains";
 import { formatBuilderFeePercent } from "../builder-fee";
 import { formatCreatorSharePercent } from "../creator-revenue";
-import { APP_URL_STEP, INTEGRATION_CHOICE_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
+import { APP_URL_STEP, NETWORKS_STEP, PARTNER_STEP, REVENUE_STEP } from "../onboarding-steps";
 import type { OnboardingDraft } from "../state/types";
 import { RevenueWalletLink } from "./RevenueWalletLink";
 
@@ -31,16 +31,15 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
     <section className={cn("rounded-[20px] border border-(--edge) bg-(--control-bg) px-5 max-[720px]:px-4", className)} aria-label={onEdit ? "Setup review" : "Saved setup details"}>
       <div className="flex items-center justify-between gap-3 py-4">
         <div className="min-w-0 flex-1">
-          <span className={labelClass}>{api ? "Partner ID" : "App name"}</span>
+          <span className={labelClass}>{api ? "Partner ID" : "DEX name"}</span>
           <strong className="block min-w-0 text-xl leading-snug font-semibold tracking-[-0.5px] wrap-anywhere text-(--text) max-[480px]:text-lg">{api ? draft.partnerName : draft.displayName || draft.partnerName}</strong>
         </div>
-        {onEdit ? <Button variant="ghost" type="button" className={editClass} disabled={disabled} onClick={() => onEdit(PARTNER_STEP)} aria-label={api ? "Edit partner ID" : "Edit app name"}>
+        {onEdit ? <Button variant="ghost" type="button" className={editClass} disabled={disabled} onClick={() => onEdit(PARTNER_STEP)} aria-label={api ? "Edit partner ID" : "Edit DEX name"}>
           <Pencil size={13} aria-hidden="true" /> Edit
         </Button> : null}
       </div>
-      {draft.integrationMode ? <div className={`${rowClass} items-center`}>
-        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">How you’re adding Perps</dt><dd className="m-0 text-sm text-(--secondary-text)">{draft.integrationMode === "api" ? "Add trading to my app" : "A complete trading app"}</dd></dl>
-        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(INTEGRATION_CHOICE_STEP)} aria-label="Edit how you’re adding Perps"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
+      {onEdit && !api && draft.integrationMode === "api" ? <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">Partner ID</dt><dd className="m-0 text-sm wrap-anywhere text-(--secondary-text)">{draft.partnerName}</dd></dl>
       </div> : null}
       <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-1.5"><dt className="text-[11px] text-(--muted)">Network</dt>
@@ -67,9 +66,9 @@ export function SetupSummary({ draft, onEdit, disabled = false, className }: {
           <Pencil size={13} aria-hidden="true" /> Edit
         </Button> : null}
       </div>
-      {draft.appUrl || onEdit ? <div className={`${rowClass} items-center`}>
-        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">App URL</dt><dd className="m-0 text-sm wrap-anywhere text-(--secondary-text)">{draft.appUrl || "Not provided"}</dd></dl>
-        {onEdit ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(APP_URL_STEP)} aria-label="Edit app URL"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
+      {draft.appUrl || (onEdit && draft.integrationMode !== "api") ? <div className={`${rowClass} items-center`}>
+        <dl className="m-0 grid min-w-0 flex-1 gap-1"><dt className="text-[11px] text-(--muted)">DEX URL</dt><dd className="m-0 text-sm wrap-anywhere text-(--secondary-text)">{draft.appUrl || "Not provided"}</dd></dl>
+        {onEdit && draft.integrationMode !== "api" ? <Button variant="ghost" type="button" className={`${editClass} shrink-0`} disabled={disabled} onClick={() => onEdit(APP_URL_STEP)} aria-label="Edit DEX URL"><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
       </div> : null}
       {draft.contact || onEdit ? <div className={`${rowClass} items-center`}>
         <dl className="m-0 grid min-w-0 flex-1 gap-1">

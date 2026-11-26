@@ -15,7 +15,7 @@ export function FieldHelp({ label, children }: { label: string; children: ReactN
   useEffect(() => () => clearTimeout(timer.current), []);
   return <Popover.Root open={open} onOpenChange={next => { pinned.current = next; setOpen(next); }}>
     <Popover.Trigger asChild>
-      <button type="button" aria-label={`About ${label}`} className="-my-3 inline-flex size-11 shrink-0 appearance-none items-center justify-start rounded-full border-0 bg-transparent p-0 pl-1 text-(--muted) hover:text-(--link) focus-visible:outline-none focus-visible:[&>svg]:rounded-full focus-visible:[&>svg]:outline-2 focus-visible:[&>svg]:outline-offset-2 focus-visible:[&>svg]:outline-(--focus-ring)"
+      <button type="button" aria-label={`About ${label}`} className="-my-3 inline-flex size-11 shrink-0 appearance-none items-center justify-start rounded-full border-0 bg-transparent p-0 pl-1 text-(--muted) hover:text-(--link) focus-visible:outline-none"
         onPointerEnter={event => { if (event.pointerType === "mouse") { cancelClose(); setOpen(true); } }}
         onPointerLeave={event => { if (event.pointerType === "mouse") closeAfterHover(); }}
         onClick={event => { event.preventDefault(); pinned.current = !pinned.current; setOpen(pinned.current); }}>

@@ -29,7 +29,7 @@ export function DepositSummary({ chainId, collateral, loading, error, onRetry }:
         </dl>
       </section>
       {error ? <p role="alert" className="mt-3 text-[13px] text-(--danger)">We couldn’t load the deposit token for this network. <button type="button" onClick={onRetry} className="min-h-11 underline">Try again</button></p> : null}
-      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">A one-time trading deposit is required before activation. Submitting this request does not collect the deposit; the team will review your setup first.</p>
+      <p className="mt-3 text-[13px] leading-[1.7] text-(--muted)">This is not a setup fee. The 100 USDC will be deposited into your trading account and available as trading balance after activation.</p>
     </>
   );
 }

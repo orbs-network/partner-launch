@@ -79,7 +79,6 @@
     color: inherit;
     text-decoration: none;
   }
-  button:focus-visible,
   a:focus-visible,
   input:focus-visible,
   summary:focus-visible {
@@ -106,5 +105,18 @@
   ::selection {
     background: var(--selection-bg, #dce1ff);
     color: var(--selection-text, #25339e);
+  }
+}
+
+/* Keep keyboard focus visible inside buttons without an outer outline. */
+@layer utilities {
+  button:focus-visible,
+  [data-slot="button"]:focus-visible {
+    outline: none !important;
+    box-shadow: inset 0 -2px 0 currentColor !important;
+  }
+  @media (forced-colors: active) {
+    button:focus-visible,
+    [data-slot="button"]:focus-visible { border-bottom: 2px solid ButtonText !important; }
   }
 }

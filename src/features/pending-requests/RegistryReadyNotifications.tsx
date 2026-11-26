@@ -35,7 +35,7 @@ function RegistryReadyNotification({ request, paused }: { request: PerpsRequest;
     void reportPerpsDeployment(request);
     toast.success(`${request.appName} is ready!`, {
       id: toastId,
-      description: "Perps trading is enabled on your requested networks. You can now add it to your app.",
+      description: "Perps trading is enabled on your requested networks. You can now add it to your DEX.",
       duration: Infinity,
       closeButton: true,
       dismissible: true,

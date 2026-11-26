@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { useMountedRef } from "@/hooks/useMountedRef";
 import { useStepHistory } from "@/hooks/useStepHistory";
 import { focusStepStart } from "@/lib/step-focus";
+import { validateDexUrl } from "@/lib/dex-url";
+import { generateLocalTestPartnerId, isLocalTestPartner } from "../local-test-partner";
 import { spotStoryDetails } from "../story-details";
 import { safeStorage } from "../state/storage";
 import { emptySpotDraft, restoreSpotDraft, SPOT_DRAFT_KEY, spotStepError, spotStepsForMode } from "./spot-setup";
@@ -45,11 +47,11 @@ export function useSpotSetup(disabled: boolean) {
   const submissionToast = useRef<{ id: string | number; succeeded: boolean } | null>(null);
   const busy = disabled || walletBusy || submitting || checkingAppId;
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const spotSteps = spotStepsForMode(draft.integrationMode);
+  const spotSteps = spotStepsForMode(draft.integrationMode, draft.integrationMode === "existing" && (draft.step === "url" || !!validateDexUrl(draft.dexUrl)));
   const index = spotSteps.findIndex((step) => step.id === draft.step);
   const step = spotSteps[index];
   const error = tried ? spotStepError(draft.step, draft) ?? (draft.step === "app" && appIdCheck?.name === draft.appName && appIdCheck.kind === "taken"
-    ? "An app with this name already exists. Choose another app name." : undefined) : undefined;
+    ? "A DEX with this name already exists. Choose another DEX name." : undefined) : undefined;
   useEffect(() => () => {
     const current = submissionToast.current;
     if (current && !current.succeeded) toast.dismiss(current.id);
@@ -75,7 +77,7 @@ export function useSpotSetup(disabled: boolean) {
     if (busy || saved || inFlight.current) return;
     dismissSaveError();
     // Contact only reaches the team's message, so editing it keeps the policy acceptance.
-    setDraft((current) => ({ ...current, [field]: value, policyAccepted: field === "contact" ? current.policyAccepted : false }));
+    setDraft((current) => ({ ...current, [field]: value, ...(field === "appName" && value !== current.appName ? { localTestPartnerId: undefined } : {}), policyAccepted: field === "contact" ? current.policyAccepted : false }));
   }
   function selectIntegration(mode: "ui" | "existing") {
     if (busy || saved || inFlight.current) return;
@@ -124,6 +126,7 @@ export function useSpotSetup(disabled: boolean) {
             setAppIdCheck({ name: draft.appName, kind: "taken" });
             requestAnimationFrame(() => document.getElementById("spot-app")?.focus());
           } else {
+            if (isLocalTestPartner(draft.appName) && !draft.localTestPartnerId) setDraft(current => ({ ...current, localTestPartnerId: generateLocalTestPartnerId("spot") }));
             inFlight.current = false;
             navigate(canReturn ? review : index + 1);
           }

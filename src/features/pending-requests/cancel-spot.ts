@@ -8,7 +8,7 @@ export async function cancelSpotRequest(request: SpotRequest, proof: SpotCancelP
     response = await fetch("/api/spot-cancel", {
       method: "POST", headers: { "Content-Type": "application/json" },
       signal: AbortSignal.timeout(15_000),
-      body: JSON.stringify({ requestId: request.id, proof, appName: request.appName, feesWallet: request.feesWallet, dexUrl: request.dexUrl }),
+      body: JSON.stringify({ requestId: request.id, proof, appName: request.appName, partnerId: request.partnerId, feesWallet: request.feesWallet, dexUrl: request.dexUrl }),
     });
   } catch {
     throw new Error("We couldn’t confirm the cancellation reached the team. Your request is still here. Try again; a retry may send another message.");

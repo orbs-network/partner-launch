@@ -9,12 +9,12 @@ export function AppUrlStep({ error, disabled }: { error: string; disabled: boole
   const url = useOnboardingStore(state => state.appUrl ?? "");
   const setUrl = useOnboardingStore(state => state.setAppUrl);
   return <>
-    <Label htmlFor="app-url" className="text-sm font-medium text-(--secondary-text)">App URL</Label>
-    <Input id="app-url" name="appUrl" type="url" inputMode="url" autoComplete="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="https://your-app.com" maxLength={MAX_DEX_URL_LENGTH + 1} value={url} onChange={event => setUrl(event.target.value)} onBlur={() => { if (withUrlScheme(url) !== url) setUrl(withUrlScheme(url)); }} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "app-url-help app-url-error" : "app-url-help"} className="mt-2.5" />
+    <Label htmlFor="app-url" className="text-sm font-medium text-(--secondary-text)">DEX URL</Label>
+    <Input id="app-url" name="appUrl" type="url" inputMode="url" autoComplete="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="https://your-dex.com" maxLength={MAX_DEX_URL_LENGTH + 1} value={url} onChange={event => setUrl(event.target.value)} onBlur={() => { if (withUrlScheme(url) !== url) setUrl(withUrlScheme(url)); }} disabled={disabled} aria-invalid={!!error} aria-describedby={error ? "app-url-help app-url-error" : "app-url-help"} className="mt-2.5" />
     <FieldError id="app-url-error" message={error} />
     <div id="app-url-help" className="mt-4 flex items-start gap-3 rounded-2xl border border-(--edge) bg-(--primary-soft) p-4 text-(--text)">
       <CircleAlert size={19} className="mt-0.5 shrink-0 text-(--link)" aria-hidden="true" />
-      <div className="min-w-0"><p className="text-sm font-semibold">Required before your app can work</p><p className="mt-1 text-[13px] leading-[1.65] text-(--secondary-text)">Your app needs its URL to work. You can skip for now and add it later from My workspaces with Edit workspace.</p></div>
+      <div className="min-w-0"><p className="text-sm font-semibold">Required before your DEX can work</p><p className="mt-1 text-[13px] leading-[1.65] text-(--secondary-text)">Your DEX needs its URL to work. You can skip for now and add it later from My workspaces with Edit workspace.</p></div>
     </div>
   </>;
 }

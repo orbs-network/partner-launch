@@ -20,13 +20,13 @@ export function PartnerStep({ error = "", unavailable = false, disabled = false 
   return (
     <div>
       <div className="mb-2.5 flex items-center gap-1">
-        <Label htmlFor={api ? "app-id" : "partner-name"} className="text-sm font-medium text-(--secondary-text)">{api ? "Partner ID" : "App name"}</Label>
-        <FieldHelp label={api ? "Partner ID" : "App name"}>{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "We’ll use this name to generate your unique Partner ID. You can change the app name later."}</FieldHelp>
+        <Label htmlFor={api ? "app-id" : "partner-name"} className="text-sm font-medium text-(--secondary-text)">{api ? "Partner ID" : "DEX name"}</Label>
+        <FieldHelp label={api ? "Partner ID" : "DEX name"}>{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "We’ll use this name to generate your unique Partner ID. You can change the DEX name later."}</FieldHelp>
       </div>
       <Input
         id={api ? "app-id" : "partner-name"}
         name={api ? "partnerName" : "displayName"}
-        placeholder={api ? "my-trading-app" : "Your app name"}
+        placeholder={api ? "my-trading-dex" : "Your DEX name"}
         autoComplete="off"
         autoCapitalize={api ? "none" : "words"}
         enterKeyHint="next"

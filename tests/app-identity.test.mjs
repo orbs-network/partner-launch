@@ -141,34 +141,44 @@ test("Spot integration choice preserves drafts and selects the correct agent ins
   } finally { await server.close(); }
 });
 
-test("Spot UI build precedes optional DEX URL and both paths preserve it", async () => {
+test("Spot UI includes the DEX URL step and existing integrations retain saved URLs", async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom" });
   try {
     const { emptySpotDraft, spotStepsForMode, restoreSpotDraft, prepareSpotSetup } = await server.ssrLoadModule("/src/features/onboarding/spot/spot-setup.ts");
     assert.deepEqual(spotStepsForMode("ui").map(step => step.id), ["integration", "app", "wallet", "build", "url", "review", "deposit"]);
-    assert.deepEqual(spotStepsForMode("existing").map(step => step.id), ["integration", "app", "wallet", "url", "review", "deposit"]);
+    assert.deepEqual(spotStepsForMode("existing").map(step => step.id), ["integration", "app", "wallet", "build", "review", "deposit"]);
     const draft = { ...emptySpotDraft(), integrationMode: "ui", step: "url", appName: "Example App", dexUrl: "https://example.org", feesWallet: "0x0000000000000000000000000000000000000001", policyAccepted: true };
     const restored = restoreSpotDraft(draft);
     assert.equal(restored.step, "url"); assert.equal(restored.dexUrl, draft.dexUrl);
+    const restoredExisting = restoreSpotDraft({ ...draft, integrationMode: "existing" });
+    assert.equal(restoredExisting.step, "review"); assert.equal(restoredExisting.dexUrl, draft.dexUrl);
+    assert.equal(restoreSpotDraft({ ...draft, step: "build", integrationMode: "existing" }).step, "build");
+    const invalidExisting = restoreSpotDraft({ ...draft, integrationMode: "existing", dexUrl: "bad URL" });
+    assert.equal(invalidExisting.step, "url"); assert.equal(invalidExisting.dexUrl, "bad URL");
     assert.equal(prepareSpotSetup(draft).dexUrl, draft.dexUrl);
     assert.equal(prepareSpotSetup({ ...draft, integrationMode: "existing" }).dexUrl, draft.dexUrl);
     for (const integrationMode of ["ui", "existing"]) assert.throws(() => prepareSpotSetup({ ...draft, integrationMode, dexUrl: "invalid previous URL" }), /valid DEX URL/);
   } finally { await server.close(); }
 });
 
-test("Perps UI build precedes its URL and review while API skips the build step", async () => {
+test("Perps prompts follow fees and only UI includes the DEX URL step", async () => {
   const server = await createServer({ server: { middlewareMode: true, hmr: false }, appType: "custom", logLevel: "silent" });
   try {
     const { INTEGRATION_CHOICE_STEP, PARTNER_STEP, NETWORKS_STEP, REVENUE_STEP, BUILD_UI_STEP, APP_URL_STEP, TERMS_STEP, FUNDING_STEP } = await server.ssrLoadModule("/src/features/onboarding/onboarding-steps.ts");
-    const { launchStepOrder, nextLaunchStep, previousLaunchStep } = await server.ssrLoadModule("/src/features/onboarding/launch-flow.ts");
+    const { launchStepOrder, nextLaunchStep, previousLaunchStep, needsUrlRecovery } = await server.ssrLoadModule("/src/features/onboarding/launch-flow.ts");
     const { restoreStep, getStepId } = await server.ssrLoadModule("/src/features/onboarding/state/step-position.ts");
     const ui = launchStepOrder("ui");
     assert.deepEqual(ui.slice(1), [INTEGRATION_CHOICE_STEP, PARTNER_STEP, NETWORKS_STEP, REVENUE_STEP, BUILD_UI_STEP, APP_URL_STEP, TERMS_STEP, FUNDING_STEP]);
     assert.equal(nextLaunchStep(REVENUE_STEP, "ui"), BUILD_UI_STEP);
     assert.equal(nextLaunchStep(BUILD_UI_STEP, "ui"), APP_URL_STEP);
-    assert.equal(nextLaunchStep(REVENUE_STEP, "api"), APP_URL_STEP);
-    assert.equal(previousLaunchStep(APP_URL_STEP, "api"), REVENUE_STEP);
-    assert.equal(launchStepOrder("api").includes(BUILD_UI_STEP), false);
+    assert.equal(nextLaunchStep(REVENUE_STEP, "api"), BUILD_UI_STEP);
+    assert.equal(nextLaunchStep(BUILD_UI_STEP, "api"), TERMS_STEP);
+    assert.equal(previousLaunchStep(TERMS_STEP, "api"), BUILD_UI_STEP);
+    assert.equal(launchStepOrder("api").includes(APP_URL_STEP), false);
+    assert.equal(needsUrlRecovery({ integrationMode: "api", step: TERMS_STEP, appUrl: "bad URL" }), true);
+    assert.equal(needsUrlRecovery({ integrationMode: "api", step: TERMS_STEP, appUrl: "https://example.org" }), false);
+    assert.equal(launchStepOrder("api", true).includes(APP_URL_STEP), true);
+    assert.equal(launchStepOrder("api").includes(BUILD_UI_STEP), true);
     assert.equal(restoreStep({ stepId: "app-url" }), APP_URL_STEP);
     assert.equal(restoreStep({ stepId: "build-ui" }), BUILD_UI_STEP);
     assert.equal(getStepId(BUILD_UI_STEP), "build-ui");
