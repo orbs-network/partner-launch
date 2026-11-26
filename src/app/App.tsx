@@ -63,6 +63,8 @@ function PortalApp() {
     const goHome = (event: Event) => {
       event.preventDefault();
       if (requestCancellationBusy || auth.busy || auth.walletConnecting) return;
+      const onAccepted = (event as CustomEvent<{ onAccepted?: () => void }>).detail?.onAccepted;
+      onAccepted?.();
       setView("setup");
       setShowHome(true);
       window.history.pushState({ portalHome: true, portalWelcome: true }, "", "/");

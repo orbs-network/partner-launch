@@ -42,7 +42,7 @@ export function SetupComplete({ onSend, onCreateNew, onOpenSetups, createNewButt
         />
       </ExpandableSection>
       <SetupActions onCreateNew={onCreateNew} onOpenSetups={onOpenSetups} createNewButtonRef={createNewButtonRef} busy={busy}>
-        {creator ? <SharePreviewDialog displayName={displayName} partnerId={draft.partnerName} brandColor={draft.brandColor} logoDataUrl={draft.logoDataUrl} /> : null}
+        {creator ? <SharePreviewDialog displayName={displayName} partnerId={draft.partnerName} brandColor={draft.brandColor} logoDataUrl={draft.logoDataUrl} busy={busy} /> : null}
       </SetupActions>
     </Card>
   );

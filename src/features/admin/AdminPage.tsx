@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
-import { ArrowLeft, ClipboardList, RefreshCw } from "lucide-react";
+import { ArrowLeft, ClipboardList, RefreshCw, Search } from "lucide-react";
 import { AppLayout } from "@/components/AppLayout";
 import { ContentSkeleton } from "@/components/ContentSkeleton";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AdminRequestCard } from "./AdminRequestCard";
 import { useAdminRequests } from "./useAdminRequests";
 import { navigateWithinApp } from "@/hooks/useSearchLocation";
@@ -12,9 +13,14 @@ export function AdminPage() {
   const { openConnectModal } = useConnectModal();
   const { connected, needsSignIn, signIn, signingIn, rows, loading, error, retry, busy, approvingId, approve, refreshing, refresh } = useAdminRequests();
   const [view, setView] = useState<"pending" | "approved">("pending");
+  const [search, setSearch] = useState("");
   const pending = rows.filter(row => row.request.status === "pending");
   const approved = rows.filter(row => row.request.status === "approved");
-  const visible = view === "pending" ? pending : approved;
+  const query = search.trim().toLowerCase();
+  const visible = (view === "pending" ? pending : approved).filter(({ request, partnerId, ownerWallet, contact }) => !query || [
+    request.appName, request.id, request.kind, request.partnerId, partnerId, ownerWallet, contact,
+    ...(request.ownerWallets ?? []), ...(request.kind === "spot" ? [request.feesWallet, request.dexUrl] : [request.revenueWallet, request.appUrl]),
+  ].some(value => value?.toLowerCase().includes(query)));
   return <AppLayout hideDisconnectedWallet homeDisabled={busy || signingIn}><main id="main" className="mx-auto w-[min(900px,calc(100%-40px))] flex-1 py-10 max-[720px]:w-[calc(100%-24px)] max-[720px]:py-6">
     <a href="/" onClick={navigateWithinApp} className="inline-flex min-h-11 items-center gap-2 text-sm text-(--link) hover:underline"><ArrowLeft size={16} aria-hidden="true" /> Back to setup</a>
     <h1 className="mt-4 text-3xl font-semibold tracking-tight">Review setup requests</h1>
@@ -33,9 +39,14 @@ export function AdminPage() {
         </Button>
         <span role="status" className="sr-only">{refreshing ? "Refreshing requests." : ""}</span>
       </div>
+      <div className="relative mt-4">
+        <label htmlFor="admin-request-search" className="sr-only">Search requests</label>
+        <Search size={18} className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-(--muted)" aria-hidden="true" />
+        <Input id="admin-request-search" type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search by name, ID, wallet or contact" className="min-h-11 pl-11" />
+      </div>
       <section className="mt-5 grid gap-4" aria-label={`${view} requests`}>
         {visible.length ? visible.map(row => <AdminRequestCard key={row.request.id} request={row.request} previous={row.previous} approvedAt={row.approvedAt} ownerWallet={row.ownerWallet} contact={row.contact} partnerId={row.partnerId} busy={busy} approving={approvingId === row.request.id} onApprove={view === "pending" ? () => approve(row.request.id) : undefined} />)
-          : <div className="rounded-2xl border border-(--edge) bg-(--surface) px-5 py-12 text-center"><ClipboardList size={28} className="mx-auto text-(--muted)" aria-hidden="true" /><p className="mt-3 text-sm text-(--muted)">No {view} requests yet.</p></div>}
+          : <div className="rounded-2xl border border-(--edge) bg-(--surface) px-5 py-12 text-center"><ClipboardList size={28} className="mx-auto text-(--muted)" aria-hidden="true" /><p className="mt-3 text-sm text-(--muted)">{query ? "No matching requests. Try another search." : `No ${view} requests yet.`}</p></div>}
       </section>
     </> : null}
   </main></AppLayout>;

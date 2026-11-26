@@ -15,7 +15,7 @@ export const onboardingSteps = [
   {
     id: "partner",
     name: "DEX name",
-    title: "DEX name",
+    title: "Name your DEX",
     intro: "Choose the name people will see in your DEX, and how our team can reach you.",
   },
   {
@@ -42,9 +42,9 @@ export const onboardingSteps = [
     title: "One-time activation deposit",
     intro: "Deposit 100 USDC to activate your DEX.",
   },
-  { id: "integration-choice", name: "Integration", title: "How would you like to add perpetuals?", intro: "Choose a ready-made trading interface or connect directly through our API." },
+  { id: "integration-choice", name: "Integration", title: "How would you like to launch Perps?", intro: "Choose a ready-made trading interface or connect directly through our API." },
   { id: "app-url", name: "DEX URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step and add it later in My workspaces." },
-  { id: "build-ui", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made trading interface." },
+  { id: "build-ui", name: "Build your DEX", title: "Build your DEX", intro: "Use AI to customize your trading platform. No coding required." },
 ] as const;
 
 export const WELCOME_STEP = 0;

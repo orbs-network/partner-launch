@@ -10,10 +10,10 @@ export function SetupActions({ onCreateNew, onOpenSetups, createNewButtonRef, bu
   children?: ReactNode;
 }) {
   return (
-    <footer className="mt-5 flex flex-wrap items-center gap-2 border-t border-(--edge) pt-4" aria-label="Setup actions">
+    <footer className="mt-5 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-(--control-bg) p-2" aria-label="Setup actions">
+      {onOpenSetups ? <Button type="button" variant="secondary" size="sm" className="min-h-11 rounded-xl px-3 text-[13px]" onClick={onOpenSetups} disabled={busy}><Inbox size={15} aria-hidden="true" />My workspaces</Button> : null}
       {children}
-      {onOpenSetups ? <Button type="button" variant="ghost" size="sm" className="h-11 min-w-0 flex-1 rounded-xl px-3 text-xs min-[560px]:flex-none" onClick={onOpenSetups} disabled={busy}><Inbox size={15} aria-hidden="true" /> My workspaces</Button> : null}
-      <Button ref={createNewButtonRef} type="button" variant="ghost" size="sm" className="h-11 min-w-0 flex-1 rounded-xl px-3 text-xs min-[560px]:ml-auto min-[560px]:flex-none" onClick={onCreateNew} disabled={busy} aria-label="Create new setup"><Plus size={15} aria-hidden="true" /> Create new</Button>
+      <Button ref={createNewButtonRef} type="button" variant="ghost" size="sm" className="min-h-11 rounded-xl px-3 text-[13px]" onClick={onCreateNew} disabled={busy}><Plus size={15} aria-hidden="true" />Create workspace</Button>
     </footer>
   );
 }

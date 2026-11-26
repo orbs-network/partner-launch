@@ -95,7 +95,7 @@ export function useAdminRequests() {
   });
   const needsSignIn = !!address && (query.error instanceof AdminSignInRequired || mutation.error instanceof AdminSignInRequired);
   return { connected: !!address, needsSignIn, signIn, signingIn, rows: address && !needsSignIn ? query.data ?? [] : [], loading: !!address && query.isPending,
-    error: signInError || (needsSignIn ? "" : query.error?.message ?? mutation.error?.message ?? ""), retry: () => { mutation.reset(); void query.refetch(); },
+    error: signInError || (needsSignIn ? "" : query.error?.message ?? ""), retry: () => { mutation.reset(); void query.refetch(); },
     refreshing: query.isFetching, refresh: () => { if (!query.isFetching && !mutation.isPending) { mutation.reset(); void query.refetch({ cancelRefetch: false }); } },
     busy: mutation.isPending, approvingId: mutation.isPending ? mutation.variables : undefined,
     approve: (id: string) => { if (inFlight.current) return; inFlight.current = true; mutation.mutate(id); } };

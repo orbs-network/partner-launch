@@ -65,7 +65,7 @@ export function CancelSpotRequest({ request, onBusyChange, onCancelled }: {
       if (mounted.current) {
         const message = cause instanceof Error ? cause.message : "We couldn’t cancel this request. Please try again.";
         setError(message);
-        toast.error(message, { id: toastId, duration: 6000, dismissible: true, closeButton: true });
+        toast.dismiss(toastId);
         loadingToast.current = null;
       }
     } finally {
@@ -81,7 +81,7 @@ export function CancelSpotRequest({ request, onBusyChange, onCancelled }: {
         onEscapeKeyDown={event => { if (inFlight.current) event.preventDefault(); }} onPointerDownOutside={event => { if (inFlight.current) event.preventDefault(); }}>
         <DialogTitle>Cancel this Spot request?</DialogTitle>
         <DialogDescription>Send a cancellation request for <strong className="font-medium text-(--text) [overflow-wrap:anywhere]">{request.appName}</strong> to the team. Sign a message to verify the submitting wallet.</DialogDescription>
-        {error ? <p role="alert" className="mt-4 rounded-xl border border-(--warning-border) bg-(--warning-bg) p-3 text-[13px] leading-relaxed text-(--warning-text)">{error}</p> : null}
+        {error ? <p role="alert" className="mt-4 text-[13px] leading-relaxed text-(--danger)">{error}</p> : null}
         <DialogFooter className="mt-6 [&_button]:min-h-11 [&_button]:min-w-0 [&_button]:whitespace-normal [&_button]:text-[13px] max-[480px]:[&_button]:flex-1">
           <Button ref={keepRef} type="button" variant="secondary" disabled={busy} onClick={() => setOpen(false)}>Keep request</Button>
           <Button type="button" variant="destructive" disabled={busy} aria-busy={busy} onClick={() => void cancel()}>{busy ? <><LoaderCircle size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />Cancelling…</> : "Cancel request"}</Button>

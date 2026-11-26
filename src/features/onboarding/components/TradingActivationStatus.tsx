@@ -5,11 +5,12 @@ import { useSetupRequestStatus } from "../hooks/useSetupRequestStatus";
 import type { SavedSetupRequestReceipt } from "../setup-request-receipt";
 import { ActivationStatusCard } from "./ActivationStatusCard";
 
-export function TradingActivationStatus({ receipt, chainIds, titleId, descriptionId }: {
+export function TradingActivationStatus({ receipt, chainIds, titleId, descriptionId, pendingDescription }: {
   receipt: SavedSetupRequestReceipt;
   chainIds: number[];
   titleId?: string;
   descriptionId?: string;
+  pendingDescription?: string;
 }) {
   const { status, refresh, isRefreshing } = useSetupRequestStatus(receipt, chainIds);
   const generatedDescriptionId = useId();
@@ -41,7 +42,7 @@ export function TradingActivationStatus({ receipt, chainIds, titleId, descriptio
           <RefreshCw size={18} className={isRefreshing ? "animate-spin motion-reduce:animate-none" : undefined} aria-hidden="true" />
         </Button>}
     >
-      {pending ? `The dPERPS team will review your setup before activating trading.${status.isError ? "" : " Partner approval can take up to 48 hours."}` : null}
+      {pending ? status.isError ? "The dPERPS team will review your setup before activating trading." : pendingDescription ?? "The dPERPS team will review your setup before activating trading." : null}
     </ActivationStatusCard>
   );
 }

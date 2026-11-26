@@ -20,9 +20,9 @@ export function WalletExplorerLink({ address, label, chainIds = [] }: {
         target="_blank" rel="noopener noreferrer"
         aria-label={`View ${label.toLowerCase()} ${address} on ${chain.name} explorer (opens in a new tab)`}
         title={`${address} · ${chain.name} explorer`}
-        className="flex min-h-11 w-fit max-w-full items-center gap-1.5 rounded-md text-sm font-medium text-(--link) underline-offset-4 hover:text-(--link-hover) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)">
-        <span className="min-w-0 select-text [overflow-wrap:anywhere]" translate="no">{index === 0 ? address : `${chain.name} explorer`}</span>
-        <ArrowUpRight size={14} className="shrink-0 opacity-70" aria-hidden="true" />
+        className="flex min-h-11 w-fit max-w-full items-start gap-1.5 rounded-md pt-1 text-sm font-medium text-(--link) underline-offset-4 hover:text-(--link-hover) hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--focus-ring)">
+        <span className="min-w-0 select-text [overflow-wrap:anywhere]" translate="no">{index === 0 ? `${address.slice(0, 8)}...${address.slice(-8)}` : `${chain.name} explorer`}</span>
+        <ArrowUpRight size={14} className="mt-0.5 shrink-0 opacity-70" aria-hidden="true" />
       </a>)}
     </div>
   );

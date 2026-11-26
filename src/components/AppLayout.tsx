@@ -10,9 +10,10 @@ export interface AppLayoutProps {
   /** Hide "Connect wallet" only while a returning wallet reconnects; it shows once the state is known. */
   hideDisconnectedWallet?: boolean;
   homeDisabled?: boolean;
+  onHome?: () => void;
 }
 
-export function AppLayout({ children, headerActions, notice, hideDisconnectedWallet, homeDisabled = false }: AppLayoutProps) {
+export function AppLayout({ children, headerActions, notice, hideDisconnectedWallet, homeDisabled = false, onHome }: AppLayoutProps) {
   return (
     <div className="flex min-h-dvh flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)] bg-[radial-gradient(ellipse_850px_500px_at_50%_0,var(--friendly-halo),transparent_75%)]">
       <a className="fixed -top-[70px] left-5 z-[99] rounded-[14px] bg-primary px-[18px] py-[13px] text-primary-foreground focus:top-3" href="#main">Skip to main content</a>
@@ -21,7 +22,8 @@ export function AppLayout({ children, headerActions, notice, hideDisconnectedWal
           if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
           event.preventDefault();
           if (homeDisabled) return;
-          if (window.dispatchEvent(new Event("portal-home", { cancelable: true }))) {
+          if (window.dispatchEvent(new CustomEvent("portal-home", { cancelable: true, detail: { onAccepted: onHome } }))) {
+            onHome?.();
             window.history.pushState({ portalHome: true, portalWelcome: true }, "", "/");
             window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
           }

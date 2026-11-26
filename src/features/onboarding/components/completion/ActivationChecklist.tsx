@@ -8,7 +8,7 @@ export function ActivationChecklist({ draft, onSend, busy = false }: { draft: On
   const receipt = hasSetupRequestReceipt(draft) ? draft.setupRequestReceipt : undefined;
   return (
     <section className="mt-5" aria-labelledby="activation-title">
-      {receipt ? <TradingActivationStatus key={receipt.partnerId} receipt={receipt} chainIds={draft.chainIds} titleId="activation-title" descriptionId="team-approval-description" /> : (
+      {receipt ? <TradingActivationStatus key={receipt.partnerId} receipt={receipt} chainIds={draft.chainIds} titleId="activation-title" descriptionId="team-approval-description" pendingDescription="The Orbs team is reviewing your setup. Approval can take up to 48 hours. You can build your DEX while you wait." /> : (
         <div className="rounded-2xl border border-(--edge) bg-(--primary-soft) p-4">
           <h2 id="activation-title" className="text-sm font-semibold text-(--link)">Ready to submit</h2>
           <p id="team-approval-description" className="mt-2 text-sm leading-[1.7] text-(--secondary-text)">

@@ -24,13 +24,13 @@ export function PerpsAppUrlEditor({ request, disabled, onBusyChange }: { request
   const config = useConfig();
   const { signMessageAsync } = useSignMessage();
   const { refresh } = useWalletRequests();
-  const validation = !url.trim() ? "Enter your DEX URL." : validateDexUrl(url);
+  const validation = !url.trim() ? "Enter your Website URL." : validateDexUrl(url);
   async function save() {
     if (inFlight.current) return;
     setAttempted(true);
     if (validation) { requestAnimationFrame(() => document.getElementById("perps-app-url")?.focus()); return; }
     const account = getAccount(config);
-    if (!account.isConnected || !account.address) { setError("Connect the submitting wallet to update your DEX URL."); return; }
+    if (!account.isConnected || !account.address) { setError("Connect the submitting wallet to update your Website URL."); return; }
     const address = account.address;
     const current = () => { const live = getAccount(config); return live.isConnected && live.address?.toLowerCase() === address.toLowerCase(); };
     inFlight.current = true; setBusy(true); onBusyChange(true); setError("");
@@ -40,20 +40,20 @@ export function PerpsAppUrlEditor({ request, disabled, onBusyChange }: { request
       if (!mounted.current || !current()) throw new Error("Your wallet changed. Try again.");
       const response = await fetch("/api/perps-app-url", { method: "POST", headers: { "Content-Type": "application/json" }, signal: AbortSignal.timeout(15_000), body: JSON.stringify({ ...details, signature }) });
       const body: unknown = await response.json().catch(() => null);
-      if (!response.ok) throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "Couldn’t save the DEX URL. Try again.");
+      if (!response.ok) throw new Error(body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : "Couldn’t save the Website URL. Try again.");
       if (!current()) throw new Error("Your wallet changed. Reconnect to check your setup.");
       if (!mounted.current) return;
       refresh(); setEditing(false); setAttempted(false);
-      toast.success("DEX URL saved");
+      toast.success("Website URL saved");
     } catch (cause) {
-      if (mounted.current) setError(cause instanceof Error && !/reject|denied|cancel/i.test(cause.message) ? cause.message.split("\n")[0] : "Signature cancelled. Your DEX URL was not changed.");
+      if (mounted.current) setError(cause instanceof Error && !/reject|denied|cancel/i.test(cause.message) ? cause.message.split("\n")[0] : "Signature cancelled. Your Website URL was not changed.");
     } finally { inFlight.current = false; onBusyChange(false); if (mounted.current) setBusy(false); }
   }
   return <section className="mt-4 rounded-2xl border border-(--edge) bg-(--surface) p-4" aria-labelledby="perps-app-url-heading">
-    <div className="flex flex-wrap items-center justify-between gap-2"><h3 id="perps-app-url-heading" className="text-sm font-semibold">DEX URL</h3>
+    <div className="flex flex-wrap items-center justify-between gap-2"><h3 id="perps-app-url-heading" className="text-sm font-semibold">Website URL</h3>
       {!editing ? <Button type="button" variant="ghost" size="sm" className="min-h-11 text-xs text-(--link)" disabled={disabled} onClick={() => { setUrl(request.appUrl ?? ""); setEditing(true); setError(""); }}><Pencil size={14} aria-hidden="true" />{request.appUrl ? "Edit" : "Add URL"}</Button> : null}</div>
-    {!editing ? <><p className="text-sm leading-relaxed wrap-anywhere text-(--secondary-text)">{request.appUrl || "Not added yet"}</p><p className="mt-2 text-xs leading-relaxed text-(--muted)">Your DEX URL must be configured for your DEX to work. Saving it here does not configure Perps automatically.</p></> : <form className="mt-3" onSubmit={event => { event.preventDefault(); void save(); }}>
-      <Label htmlFor="perps-app-url" className="sr-only">DEX URL</Label><Input id="perps-app-url" type="url" inputMode="url" autoComplete="url" maxLength={MAX_DEX_URL_LENGTH + 1} placeholder="https://your-dex.com" value={url} onChange={event => setUrl(event.target.value)} disabled={busy} aria-invalid={attempted && !!validation} aria-describedby={attempted && validation ? "perps-app-url-error" : undefined} />
+    {!editing ? <><p className="text-sm leading-relaxed wrap-anywhere text-(--secondary-text)">{request.appUrl || "Not added yet"}</p><p className="mt-2 text-xs leading-relaxed text-(--muted)">Your Website URL must be configured for your DEX to work. Saving it here does not configure Perps automatically.</p></> : <form className="mt-3" onSubmit={event => { event.preventDefault(); void save(); }}>
+      <Label htmlFor="perps-app-url" className="sr-only">Website URL</Label><Input id="perps-app-url" type="url" inputMode="url" autoComplete="url" maxLength={MAX_DEX_URL_LENGTH + 1} placeholder="https://your-dex.com" value={url} onChange={event => setUrl(event.target.value)} disabled={busy} aria-invalid={attempted && !!validation} aria-describedby={attempted && validation ? "perps-app-url-error" : undefined} />
       <FieldError id="perps-app-url-error" message={attempted ? validation : undefined} />
       <p className="mt-2 text-xs leading-relaxed text-(--muted)">Sign a message to verify your wallet and save this URL to your setup.</p>
       {error ? <p role="alert" className="mt-2 text-xs text-(--danger)">{error}</p> : null}

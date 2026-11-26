@@ -68,9 +68,9 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
     <main id="main" className="mx-auto mt-8 mb-10 w-[min(900px,calc(100%-40px))] flex-1 max-[767px]:mt-4 max-[720px]:w-[calc(100%-24px)]">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 ref={headingRef} tabIndex={-1} className="text-[28px] font-semibold tracking-[-0.8px] focus:outline-none max-[767px]:text-2xl">My workspaces</h1>
-        {address && !loading && !error && selected ? <Button type="button" variant="secondary" size="sm" disabled={cancelling} onClick={onCreateSetup} className="min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create new setup</Button> : null}
+        {address && !loading && !error && selected ? <Button type="button" variant="secondary" size="sm" disabled={cancelling} onClick={onCreateSetup} className="min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create workspace</Button> : null}
       </div>
-      {address && !loading && !error && requests.length ? <p className="mt-1 text-sm text-(--muted)">{requests.length === 1 ? "1 setup" : `${requests.length} setups`} for your connected wallet</p> : null}
+      {address && !loading && !error && requests.length ? <p className="mt-1 text-sm text-(--muted)">{requests.length} {requests.length === 1 ? "workspace" : "workspaces"}</p> : null}
       {reconnecting ? <div className="mt-6"><ContentSkeleton label="Connecting your wallet" /></div> : !address ? (
         <div className="mt-8 rounded-[24px] border border-(--edge) bg-(--surface) px-6 py-12 text-center">
           <Wallet size={28} className="mx-auto text-(--muted)" aria-hidden="true" />
@@ -88,7 +88,7 @@ export function SetupsPage({ onCancellationBusyChange, onCreateSetup }: {
               <span className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-(--primary-soft) text-(--link)"><Inbox size={23} aria-hidden="true" /></span>
               <h2 className="mt-4 text-lg font-semibold text-(--text)">No workspaces yet</h2>
               <p className="mt-2 text-sm text-(--muted)">Create a setup to get started with Spot or Perps.</p>
-              <Button type="button" size="sm" disabled={cancelling} onClick={onCreateSetup} className="mt-5 min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create new setup</Button>
+              <Button type="button" size="sm" disabled={cancelling} onClick={onCreateSetup} className="mt-5 min-h-11 rounded-xl px-4 text-sm"><Plus size={16} aria-hidden="true" />Create workspace</Button>
             </div>
           ) : (
             <div className="mt-5">

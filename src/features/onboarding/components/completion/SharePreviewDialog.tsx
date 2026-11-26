@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CreatorLaunchCard } from "./CreatorLaunchCard";
 
-export function SharePreviewDialog(props: ComponentProps<typeof CreatorLaunchCard>) {
+export function SharePreviewDialog({ busy = false, ...props }: ComponentProps<typeof CreatorLaunchCard> & { busy?: boolean }) {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button id="completion-sharing" type="button" variant="secondary" size="sm" className="h-11 w-full rounded-xl px-3 text-xs min-[560px]:w-auto">
-          <Share2 size={16} aria-hidden="true" /> Share your launch
+        <Button id="completion-sharing" type="button" variant="ghost" size="sm" disabled={busy} className="min-h-11 rounded-xl px-3 text-[13px]">
+          <Share2 size={16} aria-hidden="true" /> Share setup
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100dvh-32px)] w-[600px] overflow-y-auto" showCloseButton={false}>

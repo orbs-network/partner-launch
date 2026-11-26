@@ -1,7 +1,6 @@
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FieldHelp } from "@/components/FieldHelp";
 import { MAX_CONTACT_LENGTH, validateContact } from "@/lib/contact";
 import { useOnboardingStore } from "../store";
 
@@ -21,12 +20,11 @@ export function PartnerStep({ error = "", unavailable = false, disabled = false 
     <div>
       <div className="mb-2.5 flex items-center gap-1">
         <Label htmlFor={api ? "app-id" : "partner-name"} className="text-sm font-medium text-(--secondary-text)">{api ? "Partner ID" : "DEX name"}</Label>
-        <FieldHelp label={api ? "Partner ID" : "DEX name"}>{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "We’ll use this name to generate your unique Partner ID. You can change the DEX name later."}</FieldHelp>
       </div>
       <Input
         id={api ? "app-id" : "partner-name"}
         name={api ? "partnerName" : "displayName"}
-        placeholder={api ? "my-trading-dex" : "Your DEX name"}
+        placeholder={api ? "my-trading-dex" : "e.g. Harbor Exchange"}
         autoComplete="off"
         autoCapitalize={api ? "none" : "words"}
         enterKeyHint="next"
@@ -38,13 +36,13 @@ export function PartnerStep({ error = "", unavailable = false, disabled = false 
         disabled={disabled}
         onChange={(event) => api ? setPartnerName(event.target.value) : setDexName(event.target.value)}
         aria-invalid={!!nameError}
-        aria-describedby={nameError ? "partner-error" : undefined}
+        aria-describedby={nameError ? "partner-name-hint partner-error" : "partner-name-hint"}
         className={api ? "font-mono text-sm" : undefined}
       />
       <FieldError id="partner-error" message={nameError} />
+      <p id="partner-name-hint" className="mt-2 text-[13px] leading-relaxed text-(--muted)">{api ? "Choose a unique Partner ID for your integration. Its availability is checked before you continue." : "We’ll use this name to generate your unique Partner ID. You can change the DEX name later."}</p>
       <div className="mt-5 mb-2.5 flex items-center gap-1">
         <Label htmlFor="partner-contact" className="text-sm font-medium text-(--secondary-text)">Contact <span className="font-normal text-(--muted)">(optional)</span></Label>
-        <FieldHelp label="Contact">Provide an email address or Telegram contact so the team can follow up about your request. It is shared only with the Orbs team.</FieldHelp>
       </div>
       <Input
         id="partner-contact"
@@ -64,7 +62,7 @@ export function PartnerStep({ error = "", unavailable = false, disabled = false 
         aria-describedby={contactError ? "partner-contact-hint partner-contact-error" : "partner-contact-hint"}
       />
       <FieldError id="partner-contact-error" message={contactError} />
-      <p id="partner-contact-hint" className="sr-only">Email or Telegram, so our team can reach you about this request. Shared only with the Orbs team.</p>
+      <p id="partner-contact-hint" className="mt-2 text-[13px] leading-relaxed text-(--muted)">So our team can reach you if needed.</p>
       {unavailable ? <p role="alert" className="mt-4 rounded-xl border border-(--warning-border) bg-(--warning-bg) p-3 text-sm text-(--warning-text)">We couldn’t check Partner ID availability. Please try again.</p> : null}
     </div>
   );

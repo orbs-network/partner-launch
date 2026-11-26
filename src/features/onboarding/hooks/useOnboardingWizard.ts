@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useConfig } from "wagmi";
 import { getAccount } from "wagmi/actions";
 import { useOnboardingStore } from "../store";
-import { useValidationToast } from "@/hooks/useValidationToast";
 import { useChainCollateral } from "./useChainCollateral";
 import { useStepHistory } from "@/hooks/useStepHistory";
 import { focusStepStart } from "@/lib/step-focus";
@@ -34,7 +33,9 @@ export function useOnboardingWizard(externalBusy = false) {
   const draft = useOnboardingStore();
   useChainCollateral(!draft.completed && draft.chainIds.length === 1 ? draft.chainIds[0] : null);
   const config = useConfig();
-  const { error: showActionError, dismiss: dismissActionError } = useValidationToast();
+  const [actionError, setActionError] = useState<{ message: string; revision: number } | null>(null);
+  const dismissActionError = () => setActionError(null);
+  const showActionError = (message: string) => setActionError({ message, revision: useOnboardingStore.getState().revision });
   const [resetOpen, setResetOpen] = useState(false);
   // Keep fields neutral until the user attempts to continue.
   const [submitted, setSubmitted] = useState(false);
@@ -67,7 +68,7 @@ export function useOnboardingWizard(externalBusy = false) {
       ? "Get started"
       : activeStep.id === "funding"
         ? "Submit setup"
-        : returning ? "Save changes" : activeStep.id === "networks" ? "Continue" : activeStep.id === "app-url" && !(draft.appUrl ?? "").trim() ? "Skip for now" : "Next step";
+        : returning ? "Save changes" : activeStep.id === "networks" ? "Continue" : activeStep.id === "app-url" && !(draft.appUrl ?? "").trim() ? "Skip for now" : "Next";
   const headingRef = useRef<HTMLHeadingElement>(null);
   const previousStepRef = useRef(draft.step);
   const resetButtonRef = useRef<HTMLButtonElement>(null);
@@ -88,7 +89,6 @@ export function useOnboardingWizard(externalBusy = false) {
   useEffect(() => {
     if (draft.step === WELCOME_STEP) document.querySelector<HTMLElement>("main h1")?.focus({ preventScroll: true });
   }, [draft.launchPath, draft.step]);
-  useEffect(dismissActionError, [draft.revision, dismissActionError]);
   function navigate(step: number) {
     if (busy || partnerCheckInFlight.current || !activeOrder.includes(step)) return;
     const current = useOnboardingStore.getState();
@@ -261,10 +261,11 @@ export function useOnboardingWizard(externalBusy = false) {
     launchPath: draft.launchPath,
     progress,
     busy,
-    canContinue: !busy,
+    canContinue: !busy && (draft.step !== NETWORKS_STEP || (draft.chainIds.length === 1 && selectablePerpsChains.some(chain => chain.id === draft.chainIds[0]))),
     continueLabel,
     checkingPartner,
     stepError,
+    actionError: actionError?.revision === draft.revision ? actionError.message : "",
     partnerCheckUnavailable: draft.step === PARTNER_STEP && partnerCheck?.id === draft.partnerName && partnerCheck.kind === "unavailable",
     showCompletion,
     resetOpen,

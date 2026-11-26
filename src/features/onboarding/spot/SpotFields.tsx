@@ -10,10 +10,12 @@ import { MAX_CONTACT_LENGTH, validateContact } from "@/lib/contact";
 import type { SpotDraft, SpotStep } from "./spot-setup";
 import { SpotSummary } from "./SpotSummary";
 import { IntegrationChoice } from "../components/IntegrationChoice";
-import { SpotSupportedChains } from "./SpotSupportedChains";
 import { InlineSpotPrompt } from "./InlineSpotPrompt";
 import { SpotDepositSummary } from "./SpotDepositSummary";
 import { SpotWalletField } from "./SpotWalletField";
+import { SpotNetworksDialog } from "./SpotNetworksDialog";
+import { Globe } from "lucide-react";
+import { spotSupportedChains } from "@/config/spot-chains";
 
 export function SpotFields({ draft, error, appIdUnavailable, update, selectIntegration, acceptPolicy, edit, fillWallet, onWalletBusyChange }: {
   draft: SpotDraft;
@@ -26,13 +28,19 @@ export function SpotFields({ draft, error, appIdUnavailable, update, selectInteg
   fillWallet: (address: string, scope: string) => void;
   onWalletBusyChange: (busy: boolean) => void;
 }) {
-  if (draft.step === "integration") return <IntegrationChoice product="Spot" selected={draft.integrationMode} onSelect={selectIntegration} error={error} disabled={false} />;
+  if (draft.step === "integration") return <>
+    <IntegrationChoice product="Spot" selected={draft.integrationMode} onSelect={selectIntegration} error={error} disabled={false} />
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3">
+      <Globe size={20} className="shrink-0 text-(--link)" aria-hidden="true" />
+      <div className="min-w-[180px] flex-1"><p className="text-sm font-semibold">{spotSupportedChains.length} supported networks</p><p className="mt-1 text-sm text-(--secondary-text)">All supported networks are included automatically.</p></div>
+      <SpotNetworksDialog label="View networks" />
+    </div>
+  </>;
   if (draft.step === "build") return <InlineSpotPrompt compact setup={{ appName: draft.appName, partnerId: isLocalTestPartner(draft.appName) ? draft.localTestPartnerId : undefined, feesWallet: draft.feesWallet, tradingFeeTenthsBps: parseSpotFeePercent(draft.tradingFeePercent) ?? undefined, integrationMode: draft.integrationMode ?? "ui" }} />;
   if (draft.step === "deposit") return <SpotDepositSummary />;
   if (draft.step === "review") return (
     <>
       <SpotSummary integrationMode={draft.integrationMode ?? undefined} appName={draft.appName} partnerId={isLocalTestPartner(draft.appName) ? draft.localTestPartnerId : undefined} contact={draft.contact} dexUrl={draft.dexUrl} feesWallet={draft.feesWallet} tradingFeeTenthsBps={parseSpotFeePercent(draft.tradingFeePercent) ?? 0} onEdit={edit} />
-      <SpotSupportedChains />
       <Label htmlFor="spot-review" className={`mt-5 flex cursor-pointer items-start gap-3 rounded-[14px] border bg-(--control-bg) px-4 py-3.5 text-[13px] leading-[1.75] font-normal text-(--secondary-text) ${error ? "border-(--status-danger)" : "border-(--edge)"}`}>
         <Checkbox id="spot-review" name="policyAccepted" className="mt-[3px] size-[18px] shrink-0" checked={draft.policyAccepted} onCheckedChange={(value) => acceptPolicy(value === true)} aria-invalid={!!error} aria-describedby={error ? "spot-error" : undefined} />
         <span>I agree to the <a className="text-(--link) underline underline-offset-3" href="https://perps.orbs.network/terms" target="_blank" rel="noreferrer">Terms of Use</a> and have read and accept the <a className="text-(--link) underline underline-offset-3" href="https://perps.orbs.network/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.</span>
@@ -56,13 +64,14 @@ export function SpotFields({ draft, error, appIdUnavailable, update, selectInteg
   const nameError = error && error !== contactError ? error : undefined;
   return (
     <>
-      <div className="mb-2.5 flex items-center gap-1"><Label htmlFor="spot-app" className="text-sm font-medium text-(--secondary-text)">DEX name</Label><FieldHelp label="DEX name">We’ll use this name to generate your unique Partner ID. You can change the DEX name later.</FieldHelp></div>
-      <Input id="spot-app" name="appName" enterKeyHint="next" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="Your Spot DEX name…" maxLength={80} value={draft.appName} onChange={(event) => update("appName", event.target.value)} aria-invalid={!!nameError} aria-describedby={nameError ? "spot-error" : undefined} />
+      <div className="mb-2.5 flex items-center gap-1"><Label htmlFor="spot-app" className="text-sm font-medium text-(--secondary-text)">DEX name</Label></div>
+      <Input id="spot-app" name="appName" enterKeyHint="next" autoComplete="off" autoCapitalize="words" autoCorrect="off" spellCheck={false} placeholder="e.g. Harbor Exchange" maxLength={80} value={draft.appName} onChange={(event) => update("appName", event.target.value)} aria-invalid={!!nameError} aria-describedby={nameError ? "spot-name-hint spot-error" : "spot-name-hint"} />
       <FieldError id="spot-error" message={nameError} />
-      <div className="mt-5 mb-2.5 flex items-center gap-1"><Label htmlFor="spot-contact" className="text-sm font-medium text-(--secondary-text)">Contact <span className="font-normal text-(--muted)">(optional)</span></Label><FieldHelp label="Contact">Provide an email address or Telegram contact so the team can follow up about your request. It is shared only with the Orbs team.</FieldHelp></div>
+      <p id="spot-name-hint" className="mt-2 text-[13px] leading-relaxed text-(--muted)">We’ll use this name to generate your unique Partner ID. You can change the DEX name later.</p>
+      <div className="mt-5 mb-2.5 flex items-center gap-1"><Label htmlFor="spot-contact" className="text-sm font-medium text-(--secondary-text)">Contact <span className="font-normal text-(--muted)">(optional)</span></Label></div>
       <Input id="spot-contact" name="contact" type="text" enterKeyHint="next" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="you@example.com or @telegram" maxLength={MAX_CONTACT_LENGTH} value={draft.contact} onChange={(event) => update("contact", event.target.value)} aria-invalid={!!contactError} aria-describedby={contactError ? "spot-contact-hint spot-contact-error" : "spot-contact-hint"} />
       <FieldError id="spot-contact-error" message={contactError} />
-      <p id="spot-contact-hint" className="sr-only">Email or Telegram, so our team can reach you about this request. Shared only with the Orbs team.</p>
+      <p id="spot-contact-hint" className="mt-2 text-[13px] leading-relaxed text-(--muted)">So our team can reach you if needed.</p>
       {appIdUnavailable ? <p role="alert" className="mt-4 rounded-xl border border-(--warning-border) bg-(--warning-bg) p-3 text-sm text-(--warning-text)">We couldn’t check Spot Partner ID availability. Please try again.</p> : null}
     </>
   );

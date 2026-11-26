@@ -7,7 +7,7 @@ import { useRef, useState, type ReactNode, type RefObject } from "react";
 import { useOnboardingStore } from "../store";
 import { hasAcceptedTerms } from "../terms-review";
 
-export function TermsStep({ error: submittedError, disabled, actionLabel = "Next step", onFinish, onBack, actionRef, children }: {
+export function TermsStep({ error: submittedError, disabled, actionLabel = "Next", onFinish, onBack, actionRef, children }: {
   error?: string;
   disabled: boolean;
   actionLabel?: ReactNode;

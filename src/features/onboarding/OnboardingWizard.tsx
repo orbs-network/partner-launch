@@ -44,6 +44,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
     continueLabel,
     checkingPartner,
     stepError,
+    actionError,
     partnerCheckUnavailable,
     resetButtonRef,
     openReset,
@@ -60,6 +61,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
     <OnboardingLayout
       headerActions={renderHeaderActions?.(busy)}
       homeDisabled={busy}
+      onHome={showCompletion ? reset : undefined}
       notice={notice}
       // Signing the deposit confirmation connects the wallet, so setup never shows a second "Connect wallet".
       hideDisconnectedWallet={!showCompletion}
@@ -114,6 +116,7 @@ export function OnboardingWizard({ renderHeaderActions, notice, externalBusy = f
                     onCreator={() => choosePath("creator")}
                     onSpot={onSpot}
                   />
+                  {actionError ? <p role="alert" className="mt-3 text-[13px] leading-relaxed text-(--danger)">{actionError}</p> : null}
                 </form>
                 {step !== WELCOME_STEP ? <WizardNavigation
                   step={step}

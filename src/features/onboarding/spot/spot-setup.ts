@@ -9,9 +9,9 @@ import { normalizeOwnerWallets, restoreOwnerWallets } from "../owner-wallets.js"
 export const SPOT_DRAFT_KEY = "partner-portal-spot-draft-v1";
 export const spotSteps = [
   { id: "integration", name: "Integration", title: "How would you like to add spot trading?", intro: "Choose a ready-made trading interface or add Spot to your existing DEX." },
-  { id: "app", name: "DEX name", title: "DEX name", intro: "Choose the name people will see in your DEX, and how our team can reach you." },
+  { id: "app", name: "DEX name", title: "Name your DEX", intro: "Choose the name people will see in your DEX, and how our team can reach you." },
   { id: "wallet", name: "Platform fee", title: "Set your platform fee", intro: "Choose where to receive your revenue and set the platform fee for Spot trades." },
-  { id: "build", name: "Build your DEX", title: "Build your DEX", intro: "Use these instructions to customize and publish your ready-made Spot trading interface." },
+  { id: "build", name: "Build your DEX", title: "Build your DEX", intro: "Use AI to customize your trading platform. No coding required." },
   { id: "url", name: "DEX URL", title: "Add your DEX URL", intro: "Enter your published DEX address, or skip this step if it isn’t ready yet." },
   { id: "review", name: "Review", title: "Review your Spot setup", intro: "Check your details and accept the policy before continuing." },
   { id: "deposit", name: "Activation deposit", title: "One-time activation deposit", intro: "Deposit 100 USDC to activate your DEX." },

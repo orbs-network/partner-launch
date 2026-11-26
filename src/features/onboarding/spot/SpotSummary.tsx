@@ -3,6 +3,7 @@ import { formatSpotFeePercent } from "./spot-fee";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SpotStep } from "./spot-setup";
+import { SpotNetworksDialog } from "./SpotNetworksDialog";
 
 export function SpotSummary({ appName, partnerId, contact, dexUrl, integrationMode, feesWallet, tradingFeeTenthsBps, onEdit }: {
   appName: string;
@@ -16,7 +17,6 @@ export function SpotSummary({ appName, partnerId, contact, dexUrl, integrationMo
 }) {
   const rows = [
     { id: "app", label: "DEX name", value: appName },
-    ...(onEdit && integrationMode === "existing" ? [{ id: "app" as const, key: "partnerId", label: "Partner ID", value: partnerId || generateSpotAppId(appName) }] : []),
     ...((dexUrl || (onEdit && integrationMode !== "existing")) ? [{ id: "url" as const, label: "DEX URL", value: dexUrl || "Not provided" }] : []),
     { id: "wallet", label: "Revenue wallet", value: feesWallet },
     { id: "wallet", key: "fee", label: "Platform fee", value: `${formatSpotFeePercent(tradingFeeTenthsBps)}%` },
@@ -29,10 +29,15 @@ export function SpotSummary({ appName, partnerId, contact, dexUrl, integrationMo
           <div className="min-w-0">
             <dt className="text-xs text-(--muted)">{row.label}</dt>
             <dd className={`m-0 mt-1 text-sm leading-[1.7] text-(--text) [overflow-wrap:anywhere] ${row.label === "Revenue wallet" ? "font-mono" : ""}`}>{row.value}</dd>
+            {row.id === "app" && !("key" in row) && onEdit && integrationMode === "existing" ? <><dt className="mt-3 text-xs text-(--muted)">Partner ID</dt><dd className="m-0 mt-1 text-sm leading-[1.7] text-(--text) [overflow-wrap:anywhere]">{partnerId || generateSpotAppId(appName)}</dd></> : null}
           </div>
-          {onEdit && !("key" in row && row.key === "partnerId") && (row.id !== "url" || integrationMode !== "existing") ? <Button variant="ghost" size="sm" type="button" className="shrink-0 text-xs text-(--link)" onClick={() => onEdit(row.id, "key" in row ? row.key === "fee" ? "spot-fee" : `spot-${row.key}` : undefined)} aria-label={`Edit ${row.label.toLowerCase()}`}><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
+          {onEdit && (row.id !== "url" || integrationMode !== "existing") ? <Button variant="ghost" size="sm" type="button" className="shrink-0 text-xs text-(--link)" onClick={() => onEdit(row.id, "key" in row ? row.key === "fee" ? "spot-fee" : `spot-${row.key}` : undefined)} aria-label={`Edit ${row.label.toLowerCase()}`}><Pencil size={13} aria-hidden="true" /> Edit</Button> : null}
         </div>
       ))}
+      {onEdit ? <div className="flex items-start justify-between gap-3 py-3.5">
+        <div className="min-w-0"><dt className="text-xs text-(--muted)">Networks</dt><dd className="m-0 mt-1 text-sm leading-[1.7] text-(--text)">All supported networks</dd></div>
+        <dd className="m-0 shrink-0"><SpotNetworksDialog label="View networks" compact /></dd>
+      </div> : null}
     </dl>
   );
 }

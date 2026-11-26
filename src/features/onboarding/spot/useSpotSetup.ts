@@ -200,6 +200,16 @@ export function useSpotSetup(disabled: boolean) {
     window.history.replaceState(null, "", url);
     return true;
   }
+  function resetSubmittedForHome() {
+    if (!saved || busy || inFlight.current) return;
+    safeStorage.removeItem(SPOT_DRAFT_KEY);
+    setSaved(null);
+    delivered.current = null;
+    setDraft(emptySpotDraft());
+    setTried(false);
+    setReturnToReview(false);
+    dismissSaveError();
+  }
   const progress = spotSteps.map((item, position) => ({
     name: item.name, target: position, active: position === index,
     done: position < index && !spotStepError(item.id, draft),
@@ -210,7 +220,7 @@ export function useSpotSetup(disabled: boolean) {
     setDraft((current) => current.step === "wallet" && JSON.stringify(current) === scope
       ? { ...current, feesWallet: address, policyAccepted: false } : current);
   }
-  return { draft, saved, step, index, error, headingRef, progress, update, selectIntegration, navigate, next, acceptPolicy, reset, busy, submitting, checkingAppId,
+  return { draft, saved, step, index, error, headingRef, progress, update, selectIntegration, navigate, next, acceptPolicy, reset, resetSubmittedForHome, busy, submitting, checkingAppId,
     appIdUnavailable: draft.step === "app" && appIdCheck?.name === draft.appName && appIdCheck.kind === "unavailable",
     fillWallet, onWalletBusyChange: setWalletBusy, returnToReview: returnToReview && draft.step !== "review",
     // While editing from Review, Back returns there once the edited step is valid again.
